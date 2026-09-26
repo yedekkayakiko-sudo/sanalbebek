@@ -1,0 +1,1169 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ortak Dijital Yaşam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#EDF0E8; --surface:#FAFBF7; --surface-2:#F1F4EC; --ink:#1F2A24; --muted:#5B6961; --line:#D3DACF;
+  --accent:#7A3E62; --accent-ink:#FFFFFF; --accent-soft:#F1E3EB; --amber:#C98A1E; --amber-soft:#FBEFD6;
+  --good:#2F7A4F; --warn:#A5621A; --bezel:#101412;
+  --f-display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#111513; --surface:#1A1F1C; --surface-2:#222824; --ink:#E3E8E0; --muted:#9BA69F; --line:#2E3632;
+    --accent:#D39ABD; --accent-ink:#241420; --accent-soft:#3A2632; --amber:#E7B55A; --amber-soft:#3A2F1A;
+    --good:#7CC79A; --warn:#E3A35C; --bezel:#050706;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#111513; --surface:#1A1F1C; --surface-2:#222824; --ink:#E3E8E0; --muted:#9BA69F; --line:#2E3632;
+  --accent:#D39ABD; --accent-ink:#241420; --accent-soft:#3A2632; --amber:#E7B55A; --amber-soft:#3A2F1A;
+  --good:#7CC79A; --warn:#E3A35C; --bezel:#050706;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.5 var(--f-body)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:24px 48px;display:grid;gap:28px;grid-template-columns:1fr}
+@media (min-width:920px){.wrap{grid-template-columns:400px 1fr;align-items:start}}
+
+/* ---------- phone ---------- */
+.phone{width:min(400px,100%);margin-inline:auto;background:var(--bezel);border-radius:44px;padding:10px;position:relative;box-shadow:0 18px 50px -24px rgba(0,0,0,.45)}
+@media (min-width:920px){.phone{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}}
+.power{position:absolute;right:-4px;top:150px;width:5px;height:64px;border-radius:0 3px 3px 0;background:#2B322E;border:0;padding:0}
+.power:hover{background:#4A544E}
+.screen{height:min(780px,calc(100svh - 40px));min-height:620px;border-radius:34px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;position:relative}
+.statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 22px 4px;font:600 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.apphead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 18px 10px}
+.apphead h1{font-size:26px;font-weight:700;letter-spacing:-.01em}
+.apphead .sub{font-size:13px;color:var(--muted)}
+.iconbtn{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+main.appmain{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px 16px;display:flex;flex-direction:column;gap:14px}
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding:6px 4px 10px}
+.tabbar button{border:0;background:none;padding:6px 2px;font-size:11.5px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;border-radius:10px}
+.tabbar button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-selected="true"]{color:var(--accent)}
+.tabbar .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);position:absolute;margin-left:18px}
+
+.stage{position:relative;border-radius:22px;overflow:hidden;background:#E8D6BD}
+.stage canvas{display:block;width:100%;height:auto;aspect-ratio:4/3.3;touch-action:manipulation}
+.bubble{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:#FFFFFF;color:#1F2A24;border-radius:16px;padding:6px 14px;font:600 16px var(--f-display);box-shadow:0 4px 14px rgba(0,0,0,.14);white-space:nowrap;transition:opacity .25s}
+.bubble::after{content:"";position:absolute;left:50%;bottom:-6px;width:12px;height:12px;background:#FFFFFF;transform:translateX(-50%) rotate(45deg)}
+.caption{font-size:15.5px;line-height:1.4;min-height:44px;margin:0}
+.caption b{font-family:var(--f-display)}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.act{border:1px solid var(--line);background:var(--surface-2);border-radius:16px;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:600;font-size:14px}
+.act svg{width:26px;height:26px;stroke:var(--accent);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.act:hover{border-color:var(--accent)}
+.act:active{transform:scale(.97)}
+.toast{font-size:14px;color:var(--muted);min-height:21px;margin:0}
+
+.card{border:1px solid var(--line);border-radius:18px;padding:14px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.card h3{font-size:17px}
+.card.away{background:var(--amber-soft);border-color:transparent}
+.card.away ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;font-size:14.5px}
+.eyebrow{font:600 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:9px 14px;font-weight:700;font-size:14px}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.small{padding:6px 10px;font-size:13px;border-radius:10px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 12px;font-size:13.5px;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+input[type=text]{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:12px;padding:9px 12px}
+
+/* memories */
+.album{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mem{border-radius:16px;overflow:hidden;background:var(--surface-2);display:flex;flex-direction:column}
+.mem img{display:block;width:100%;aspect-ratio:4/3.3;object-fit:cover;background:#E8D6BD}
+.mem div{padding:8px 10px 10px;display:flex;flex-direction:column;gap:2px}
+.mem strong{font-family:var(--f-display);font-size:15px;line-height:1.2}
+.mem span{font-size:12.5px;color:var(--muted);line-height:1.35}
+.mem .when{font:500 11px var(--f-mono);color:var(--muted)}
+
+/* walk */
+.track{position:relative;height:14px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.track i{position:absolute;inset:0 auto 0 0;background:var(--good);border-radius:999px}
+.track b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.5}
+.ticks{display:flex;justify-content:space-between;font:500 11px var(--f-mono);color:var(--muted)}
+.big{font:700 34px var(--f-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+/* settings */
+.set{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.set:last-child{border-bottom:0}
+.set p{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.switch{flex:none;width:46px;height:28px;border-radius:999px;border:0;background:var(--line);position:relative;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#FFFFFF;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(18px)}
+.notif-preview{font-size:13.5px;background:var(--surface-2);border-radius:12px;padding:8px 10px}
+
+/* overlays inside phone */
+.overlay{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column}
+.sheet-bg{background:rgba(10,14,12,.45);justify-content:flex-end}
+.sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:18px 18px 22px;display:flex;flex-direction:column;gap:12px;max-height:88%;overflow-y:auto}
+.sheet h2{font-size:22px}
+.lock{background:#07090B;color:#E9EEF2;padding:40px 20px 24px;gap:14px;align-items:stretch}
+.lock .clock{font:500 64px var(--f-display);text-align:center;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.lock .date{text-align:center;font-size:14px;color:#9AA5AE}
+.lock .note{font-size:13px;color:#9AA5AE;text-align:center}
+.lock .n{background:rgba(255,255,255,.1);border-radius:16px;padding:10px 12px;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.lock .n small{color:#9AA5AE;font-size:11.5px}
+.lock .chips{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lock .chips button{background:rgba(255,255,255,.1);color:#E9EEF2;border:0;border-radius:12px;padding:10px;font-weight:600}
+.lock .unlock{margin-top:auto;background:#E9EEF2;color:#07090B;border:0;border-radius:14px;padding:12px;font-weight:700}
+.lock .list{display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.celebrate{background:rgba(10,14,12,.55);align-items:center;justify-content:center;padding:20px}
+.celebrate .card{background:var(--surface);max-width:320px;text-align:center;align-items:center}
+.celebrate img{width:100%;border-radius:12px}
+.look-preview{width:180px;height:150px;border-radius:16px;align-self:center;background:#E8D6BD}
+
+/* ---------- moderator panel ---------- */
+.panel{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel header h2{font-size:30px;letter-spacing:-.015em}
+.panel header p{margin:6px 0 0;max-width:62ch;color:var(--muted)}
+.pbox{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.pbox h3{font-size:18px}
+.pgrid{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:1180px){.pgrid{grid-template-columns:1fr 1fr}}
+.meter{display:grid;grid-template-columns:88px 1fr 40px;gap:8px;align-items:center;font-size:13px}
+.meter .bar{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.meter .bar i{display:block;height:100%;background:var(--accent)}
+.meter .v{font:600 12px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:13.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font:600 13px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.log{font:12px/1.5 var(--f-mono);max-height:220px;overflow-y:auto;background:var(--surface-2);border-radius:12px;padding:8px 10px;margin:0;list-style:none}
+.log li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font:600 11px var(--f-mono);background:var(--surface-2);border:1px solid var(--line)}
+.pill.good{color:var(--good)} .pill.warn{color:var(--warn)}
+textarea{width:100%;min-height:120px;font:12px var(--f-mono);border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:8px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="phone">
+    <button class="power" id="power" aria-label="Ekranı kapat" title="Ekranı kapat"></button>
+    <div class="screen" id="screen">
+      <div class="statusbar"><span id="sb-time">09:00</span><span id="sb-day">Gün 1</span></div>
+      <div class="apphead">
+        <div><h1 id="baby-name">Milo</h1><div class="sub" id="baby-age">yeni doğdu</div></div>
+        <button class="iconbtn" id="open-wardrobe">Dolap</button>
+      </div>
+      <main class="appmain" id="appmain"></main>
+      <nav class="tabbar" id="tabbar" role="tablist"></nav>
+      <div id="overlay-root"></div>
+    </div>
+  </div>
+
+  <section class="panel" aria-label="Moderatör paneli">
+    <header>
+      <div class="eyebrow">Moderatör paneli · kullanıcı bunu görmez</div>
+      <h2>Ortak Dijital Yaşam</h2>
+      <p>Tıklanabilir prototip. Veriler sahte, “sunucu” tarayıcıda simüle ediliyor. Zamanı hızlandır, ekranı kapatıp saatler sonra aç, bebeğin geçen süreyi nasıl yeniden hesapladığını izle. Prototipte 1 gün, gerçek üründe yaklaşık 1–2 aya karşılık gelir.</p>
+    </header>
+
+    <div class="pbox">
+      <h3>Zaman</h3>
+      <div class="row" role="group" aria-label="Hız">
+        <button class="chip" data-speed="1">1× gerçek</button>
+        <button class="chip" data-speed="60">60× · 1 sn = 1 dk</button>
+        <button class="chip" data-speed="600">600× · 1 sn = 10 dk</button>
+        <button class="chip" data-speed="0">Durdur</button>
+      </div>
+      <div class="row">
+        <button class="btn" id="p-lock">Ekranı kapat</button>
+        <button class="btn ghost" id="p-skip">Sonraki aşamaya atla</button>
+      </div>
+      <p class="small muted" style="margin:0">Ekran kapalıyken hiçbir şey hesaplanmaz. Açılışta <code>lastSim</code> ile şimdiki an arasındaki süre 10 dakikalık adımlarla yeniden simüle edilir.</p>
+    </div>
+
+    <div class="pgrid">
+      <div class="pbox">
+        <h3>İç değerler</h3>
+        <div id="p-internals"></div>
+      </div>
+      <div class="pbox">
+        <h3>Test metrikleri</h3>
+        <div id="p-metrics"></div>
+      </div>
+    </div>
+
+    <div class="pbox">
+      <h3>Olay günlüğü</h3>
+      <ul class="log" id="p-log"></ul>
+      <div class="row">
+        <button class="btn ghost small" id="p-export">Veriyi kopyala (JSON)</button>
+        <button class="btn ghost small" id="p-reset">Sıfırla</button>
+      </div>
+      <div id="p-export-out"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+"use strict";
+const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
+const EPOCH = Date.UTC(2026, 8, 26, 0, 0);            // simülasyon takviminin 1. günü
+const T0 = EPOCH + 9 * HOUR;                             // doğum: 1. gün 09:00
+const STORE = "odys-proto-v1";
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const STAGES = [
+  { key: "newborn", name: "Yenidoğan",     from: 0,  hunger: 11, drain: 14, attn: 5 },
+  { key: "baby",    name: "Bebek",         from: 2,  hunger: 10, drain: 12, attn: 6 },
+  { key: "crawl",   name: "Emekleme",      from: 4,  hunger: 9,  drain: 10, attn: 7 },
+  { key: "walk",    name: "Yürüme",        from: 7,  hunger: 8,  drain: 9,  attn: 8 },
+  { key: "words",   name: "İlk kelimeler", from: 10, hunger: 8,  drain: 8,  attn: 8 },
+  { key: "child",   name: "Çocukluk",      from: 13, hunger: 7,  drain: 7,  attn: 8 },
+];
+const LOOK = {
+  skin: ["#F6D7C3", "#EBC0A0", "#D39C74", "#A8704A", "#6F4630"],
+  hair: ["#2B1D14", "#5A3A22", "#9C6A3A", "#D9B36C", "#B5532E"],
+  eye:  ["#4A3222", "#2F5E7A", "#4F6B3A", "#6B6E73"],
+  styles: 3,
+};
+const NAMES = ["Milo", "Deniz", "Ada", "Ekin", "Toprak", "Nil", "Aras", "Umay"];
+const OUTFITS = [
+  { id: "o1", name: "Adaçayı tulum", color: "#7FA38A", free: true },
+  { id: "o2", name: "Hardal tulum",  color: "#E1B24C", free: true },
+  { id: "o3", name: "Gök mavisi",    color: "#7C9DC6", free: true },
+];
+const PREMIUM = [
+  { id: "p1", name: "Yıldızlı pijama",       price: "₺49,99" },
+  { id: "p2", name: "Ayıcık şapka",          price: "₺29,99" },
+  { id: "p3", name: "Oda teması: Gece lambası", price: "₺59,99" },
+];
+const WORDS = { feed: ["mama", "su", "am"], sleep: ["nini", "yat"], play: ["ce-e", "top", "hop"], walk: ["ata", "kuş", "hav hav"] };
+const FIRST_WORD_REASON = {
+  feed: "En çok beslenirken duyduğu kelime.", sleep: "Her uyku öncesi duyduğu kelime.",
+  play: "Oyunlarınızdan aklında kalan.", walk: "Yürüyüşlerde en çok duyduğu kelime.",
+};
+
+const clamp = (v, a = 0, b = 100) => Math.max(a, Math.min(b, v));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const hourOf = t => new Date(t).getUTCHours();
+const dayIdx = t => Math.floor((t - EPOCH) / DAY);
+const isNight = t => { const h = hourOf(t); return h >= 22 || h < 7; };
+const hhmm = t => { const d = new Date(t); return String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0"); };
+const stamp = t => `Gün ${dayIdx(t) + 1} · ${hhmm(t)}`;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function durText(ms) {
+  const h = Math.round(ms / HOUR);
+  if (ms < HOUR) return `${Math.max(1, Math.round(ms / MIN))} dakika`;
+  if (h < 48) return `${h} saat`;
+  return `${Math.round(ms / DAY)} gün`;
+}
+function randomLook() {
+  return { skin: pick(LOOK.skin), hair: pick(LOOK.hair), eye: pick(LOOK.eye), style: Math.floor(Math.random() * LOOK.styles) };
+}
+
+/* =====================================================================
+   SUNUCU SİMÜLASYONU
+   Gerçek üründe bu blok sunucuda çalışır ve tek doğru kaynaktır.
+   İstemci yalnızca istek gönderir (act, addSteps...) ve view() kopyasını çizer.
+   ===================================================================== */
+const Server = (() => {
+  let S = null;
+
+  function fresh(name, look, callName) {
+    return {
+      v: 1, now: T0, lastSim: T0,
+      baby: { name, look, bornAt: T0, hunger: 25, energy: 85, attention: 60, asleep: false, crying: false, cryStart: 0,
+              stageIdx: 0, hungryFlag: false, nightCryKey: -99 },
+      parents: [{ id: "p1", name: "Sen", callName, rel: 40, gainDay: -1, gainToday: 0 }],
+      active: "p1",
+      memories: [], pending: [],
+      counts: { feed: 0, sleep: 0, play: 0, walk: 0 },
+      vocab: [], lastWordDay: -1,
+      walk: { day: -1, steps: 0, hit500: false, hit1k: false, walkedInWalkStage: false },
+      hc: "unasked",
+      settings: { notif: true, maxPerDay: 2, night: false },
+      notif: { day: -1, sentToday: 0, lastAt: 0, delivered: 0, suppressed: 0 },
+      invite: { code: null, accepted: false },
+      outfit: "o1",
+      metrics: { opens: [], reasons: {}, fakeDoor: {}, surveys: 0 },
+      presentMin: 0, neglectH: 0,
+      log: [],
+    };
+  }
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(S)); } catch (e) {} };
+  const log = (type, data = {}) => { S.log.push({ t: S.now, type, ...data }); if (S.log.length > 500) S.log.shift(); };
+  const parent = id => S.parents.find(p => p.id === id);
+  const ageDays = t => (t - S.baby.bornAt) / DAY;
+  const stageFor = d => { let i = 0; STAGES.forEach((s, k) => { if (d >= s.from) i = k; }); return i; };
+  const hasMem = k => S.memories.some(m => m.kind === k);
+
+  function gain(p, amt) {
+    const d = dayIdx(S.now);
+    if (p.gainDay !== d) { p.gainDay = d; p.gainToday = 0; }
+    const room = Math.max(0, 12 - p.gainToday);          // günlük ilişki kazanımı sınırlı: grind yok
+    const g = Math.min(room, amt);
+    p.gainToday += g; p.rel = clamp(p.rel + g, 5, 100);
+  }
+
+  function addMemory(kind, title, text) {
+    const who = parent(S.active);
+    const m = { id: "m" + (S.memories.length + 1), kind, title, text, t: S.now, age: ageDays(S.now), stage: STAGES[S.baby.stageIdx].name,
+                with: who ? who.name : "", photo: null };
+    S.memories.push(m); log("memory", { kind });
+    return m;
+  }
+
+  function firstWord() {
+    const top = [...S.parents].sort((a, b) => b.rel - a.rel)[0];
+    if (top && top.rel >= 65 && top.callName) return { word: top.callName, reason: `En çok “${top.callName}” diye seslenildiğini duydu.` };
+    const k = Object.keys(S.counts).sort((a, b) => S.counts[b] - S.counts[a])[0];
+    return { word: WORDS[k][0], reason: FIRST_WORD_REASON[k] };
+  }
+  function nextWord() {
+    const order = Object.keys(S.counts).sort((a, b) => S.counts[b] - S.counts[a]);
+    const pool = [...S.parents.map(p => p.callName).filter(Boolean), ...order.flatMap(k => WORDS[k])];
+    return pool.find(w => !S.vocab.includes(w));
+  }
+
+  // Bildirim filtresi: kullanıcı ayarı, sessiz saat, günlük sınır, minimum aralık.
+  function maybeNotify(kind, text, time, sum) {
+    const st = S.settings, n = S.notif, d = dayIdx(time), h = hourOf(time);
+    if (n.day !== d) { n.day = d; n.sentToday = 0; }
+    let reason = null;
+    if (!st.notif) reason = "bildirimler kapalı";
+    else if (kind === "nightcry" && !st.night) reason = "gece bildirimi kapalı";
+    else if (kind !== "nightcry" && (h >= 22 || h < 8)) reason = "sessiz saat";
+    else if (kind !== "nightcry" && n.sentToday >= st.maxPerDay) reason = "günlük sınır";
+    else if (kind !== "nightcry" && time - n.lastAt < 3 * HOUR) reason = "3 saatten sık";
+    if (reason) { n.suppressed++; sum.suppressed.push({ kind, reason }); log("notif_suppressed", { kind, reason }); return; }
+    if (kind !== "nightcry") { n.sentToday++; n.lastAt = time; }
+    n.delivered++; sum.notifs.push({ t: time, text, kind }); log("notif_sent", { kind });
+  }
+
+  function emit(sum, away, key, text, notifyKind) {
+    log(key);
+    if (!sum) return;
+    sum.events.push({ key, text, t: S.now });
+    if (away && notifyKind) maybeNotify(notifyKind, text, S.now, sum);
+  }
+
+  function step(dtH, away, sum) {
+    const b = S.baby, st = STAGES[b.stageIdx], night = isNight(S.now), n = b.name;
+    if (b.crying) {
+      b.hunger += 3.5 * dtH;
+      if (S.now - b.cryStart >= 45 * MIN) { b.crying = false; b.asleep = true; emit(sum, away, "soothed", "Bir süre sonra kendi kendine sakinleşip uyudu."); }
+    } else if (b.asleep) {
+      b.hunger += 3.5 * dtH; b.energy += 16 * dtH; b.attention -= 1 * dtH;
+      const nightKey = dayIdx(S.now - 12 * HOUR);
+      if (night && b.hunger >= 88 && b.nightCryKey !== nightKey) {
+        b.asleep = false; b.crying = true; b.cryStart = S.now; b.nightCryKey = nightKey;
+        emit(sum, away, "nightcry", `${n} gece uyandı, huzursuz.`, "nightcry");
+      } else if (!night && b.hunger >= 88 && b.energy >= 40) {
+        b.asleep = false; emit(sum, away, "woke_hungry", `${n} uyandı, karnı acıkmış gibi.`, "woke");
+      } else if (!night && b.energy >= 85) {
+        b.asleep = false; emit(sum, away, "woke", `${n} uyandı ve etrafa bakınıyor.`, "woke");
+      }
+    } else {
+      b.hunger += st.hunger * dtH; b.energy -= st.drain * dtH * (night ? 1.6 : 1); b.attention -= st.attn * dtH;
+      if (b.hunger >= 70 && !b.hungryFlag) { b.hungryFlag = true; emit(sum, away, "hungry", `${n} mutfağa doğru bakıyor.`, "hungry"); }
+      if (b.energy <= 12 || (night && b.energy <= 55)) { b.asleep = true; emit(sum, away, "slept", `${n} uyuyakaldı.`); }
+    }
+    b.hunger = clamp(b.hunger); b.energy = clamp(b.energy); b.attention = clamp(b.attention);
+
+    // İhmal: sadece gündüz, uyanıkken. Gece yanıt vermemek asla ceza değildir.
+    if (!night && !b.asleep && !b.crying && (b.hunger > 85 || b.attention < 10)) {
+      S.neglectH += dtH;
+      S.parents.forEach(p => { p.rel = clamp(p.rel - 0.7 * dtH, 5, 100); });  // taban 5: silinmez, ölmez
+    }
+
+    // Büyüme
+    const ad = ageDays(S.now), si = stageFor(ad);
+    if (si > b.stageIdx) {
+      b.stageIdx = si;
+      emit(sum, away, "grew", `${n} büyüdü: artık ${STAGES[si].name} döneminde.`, "grew");
+      if (STAGES[si].key === "crawl" && !hasMem("crawl")) S.pending.push("crawl");
+      if (STAGES[si].key === "words" && !hasMem("firstword")) S.pending.push("firstword");
+      if (STAGES[si].key === "child" && !hasMem("sentence")) S.pending.push("sentence");
+    }
+    const walkIdx = 3;
+    if (b.stageIdx >= walkIdx && !hasMem("step") && !S.pending.includes("step")) {
+      // Adım verisi opsiyonel: yürüyüş hızlandırır ama tek yol değildir.
+      if (S.walk.walkedInWalkStage || ad >= STAGES[walkIdx].from + 1) S.pending.push("step");
+    }
+    // Kelime dağarcığı: ilk kelimeden sonra günde bir yeni kelime
+    if (hasMem("firstword") && dayIdx(S.now) !== S.lastWordDay) {
+      S.lastWordDay = dayIdx(S.now);
+      const w = nextWord();
+      if (w) { S.vocab.push(w); emit(sum, away, "new_word", `Yeni bir kelime deniyor: “${w}”.`); }
+    }
+  }
+
+  function firePending() {
+    const kind = S.pending.shift(), n = S.baby.name;
+    if (kind === "crawl") return addMemory("crawl", "İlk emekleme", "Halının öbür ucundaki oyuncağa emekleyerek kendi başına ulaştı.");
+    if (kind === "step") return addMemory("step", "İlk adım", S.walk.walkedInWalkStage
+      ? "Dışarıdaki yürüyüşten sonra koltuğu bıraktı ve ilk adımını attı."
+      : "Koltuğa tutunmayı bırakıp ilk adımını attı.");
+    if (kind === "firstword") {
+      const f = firstWord(); S.vocab = [f.word]; S.lastWordDay = dayIdx(S.now);
+      return addMemory("firstword", "İlk kelime", `“${f.word}” dedi. ${f.reason}`);
+    }
+    if (kind === "sentence") {
+      const a = S.vocab[0] || "mama", b = S.vocab.find(w => w !== a) || "daha";
+      return addMemory("sentence", "İlk cümle", `“${a} ${b}” dedi. İki kelimeyi ilk kez yan yana getirdi.`);
+    }
+    return null;
+  }
+
+  function simulateTo(target, away) {
+    const sum = { events: [], notifs: [], suppressed: [], from: S.now, to: target };
+    let t = S.lastSim;
+    while (t < target) {
+      const dt = Math.min(10 * MIN, target - t);
+      t += dt; S.now = t;
+      step(dt / HOUR, away, sum);
+    }
+    S.lastSim = target; S.now = target;
+    return sum;
+  }
+
+  const api = {
+    load() {
+      try { const raw = localStorage.getItem(STORE); if (raw) { const s = JSON.parse(raw); if (s && s.v === 1) S = s; } } catch (e) {}
+      return !!S;
+    },
+    create(name, look, callName) { S = fresh(name, look, callName); log("born"); save(); },
+    reset() { S = null; try { localStorage.removeItem(STORE); } catch (e) {} },
+    view() { return structuredClone(S); },
+    advance(ms, away) {
+      const sum = simulateTo(S.now + ms, away);
+      let memory = null;
+      if (!away) {
+        S.presentMin += ms / MIN;
+        // Kilometre taşları kullanıcı yanındayken yaşanır: "kaçırdın" hissi yok, açınca bir sürpriz var.
+        if (S.pending.length && !S.baby.asleep && !S.baby.crying && S.presentMin >= 3) memory = firePending();
+      }
+      save();
+      return { sum, memory };
+    },
+    open() {
+      S.presentMin = 0;
+      S.metrics.opens.push({ t: S.now, day: dayIdx(S.now) }); log("open"); save();
+      return S.metrics.opens.length;
+    },
+    act(action) {
+      const b = S.baby, n = b.name, p = parent(S.active), night = isNight(S.now);
+      let r = { ok: true, msg: "" , memory: null };
+      if (action === "feed") {
+        if (b.asleep) return { ok: false, msg: `${n} uyuyor. Uyanınca besleyebilirsin.` };
+        if (b.hunger < 25) return { ok: false, msg: `${n} başını çeviriyor. Karnı tok.` };
+        b.hunger = clamp(b.hunger - 60); b.hungryFlag = false; S.counts.feed++; gain(p, 3);
+        if (b.crying) { b.crying = false; b.asleep = true; r.msg = `Karnı doydu, yeniden uykuya daldı.`; }
+        else r.msg = pick([`${n} iştahla yedi.`, `${n} yedi, sonra kaşığa uzun uzun baktı.`, `Yarısını yedi, yarısını üstüne döktü.`]);
+      } else if (action === "sleep") {
+        if (b.asleep) return { ok: false, msg: `${n} zaten uyuyor.` };
+        if (b.energy > 75 && !night && !b.crying) return { ok: false, msg: `Uykusu yok, oynamak istiyor gibi.` };
+        b.asleep = true; b.crying = false; S.counts.sleep++; gain(p, 2);
+        r.msg = pick([`Ninni söyledin, ${n} gözlerini kapattı.`, `${n} parmağını tutarak uyudu.`]);
+      } else if (action === "play") {
+        if (b.asleep) { gain(p, 1); return { ok: true, msg: `Uyurken onu izliyorsun. Nefesi düzenli.` }; }
+        if (b.crying) { b.crying = false; b.asleep = true; gain(p, 1); return { ok: true, msg: `Kucağına aldın, sakinleşip uyudu.` }; }
+        if (b.energy < 15) return { ok: false, msg: `Çok yorgun, gözleri kapanıyor.` };
+        b.attention = clamp(b.attention + 40); b.energy = clamp(b.energy - 4); S.counts.play++; gain(p, 3);
+        const shy = p.rel < 25;
+        r.msg = shy ? `${n} önce çekingen baktı, sonra elini tuttu.` :
+          pick([`Ce-e oynadınız, ${n} kıkırdadı.`, `Burnuna dokundun, şaşırıp baktı.`, `Birlikte oyuncak ayıyı sakladınız.`]);
+        if (!hasMem("smile") && ageDays(S.now) >= 0.25)
+          r.memory = addMemory("smile", "İlk gülümseme", `${p.name === "Sen" ? "Seninle" : p.name + " ile"} oynarken ilk kez gerçekten gülümsedi.`);
+      }
+      log("act", { action, by: S.active }); save();
+      return r;
+    },
+    grantHC(v) { S.hc = v ? "granted" : "denied"; log("hc_" + S.hc); save(); },
+    addSteps(nSteps) {
+      if (S.hc !== "granted") return [];
+      const w = S.walk, d = dayIdx(S.now), out = [];
+      if (w.day !== d) { w.day = d; w.steps = 0; w.hit500 = false; w.hit1k = false; }
+      w.steps += nSteps; log("steps", { n: nSteps });
+      const m = w.steps * 0.75;
+      if (m >= 500 && !w.hit500) {
+        w.hit500 = true; S.counts.walk++; S.baby.attention = clamp(S.baby.attention + 15);
+        if (S.baby.stageIdx >= 3) w.walkedInWalkStage = true;
+        out.push({ text: pick(["Dışarıda yeni sesler duydu, kuşlara bakıp el çırptı.", "Bir kediyi uzun uzun izledi.", "Rüzgârı yüzünde hissedince gözlerini kıstı."]) });
+      }
+      if (m >= 1000 && !w.hit1k) {
+        w.hit1k = true;
+        if (!hasMem("park")) out.push({ memory: addMemory("park", "İlk park gezisi", "1 km birlikte yürüdünüz. Salıncakları uzun uzun izledi.") });
+        else out.push({ text: pick(["Parkta bir yaprağı eline alıp bırakmadı.", "Başka bir bebeğe el salladı."]) });
+      }
+      save(); return out;
+    },
+    createInvite() {
+      S.invite.code = Math.random().toString(36).slice(2, 6).toUpperCase() + "-" + Math.random().toString(36).slice(2, 4).toUpperCase();
+      log("invite_sent"); save(); return S.invite.code;
+    },
+    acceptInvite(name, callName) {
+      if (S.parents.length >= 2) return null;
+      S.parents.push({ id: "p2", name, callName, rel: 25, gainDay: -1, gainToday: 0 });
+      S.invite.accepted = true; log("invite_accepted");
+      const m = addMemory("family", `${name} aileye katıldı`, `Artık iki kişi bakıyor. ${S.baby.name} yeni gelen yüze uzun uzun baktı.`);
+      save(); return m;
+    },
+    setActive(id) { if (parent(id)) { S.active = id; log("switch_parent", { to: id }); save(); } },
+    setSettings(patch) { Object.assign(S.settings, patch); log("settings", patch); save(); },
+    setOutfit(id) { S.outfit = id; log("outfit", { id }); save(); },
+    fakeDoor(id) { S.metrics.fakeDoor[id] = (S.metrics.fakeDoor[id] || 0) + 1; log("fake_door", { id }); save(); },
+    reason(r) { S.metrics.reasons[r] = (S.metrics.reasons[r] || 0) + 1; log("open_reason", { r }); save(); },
+    surveyShown() { S.metrics.surveys++; save(); },
+    attachPhoto(id, url) { const m = S.memories.find(x => x.id === id); if (m) { m.photo = url; save(); } },
+    devSkipStage() {
+      const next = STAGES[S.baby.stageIdx + 1]; if (!next) return;
+      const need = next.from * DAY - (S.now - S.baby.bornAt);
+      if (need > 0) S.baby.bornAt -= need + MIN;
+      log("dev_skip_stage"); const r = simulateTo(S.now, false); save(); return r;
+    },
+    speech() {
+      const b = S.baby; if (b.asleep) return null;
+      if (b.crying) return "ıııhh!";
+      const i = b.stageIdx;
+      if (i === 0) return pick(["(minik sesler)", "hıı", "ııh"]);
+      if (i === 1) return pick(["agu", "ağğ", "ba-ba-ba", "ııı!"]);
+      if (i === 2) return pick(["ma", "da", "ba", "ma-ma-ma", "dıdı"]);
+      if (i === 3) return pick(["ma", "da", "bu!", "ah!", "ta-ta", "mam"]);
+      if (i === 4) return Math.random() < 0.6 && S.vocab.length ? pick(S.vocab) + "!" : pick(["ma", "bu?", "da!"]);
+      const v = S.vocab.length ? S.vocab : ["mama"];
+      return Math.random() < 0.5 ? `${pick(v)} ${pick(["daha", "yok", "ver", pick(v)])}` : pick(v) + "!";
+    },
+    exportJSON() { return JSON.stringify({ baby: { name: S.baby.name, stage: STAGES[S.baby.stageIdx].name }, metrics: S.metrics,
+      notif: S.notif, invite: S.invite, memories: S.memories.map(({ photo, ...m }) => m), log: S.log }, null, 2); },
+  };
+  return api;
+})();
+
+/* =====================================================================
+   İSTEMCİ: sadece çizer ve istek gönderir
+   ===================================================================== */
+let V = null;
+let speed = 60, screenOff = false, tab = "home", onboarding = false;
+let awayAcc = null;         // ekran kapalıyken biriken özet
+let lastSummary = null;     // açılışta gösterilen "sen yokken" kartı
+let toast = "", bubble = null, bubbleUntil = 0, survey = false;
+
+const $ = s => document.querySelector(s);
+const main = $("#appmain"), ov = $("#overlay-root");
+const refresh = () => { V = Server.view(); };
+
+const behaviour = v => {
+  const b = v.baby, n = `<b>${esc(b.name)}</b>`, rel = v.parents.find(p => p.id === v.active).rel;
+  if (b.crying) return { mood: "cry", text: `${n} gece uyandı, huzursuzca ağlıyor.` };
+  if (b.asleep) return { mood: "sleep", text: `${n} uyuyor. Arada bir dudaklarını büzüyor.` };
+  if (b.hunger >= 88) return { mood: "hungry", text: `${n} mutfağa bakıp sızlanıyor.` };
+  if (b.hunger >= 70) return { mood: "hungry", text: `${n} sık sık mutfağa doğru bakıyor.` };
+  if (b.energy <= 25) return { mood: "sleepy", text: `${n} gözlerini ovuşturuyor, esniyor.` };
+  if (b.attention <= 25) return { mood: "needy", text: `${n} sana doğru kollarını uzatıyor.` };
+  if (rel < 25) return { mood: "shy", text: `${n} sana temkinli bakıyor. Biraz çekingen.` };
+  const idle = [
+    `${n} tavanı izliyor, ellerini açıp kapatıyor.`, `${n} ayaklarını yakalamaya çalışıyor.`, `${n} halının kenarına kadar emekledi.`,
+    `${n} sehpaya tutunup birkaç adım atıyor.`, `${n} oyuncaklarına isim veriyor gibi.`, `${n} kendi kendine bir oyun kurmuş.`,
+  ];
+  return { mood: "happy", text: idle[b.stageIdx] };
+};
+const relLabel = (r, you) => r >= 70 ? (you ? "Sana çok bağlı" : "Ona çok bağlı") : r >= 45 ? (you ? "Seni tanıyor, yanında rahat" : "Onu tanıyor, yanında rahat") : r >= 25 ? "Isınıyor" : "Biraz çekingen, birkaç gün ilgiyle açılır";
+const ageText = v => { const d = (v.now - v.baby.bornAt) / DAY; return d < 1 ? `${Math.max(1, Math.floor(d * 24))} saatlik` : `${Math.floor(d)} günlük`; };
+
+/* ---------- çizim ---------- */
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function circle(ctx, x, y, r, fill) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); }
+
+function drawRoom(ctx, W, H, now) {
+  const h = hourOf(now) + new Date(now).getUTCMinutes() / 60;
+  const night = h >= 21 || h < 6, dusk = (h >= 18 && h < 21) || (h >= 6 && h < 8);
+  const wall = ctx.createLinearGradient(0, 0, 0, H * 0.72);
+  if (night) { wall.addColorStop(0, "#27304A"); wall.addColorStop(1, "#1D2438"); }
+  else if (dusk) { wall.addColorStop(0, "#EDC39A"); wall.addColorStop(1, "#DDA879"); }
+  else { wall.addColorStop(0, "#F3E8D6"); wall.addColorStop(1, "#E7D5BB"); }
+  ctx.fillStyle = wall; ctx.fillRect(0, 0, W, H * 0.72);
+  const fy = H * 0.72;
+  ctx.fillStyle = night ? "#3A3342" : "#C9A57C"; ctx.fillRect(0, fy, W, H - fy);
+  ctx.strokeStyle = night ? "rgba(0,0,0,.25)" : "rgba(120,80,40,.18)"; ctx.lineWidth = 1;
+  for (let y = fy + 14; y < H; y += 16) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  // mutfak kapısı (sol)
+  const dx = W * 0.04, dy = H * 0.22, dw = W * 0.17;
+  ctx.fillStyle = night ? "#151A28" : "#CDB798"; ctx.fillRect(dx, dy, dw, fy - dy);
+  ctx.fillStyle = night ? "#2A3044" : "#EEF0EC"; rr(ctx, dx + dw * 0.18, dy + (fy - dy) * 0.18, dw * 0.55, (fy - dy) * 0.82, 4); ctx.fill();
+  ctx.fillStyle = night ? "#3B4258" : "#C9CEC8"; ctx.fillRect(dx + dw * 0.22, dy + (fy - dy) * 0.45, dw * 0.47, 2);
+  // pencere (sağ)
+  const wx = W * 0.66, wy = H * 0.1, ww = W * 0.24, wh = H * 0.28;
+  const sky = ctx.createLinearGradient(0, wy, 0, wy + wh);
+  if (night) { sky.addColorStop(0, "#0E1530"); sky.addColorStop(1, "#1E2A55"); }
+  else if (dusk) { sky.addColorStop(0, "#F2A36B"); sky.addColorStop(1, "#F7D49A"); }
+  else { sky.addColorStop(0, "#9CCBE8"); sky.addColorStop(1, "#D6ECF7"); }
+  ctx.fillStyle = "#F7F2EA"; rr(ctx, wx - 5, wy - 5, ww + 10, wh + 10, 6); ctx.fill();
+  ctx.fillStyle = sky; ctx.fillRect(wx, wy, ww, wh);
+  if (night) { circle(ctx, wx + ww * 0.7, wy + wh * 0.3, ww * 0.1, "#F4EFD8"); circle(ctx, wx + ww * 0.75, wy + wh * 0.26, ww * 0.09, "#1A2447");
+    ctx.fillStyle = "#F4EFD8"; [[.2, .2], [.35, .6], [.15, .75], [.5, .4]].forEach(([a, c]) => ctx.fillRect(wx + ww * a, wy + wh * c, 2, 2)); }
+  else circle(ctx, wx + ww * 0.3, wy + wh * (dusk ? 0.75 : 0.35), ww * 0.12, dusk ? "#F07A4A" : "#FFE08A");
+  ctx.fillStyle = "#F7F2EA"; ctx.fillRect(wx + ww / 2 - 2, wy, 4, wh); ctx.fillRect(wx, wy + wh / 2 - 2, ww, 4);
+  // halı
+  ctx.fillStyle = night ? "#4B4260" : "#E7C9A6"; ctx.beginPath(); ctx.ellipse(W * 0.52, fy + (H - fy) * 0.55, W * 0.34, (H - fy) * 0.34, 0, 0, Math.PI * 2); ctx.fill();
+  if (night) { const g = ctx.createRadialGradient(W * 0.9, fy, 2, W * 0.9, fy, W * 0.35); g.addColorStop(0, "rgba(255,200,120,.35)"); g.addColorStop(1, "rgba(255,200,120,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); circle(ctx, W * 0.9, fy - 8, 8, "#FFD28A"); ctx.fillStyle = "#6B5A4A"; ctx.fillRect(W * 0.9 - 2, fy - 2, 4, 10); }
+  return { fy, night };
+}
+
+function drawHair(ctx, x, y, r, look, stage) {
+  ctx.fillStyle = look.hair; ctx.strokeStyle = look.hair;
+  const style = stage < 2 ? 0 : look.style;
+  if (style === 0) {
+    ctx.lineWidth = r * 0.13; ctx.lineCap = "round"; ctx.beginPath();
+    ctx.moveTo(x - r * 0.05, y - r * 0.95); ctx.quadraticCurveTo(x + r * 0.35, y - r * 1.35, x + r * 0.15, y - r * 1.05); ctx.stroke();
+    if (stage >= 2) { ctx.beginPath(); ctx.arc(x, y - r * 0.1, r * 1.02, Math.PI * 1.1, Math.PI * 1.9); ctx.lineWidth = r * 0.25; ctx.stroke(); }
+  } else if (style === 1) {
+    for (let a = 1.05; a <= 1.95; a += 0.13) circle(ctx, x + Math.cos(a * Math.PI) * r * 0.92, y + Math.sin(a * Math.PI) * r * 0.92, r * 0.22, look.hair);
+  } else {
+    ctx.beginPath(); ctx.arc(x, y, r * 1.04, Math.PI * 1.02, Math.PI * 1.98); ctx.quadraticCurveTo(x + r * 0.2, y - r * 0.55, x - r * 1.02, y - r * 0.1); ctx.fill();
+  }
+}
+
+function drawFace(ctx, x, y, r, look, mood, stage, t) {
+  circle(ctx, x - r * 0.95, y + r * 0.05, r * 0.2, look.skin); circle(ctx, x + r * 0.95, y + r * 0.05, r * 0.2, look.skin);
+  circle(ctx, x, y, r, look.skin);
+  drawHair(ctx, x, y, r, look, stage);
+  circle(ctx, x - r * 0.52, y + r * 0.3, r * 0.16, "rgba(230,120,120,.32)"); circle(ctx, x + r * 0.52, y + r * 0.3, r * 0.16, "rgba(230,120,120,.32)");
+  const ex = r * 0.36, ey = y - r * 0.02, er = r * 0.13;
+  ctx.strokeStyle = "#2B1D14"; ctx.lineWidth = Math.max(1.5, r * 0.07); ctx.lineCap = "round";
+  const look_x = mood === "hungry" ? -1 : mood === "shy" ? 0.8 : 0;
+  const look_y = mood === "shy" ? 0.5 : 0;
+  if (mood === "sleep") {
+    [-1, 1].forEach(s => { ctx.beginPath(); ctx.arc(x + s * ex, ey, er, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke(); });
+  } else if (mood === "cry") {
+    [-1, 1].forEach(s => { ctx.beginPath(); ctx.moveTo(x + s * ex - er, ey - er * 0.6); ctx.lineTo(x + s * ex + er * 0.6 * s, ey); ctx.lineTo(x + s * ex - er, ey + er * 0.6); ctx.stroke(); });
+    const drop = (t / 600) % 1;
+    circle(ctx, x - ex - er, ey + r * 0.3 + drop * r * 0.5, r * 0.07, "rgba(90,160,220,.8)"); circle(ctx, x + ex + er, ey + r * 0.3 + ((drop + .5) % 1) * r * 0.5, r * 0.07, "rgba(90,160,220,.8)");
+  } else {
+    const blink = !REDUCED && (t % 4200) < 140;
+    [-1, 1].forEach(s => {
+      if (blink) { ctx.beginPath(); ctx.moveTo(x + s * ex - er, ey); ctx.lineTo(x + s * ex + er, ey); ctx.stroke(); return; }
+      circle(ctx, x + s * ex, ey, er * 1.05, "#FFFFFF");
+      circle(ctx, x + s * ex + look_x * er * 0.45, ey + look_y * er * 0.4, er * 0.8, look.eye);
+      circle(ctx, x + s * ex + look_x * er * 0.45, ey + look_y * er * 0.4, er * 0.42, "#15100C");
+      circle(ctx, x + s * ex + look_x * er * 0.45 + er * 0.25, ey - er * 0.3, er * 0.18, "#FFFFFF");
+      if (mood === "sleepy") { ctx.fillStyle = look.skin; ctx.fillRect(x + s * ex - er * 1.3, ey - er * 1.4, er * 2.6, er * 1.35); ctx.beginPath(); ctx.moveTo(x + s * ex - er * 1.1, ey); ctx.lineTo(x + s * ex + er * 1.1, ey); ctx.stroke(); }
+    });
+  }
+  const my = y + r * 0.45;
+  ctx.beginPath();
+  if (mood === "happy" || mood === "needy") ctx.arc(x, my - r * 0.12, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
+  else if (mood === "cry") { ctx.ellipse(x, my, r * 0.16, r * 0.13, 0, 0, Math.PI * 2); ctx.fillStyle = "#7A2E2E"; ctx.fill(); ctx.beginPath(); }
+  else if (mood === "sleepy") { ctx.ellipse(x, my, r * 0.08, r * 0.11, 0, 0, Math.PI * 2); ctx.fillStyle = "#7A2E2E"; ctx.fill(); ctx.beginPath(); }
+  else if (mood === "hungry") ctx.arc(x, my + r * 0.12, r * 0.16, 1.15 * Math.PI, 1.85 * Math.PI);
+  else if (mood === "sleep") { ctx.moveTo(x - r * 0.08, my); ctx.lineTo(x + r * 0.08, my); }
+  else { ctx.moveTo(x - r * 0.12, my); ctx.lineTo(x + r * 0.12, my); }
+  ctx.stroke();
+}
+
+function drawBaby(ctx, W, H, fy, v, mood, t) {
+  const b = v.baby, st = b.stageIdx, look = b.look;
+  const outfit = (OUTFITS.find(o => o.id === v.outfit) || OUTFITS[0]).color;
+  const a = REDUCED ? 0 : 1;
+  const breathe = 1 + a * 0.02 * Math.sin(t / 700);
+  const S = [0.8, 0.88, 0.95, 1.02, 1.1, 1.22][st] * W / 400;
+  const cx = W * 0.52, base = fy + (H - fy) * 0.55;
+  ctx.lineCap = "round";
+  let head = { x: cx, y: base - 120 * S };
+  if (st === 0) {
+    // beşik
+    const cw = 190 * S, ch = 70 * S, top = base - ch - 30 * S;
+    ctx.fillStyle = "#F5EFE4"; rr(ctx, cx - cw / 2, top + ch * 0.35, cw, ch * 0.65, 10 * S); ctx.fill();
+    ctx.strokeStyle = "#B8906A"; ctx.lineWidth = 5 * S;
+    ctx.beginPath(); ctx.moveTo(cx - cw / 2, top - 10 * S); ctx.lineTo(cx - cw / 2, base); ctx.moveTo(cx + cw / 2, top - 10 * S); ctx.lineTo(cx + cw / 2, base); ctx.stroke();
+    ctx.fillStyle = outfit; ctx.beginPath(); ctx.ellipse(cx + 22 * S, top + ch * 0.32, 58 * S, 24 * S * breathe, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.4)"; ctx.lineWidth = 2 * S; ctx.beginPath(); ctx.moveTo(cx - 10 * S, top + ch * 0.2); ctx.lineTo(cx + 60 * S, top + ch * 0.45); ctx.stroke();
+    head = { x: cx - 45 * S, y: top + ch * 0.2 };
+    drawFace(ctx, head.x, head.y, 30 * S, look, mood, st, t);
+    ctx.strokeStyle = "#B8906A"; ctx.lineWidth = 3 * S;
+    for (let i = 1; i < 8; i++) { const x = cx - cw / 2 + (cw / 8) * i; ctx.beginPath(); ctx.moveTo(x, top + ch * 0.55); ctx.lineTo(x, base - 6 * S); ctx.stroke(); }
+    ctx.lineWidth = 5 * S; ctx.beginPath(); ctx.moveTo(cx - cw / 2, top + ch * 0.55); ctx.lineTo(cx + cw / 2, top + ch * 0.55); ctx.stroke();
+  } else if (st === 1) {
+    const k = a * Math.sin(t / 260) * 8 * S;
+    ctx.strokeStyle = look.skin; ctx.lineWidth = 12 * S;
+    ctx.beginPath(); ctx.moveTo(cx + 50 * S, base - 22 * S); ctx.lineTo(cx + 88 * S, base - 38 * S - k); ctx.moveTo(cx + 50 * S, base - 14 * S); ctx.lineTo(cx + 92 * S, base - 8 * S + k); ctx.stroke();
+    ctx.fillStyle = outfit; ctx.beginPath(); ctx.ellipse(cx + 18 * S, base - 22 * S, 48 * S, 26 * S * breathe, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = look.skin; ctx.lineWidth = 10 * S;
+    ctx.beginPath(); ctx.moveTo(cx - 4 * S, base - 38 * S); ctx.lineTo(cx + 14 * S, base - 62 * S + (mood === "needy" ? -14 * S : k * 0.5)); ctx.stroke();
+    head = { x: cx - 50 * S, y: base - 32 * S };
+    drawFace(ctx, head.x, head.y, 34 * S, look, mood, st, t);
+  } else if (st === 2) {
+    const sh = a * Math.sin(t / 380) * 4 * S;
+    ctx.strokeStyle = look.skin; ctx.lineWidth = 12 * S;
+    ctx.beginPath();
+    ctx.moveTo(cx + 26 * S, base - 44 * S); ctx.lineTo(cx + 28 * S + sh, base - 4 * S);
+    ctx.moveTo(cx - 34 * S, base - 44 * S); ctx.lineTo(cx - 36 * S - sh, base - 4 * S);
+    ctx.stroke();
+    ctx.fillStyle = outfit; ctx.beginPath(); ctx.ellipse(cx, base - 52 * S, 55 * S, 26 * S * breathe, -0.06, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = outfit; ctx.lineWidth = 14 * S;
+    ctx.beginPath(); ctx.moveTo(cx + 40 * S, base - 44 * S); ctx.lineTo(cx + 44 * S - sh, base - 6 * S); ctx.moveTo(cx - 46 * S, base - 46 * S); ctx.lineTo(cx - 52 * S + sh, base - 6 * S); ctx.stroke();
+    head = { x: cx - 70 * S, y: base - 84 * S };
+    drawFace(ctx, head.x, head.y, 36 * S, look, mood, st, t);
+  } else {
+    const wob = st === 3 && !REDUCED ? Math.sin(t / 500) * 0.04 : 0;
+    ctx.save(); ctx.translate(cx, base); ctx.rotate(wob); ctx.translate(-cx, -base);
+    const legH = (st === 5 ? 50 : 38) * S, bodyH = (st === 5 ? 72 : 60) * S, bodyW = 62 * S;
+    ctx.strokeStyle = look.skin; ctx.lineWidth = 13 * S;
+    ctx.beginPath(); ctx.moveTo(cx - 13 * S, base - legH); ctx.lineTo(cx - 15 * S, base - 5 * S); ctx.moveTo(cx + 13 * S, base - legH); ctx.lineTo(cx + 15 * S, base - 5 * S); ctx.stroke();
+    ctx.fillStyle = "#EDEDED"; [-1, 1].forEach(s => { ctx.beginPath(); ctx.ellipse(cx + s * 17 * S, base - 3 * S, 11 * S, 6 * S, 0, 0, Math.PI * 2); ctx.fill(); });
+    const bt = base - legH - bodyH;
+    ctx.fillStyle = outfit; rr(ctx, cx - bodyW / 2, bt, bodyW, bodyH * breathe + 6 * S, 22 * S); ctx.fill();
+    ctx.strokeStyle = look.skin; ctx.lineWidth = 11 * S;
+    const up = mood === "needy";
+    const sway = a * Math.sin(t / 450) * 5 * S;
+    ctx.beginPath();
+    ctx.moveTo(cx - bodyW / 2 + 4 * S, bt + 14 * S); ctx.lineTo(cx - bodyW / 2 - 16 * S, up ? bt - 26 * S : bt + 44 * S + sway);
+    if (mood === "sleepy") { ctx.moveTo(cx + bodyW / 2 - 4 * S, bt + 14 * S); ctx.lineTo(cx + 22 * S, bt - 28 * S); }
+    else { ctx.moveTo(cx + bodyW / 2 - 4 * S, bt + 14 * S); ctx.lineTo(cx + bodyW / 2 + 16 * S, up ? bt - 26 * S : bt + 44 * S - sway); }
+    ctx.stroke();
+    head = { x: cx, y: bt - 30 * S };
+    drawFace(ctx, head.x, head.y, 38 * S, look, mood, st, t);
+    if (mood === "sleepy") circle(ctx, cx + 20 * S, bt - 30 * S, 8 * S, look.skin);
+    ctx.restore();
+  }
+  // durum işaretleri
+  if (mood === "sleep") {
+    ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.font = `700 ${18 * S}px "Bricolage Grotesque", sans-serif`;
+    for (let i = 0; i < 3; i++) { const p = REDUCED ? i / 3 : ((t / 2400) + i / 3) % 1; ctx.globalAlpha = 1 - p; ctx.fillText("z", head.x + 30 * S + p * 30 * S, head.y - 20 * S - p * 50 * S); }
+    ctx.globalAlpha = 1;
+  }
+  if (mood === "hungry") {
+    const bx = head.x - 70 * S, by = head.y - 60 * S;
+    circle(ctx, head.x - 36 * S, head.y - 32 * S, 4 * S, "#FFFFFF"); circle(ctx, head.x - 50 * S, head.y - 44 * S, 6 * S, "#FFFFFF");
+    circle(ctx, bx, by, 22 * S, "#FFFFFF");
+    ctx.fillStyle = "#CFE3EF"; rr(ctx, bx - 6 * S, by - 8 * S, 12 * S, 20 * S, 3 * S); ctx.fill();
+    ctx.fillStyle = "#E7B35A"; rr(ctx, bx - 4 * S, by - 15 * S, 8 * S, 8 * S, 3 * S); ctx.fill();
+  }
+}
+
+const cv = document.createElement("canvas");
+let ctx = null, CW = 0, CH = 0;
+function sizeCanvas() {
+  const r = cv.getBoundingClientRect(); if (!r.width) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+  CW = r.width; CH = r.height;
+  if (!ctx || cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawNow(); }
+}
+function drawNow(t = performance.now()) {
+  if (!V || !ctx) return;
+  ctx.clearRect(0, 0, CW, CH);
+  const { fy } = drawRoom(ctx, CW, CH, V.now);
+  drawBaby(ctx, CW, CH, fy, V, behaviour(V).mood, t);
+}
+function frame(t) {
+  if (tab === "home" && cv.isConnected) drawNow(t);
+  const bEl = document.getElementById("bubble");
+  if (bEl) { const on = bubble && performance.now() < bubbleUntil; bEl.style.opacity = on ? 1 : 0; if (on) bEl.textContent = bubble; }
+  requestAnimationFrame(frame);
+}
+function snapshot() {
+  if (!ctx) return null;
+  const s = document.createElement("canvas"); s.width = 240; s.height = 198;
+  s.getContext("2d").drawImage(cv, 0, 0, s.width, s.height);
+  try { return s.toDataURL("image/jpeg", 0.72); } catch (e) { return null; }
+}
+function say(text, ms = 2600) { if (!text) return; bubble = text; bubbleUntil = performance.now() + ms; }
+
+/* ---------- ikonlar ---------- */
+const I = {
+  home: '<svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z"/></svg>',
+  album: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M5 18l5-5 3 3 2-2 4 4"/></svg>',
+  walk: '<svg viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="1.8"/><path d="M10 21l2-6-2-3 1-4 3 3 3 1M12 15l3 6M9 11l-2 3"/></svg>',
+  family: '<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="2.6"/><circle cx="16.5" cy="9" r="2.2"/><path d="M3.5 19c.5-3.5 2.4-5 4.5-5s4 1.5 4.5 5M13 19c.3-2.8 1.8-4 3.5-4s3.2 1.2 3.5 4"/></svg>',
+  settings: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>',
+  feed: '<svg viewBox="0 0 24 24"><path d="M10 3h4M9.5 6h5l.5 2v11a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V8z"/><path d="M9 12h6"/></svg>',
+  sleep: '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>',
+};
+const TABS = [["home", "Ev"], ["album", "Anılar"], ["walk", "Yürüyüş"], ["family", "Aile"], ["settings", "Ayarlar"]];
+
+/* ---------- ekranlar ---------- */
+function renderTabs() {
+  $("#tabbar").innerHTML = TABS.map(([k, l]) => `<button role="tab" aria-selected="${tab === k}" data-tab="${k}">${I[k]}<span>${l}</span></button>`).join("");
+}
+function renderHeader() {
+  $("#baby-name").textContent = V.baby.name;
+  $("#baby-age").textContent = `${ageText(V)} · ${STAGES[V.baby.stageIdx].name}`;
+  $("#sb-time").textContent = hhmm(V.now);
+  $("#sb-day").textContent = `Gün ${dayIdx(V.now) + 1}`;
+}
+
+function awayCard() {
+  if (!lastSummary) return "";
+  const s = lastSummary, n = V.baby.name, dur = s.to - s.from;
+  const cnt = k => s.events.filter(e => e.key === k).length;
+  const lines = [];
+  if (cnt("slept")) lines.push(`${cnt("slept")} kez uyudu`);
+  if (cnt("woke") + cnt("woke_hungry")) lines.push(`${cnt("woke") + cnt("woke_hungry")} kez uyandı`);
+  if (cnt("hungry")) lines.push("bir ara acıktı");
+  if (cnt("nightcry")) lines.push(cnt("soothed") ? "gece bir kez uyandı, kendi kendine sakinleşti" : "gece bir kez uyandı");
+  s.events.filter(e => e.key === "grew" || e.key === "new_word").forEach(e => lines.push(e.text));
+  if (!lines.length) lines.push("sakin geçti, pek bir şey olmadı");
+  const long = dur >= 36 * HOUR && V.parents.find(p => p.id === V.active).rel < 35;
+  return `<section class="card away" aria-label="Sen yokken">
+    <div class="eyebrow">Sen yokken · ${esc(durText(dur))}</div>
+    <ul>${lines.map(l => `<li>${esc(l.replace(/<[^>]+>/g, ""))}</li>`).join("")}</ul>
+    ${long ? `<p class="small" style="margin:0">${esc(n)} bir süredir seni görmedi, biraz çekingen olabilir. Birkaç gün ilgiyle yeniden açılır.</p>` : ""}
+    ${V.pending.length ? `<p class="small" style="margin:0"><b>${esc(n)} bugün sana bir şey göstermek istiyor gibi.</b></p>` : ""}
+    <div class="row"><button class="btn ghost small" data-dismiss-away>Tamam</button></div>
+  </section>`;
+}
+function surveyCard() {
+  if (!survey) return "";
+  const opts = ["Bildirim geldi", "Merak ettim", "Bakım yapmam lazımdı", "Canım sıkıldı"];
+  return `<section class="card" aria-label="Kısa soru">
+    <div class="eyebrow">Tek dokunuşluk test sorusu</div>
+    <h3>Uygulamayı neden açtın?</h3>
+    <div class="row">${opts.map(o => `<button class="chip" data-reason="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+    <button class="btn ghost small" data-reason="" style="align-self:flex-start">Geç</button>
+  </section>`;
+}
+
+function renderHome() {
+  const bh = behaviour(V);
+  main.innerHTML = `
+    ${awayCard()}
+    <div class="stage" id="stagebox"><div class="bubble" id="bubble" style="opacity:0" aria-hidden="true"></div></div>
+    <p class="caption" id="caption" aria-live="polite">${bh.text}</p>
+    <div class="actions">
+      <button class="act" data-act="feed">${I.feed}Besle</button>
+      <button class="act" data-act="sleep">${I.sleep}Uyut</button>
+      <button class="act" data-act="play">${I.play}İlgilen</button>
+    </div>
+    <p class="toast" id="toast">${esc(toast)}</p>
+    ${surveyCard()}
+    ${V.parents.length > 1 ? `<p class="small muted" style="margin:0">Şu an bakan: <b>${esc(V.parents.find(p => p.id === V.active).name)}</b> · Aile sekmesinden değiştir</p>` : ""}`;
+  $("#stagebox").prepend(cv);
+  cv.setAttribute("aria-label", "Bebeğin odası. Dokununca ses çıkarır.");
+  sizeCanvas();
+}
+
+function renderAlbum() {
+  const m = [...V.memories].reverse();
+  const upcoming = ["İlk gülümseme", "İlk emekleme", "İlk adım", "İlk kelime", "İlk park gezisi", "İlk cümle"]
+    .filter(t => !V.memories.some(x => x.title === t)).length;
+  main.innerHTML = `
+    <div><div class="eyebrow">Anı albümü</div><h2 style="font-size:22px;margin-top:4px">${m.length ? `${m.length} anı` : "Henüz anı yok"}</h2>
+    <p class="small muted" style="margin:4px 0 0">Sadece önemli anlar kaydedilir. ${upcoming ? `Önünüzde ${upcoming} “ilk” daha var.` : ""}</p></div>
+    ${m.length ? `<div class="album">${m.map(x => `
+      <article class="mem">
+        ${x.photo ? `<img src="${x.photo}" alt="${esc(x.title)} anı fotoğrafı">` : `<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">`}
+        <div><span class="when">${esc(stamp(x.t))}</span><strong>${esc(x.title)}</strong><span>${esc(x.text)}</span>
+        <span>${esc(x.stage)} · ${x.age < 1 ? Math.max(1, Math.floor(x.age * 24)) + " saatlik" : Math.floor(x.age) + " günlük"}${x.with ? " · " + esc(x.with) + " oradaydı" : ""}</span></div>
+      </article>`).join("")}</div>` :
+      `<section class="card"><p style="margin:0">İlk anı muhtemelen ilk gülümsemesi olacak. Onunla biraz oyna.</p></section>`}`;
+}
+
+function renderWalk() {
+  if (V.hc === "unasked" || V.hc === "denied") {
+    main.innerHTML = `
+      <div><div class="eyebrow">Yürüyüş</div><h2 style="font-size:22px;margin-top:4px">Birlikte dışarı çıkın</h2></div>
+      <section class="card">
+        <h3>Adım verisi (Health Connect)</h3>
+        <p style="margin:0">Günlük adım sayını okursak 500 m ve 1 km’de ${esc(V.baby.name)} dışarıda yeni şeyler keşfeder. Sadece adım sayısı okunur. Konum ve GPS kullanılmaz.</p>
+        <p class="small muted" style="margin:0">İsteğe bağlı. Açmazsan hiçbir gelişim kilitlenmez, sadece yürüyüş anıları olmaz.</p>
+        <div class="row"><button class="btn" data-hc="1">İzin ver</button>${V.hc === "unasked" ? `<button class="btn ghost" data-hc="0">Şimdi değil</button>` : ""}</div>
+      </section>`;
+    return;
+  }
+  const w = V.walk, today = w.day === dayIdx(V.now), steps = today ? w.steps : 0, m = Math.round(steps * 0.75);
+  const pct = Math.min(100, m / 12);
+  main.innerHTML = `
+    <div><div class="eyebrow">Yürüyüş · bugün</div><div class="big">${m.toLocaleString("tr-TR")} m</div>
+    <p class="small muted" style="margin:0">${steps.toLocaleString("tr-TR")} adım · uygulama açılınca Health Connect’ten okunur</p></div>
+    <div><div class="track"><i style="width:${pct}%"></i><b style="left:41.6%"></b><b style="left:83.3%"></b></div>
+    <div class="ticks"><span>0</span><span>500 m ${today && w.hit500 ? "✓" : ""}</span><span>1 km ${today && w.hit1k ? "✓" : ""}</span><span>1,2 km</span></div></div>
+    <section class="card">
+      <div class="eyebrow">Prototip · Health Connect okuması yerine</div>
+      <div class="row"><button class="btn" data-steps="700">+700 adım (~500 m)</button><button class="btn ghost" data-steps="1400">+1.400 adım</button></div>
+      <p class="small muted" style="margin:0">Gerçek üründe arka planda sürekli okuma yok. Açılışta günlük toplam tek sorguyla alınır.</p>
+    </section>
+    ${V.baby.stageIdx === 3 && !V.memories.some(x => x.kind === "step") ? `<p class="small" style="margin:0">Yürüme dönemindesiniz. Birlikte 500 m yürümek ilk adımı hızlandırabilir.</p>` : ""}
+    <p class="toast" id="toast">${esc(toast)}</p>`;
+}
+
+function renderFamily() {
+  const two = V.parents.length > 1;
+  main.innerHTML = `
+    <div><div class="eyebrow">Aile</div><h2 style="font-size:22px;margin-top:4px">${two ? "İki kişi bakıyor" : "Şimdilik sadece sen"}</h2></div>
+    ${V.parents.map(p => `<section class="card">
+      <div class="row" style="justify-content:space-between"><h3>${esc(p.name)}</h3>${p.id === V.active ? `<span class="pill good">şu an bakıyor</span>` : ""}</div>
+      <p style="margin:0">${esc(relLabel(p.rel, p.id === "p1"))}</p>
+      <p class="small muted" style="margin:0">${esc(V.baby.name)} ona “${esc(p.callName || "…")}” demeyi öğrenebilir.</p>
+    </section>`).join("")}
+    ${two ? `<div><div class="eyebrow">Şu an kim bakıyor?</div><div class="row" style="margin-top:6px">${V.parents.map(p => `<button class="chip" aria-pressed="${p.id === V.active}" data-parent="${p.id}">${esc(p.name)}</button>`).join("")}</div>
+      <p class="small muted" style="margin:6px 0 0">Prototipte iki telefonu taklit eder. Her ebeveynin ilişkisi ayrı tutulur.</p></div>` :
+      V.invite.code ? `<section class="card">
+        <h3>Davet linki hazır</h3>
+        <div class="row"><code id="invite-link" style="font:600 13px var(--f-mono);user-select:all">ortak.app/davet/${esc(V.invite.code)}</code><button class="btn ghost small" id="copy-invite">Kopyala</button></div>
+        <p class="small muted" style="margin:0">Linki açan kişi uygulamayı kurar ve ikinci ebeveyn olarak katılır.</p>
+        <hr style="border:0;border-top:1px solid var(--line);width:100%">
+        <div class="eyebrow">Prototip · daveti kabul edilmiş say</div>
+        <form id="accept-form" class="row" style="flex-direction:column;align-items:stretch">
+          <label class="small" for="acc-name">Adı</label><input type="text" id="acc-name" value="Ece" maxlength="20" required>
+          <label class="small" for="acc-call">Bebek onu nasıl çağırsın?</label><input type="text" id="acc-call" value="anne" maxlength="12">
+          <button class="btn" type="submit">Kabul edildi</button>
+        </form>
+      </section>` : `<section class="card">
+        <h3>Ortak ebeveyn davet et</h3>
+        <p style="margin:0">Partnerin ya da bir arkadaşın ${esc(V.baby.name)} ile birlikte ilgilenebilir. Anı albümünü paylaşırsınız, ilişkiniz ayrı ayrı gelişir.</p>
+        <button class="btn" id="make-invite" style="align-self:flex-start">Davet linki oluştur</button>
+      </section>`}
+    <p class="small muted" style="margin:0">Birden fazla ortak ebeveyn ve bebek transferi sonraki sürümde.</p>`;
+}
+
+function renderSettings() {
+  const s = V.settings;
+  const sw = (id, on, label) => `<button class="switch" role="switch" id="${id}" aria-checked="${on}" aria-label="${esc(label)}"></button>`;
+  main.innerHTML = `
+    <div><div class="eyebrow">Ayarlar</div><h2 style="font-size:22px;margin-top:4px">Bildirimler</h2></div>
+    <section class="card" style="gap:0">
+      <div class="set"><div><b>Bildirimler</b><p>${esc(V.baby.name)} uyandığında, acıktığında ya da büyüdüğünde haber verir.</p></div>${sw("s-notif", s.notif, "Bildirimler")}</div>
+      <div class="set"><div><b>Günde en fazla</b><p>Aralarında en az 3 saat olur.</p></div>
+        <div class="row" role="group" aria-label="Günlük bildirim sınırı">${[1, 2, 3].map(n => `<button class="chip" aria-pressed="${s.maxPerDay === n}" data-max="${n}">${n}</button>`).join("")}</div></div>
+      <div class="set"><div><b>Sessiz saatler</b><p>22:00–08:00 arası bildirim yok.</p></div><span class="pill">sabit</span></div>
+      <div class="set"><div><b>Gece uyanma bildirimi</b><p>Varsayılan kapalı. Açarsan gece acıkınca sesli ve titreşimli yüksek öncelikli bildirim gelir, ekranı zorla açmaz. Kapalıyken kendi kendine sakinleşir. Gece yanıt vermemek ilişkinizi etkilemez.</p></div>${sw("s-night", s.night, "Gece uyanma bildirimi")}</div>
+      <div class="set"><div><b>Adım verisi</b><p>Health Connect’ten sadece günlük adım sayısı.</p></div>${sw("s-hc", V.hc === "granted", "Adım verisi")}</div>
+    </section>
+    <div><div class="eyebrow">Bildirimler böyle görünür</div></div>
+    ${[`${V.baby.name} uyandı ve etrafa bakınıyor.`, `${V.baby.name} mutfağa doğru bakıyor.`, `${V.baby.name} büyüdü: artık yeni bir dönemde.`].map(t => `<div class="notif-preview">${esc(t)}</div>`).join("")}
+    <p class="small muted" style="margin:0">Suçluluk yaratan metin yok. “Beni neden bıraktın” gibi cümleler kullanılmaz.</p>`;
+}
+
+function render() {
+  refresh(); renderHeader(); renderTabs();
+  ({ home: renderHome, album: renderAlbum, walk: renderWalk, family: renderFamily, settings: renderSettings })[tab]();
+  renderPanel();
+}
+function tickUI() {
+  refresh(); renderHeader();
+  if (tab === "home") { const c = $("#caption"); if (c) c.innerHTML = behaviour(V).text; }
+  renderPanel();
+}
+
+/* ---------- overlay'ler ---------- */
+function showWardrobe() {
+  ov.innerHTML = `<div class="overlay sheet-bg" data-close-bg><div class="sheet" role="dialog" aria-label="Dolap">
+    <h2>Dolap</h2>
+    <p class="small muted" style="margin:0">Mama, uyku ve bakım asla parayla açılmaz. Burada sadece görünüm var.</p>
+    <div class="eyebrow">Ücretsiz</div>
+    <div class="row">${OUTFITS.map(o => `<button class="chip" aria-pressed="${V.outfit === o.id}" data-outfit="${o.id}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${o.color};margin-right:6px"></span>${esc(o.name)}</button>`).join("")}</div>
+    <div class="eyebrow">Premium kozmetik</div>
+    ${PREMIUM.map(p => `<div class="row" style="justify-content:space-between"><span>${esc(p.name)}</span><button class="btn ghost small" data-premium="${p.id}">${p.price}</button></div>`).join("")}
+    <div class="row" style="justify-content:space-between"><span>Balon (bonus)</span><button class="btn ghost small" data-premium="ad_balloon">Reklam izle</button></div>
+    <p class="toast" id="shop-toast"></p>
+    <button class="btn" data-close>Kapat</button>
+  </div></div>`;
+}
+const celebQueue = [];
+function showCelebrate(mem) {
+  if (ov.innerHTML) { celebQueue.push(mem); return; }
+  refresh(); drawNow();
+  const photo = snapshot(); if (photo) Server.attachPhoto(mem.id, photo);
+  ov.innerHTML = `<div class="overlay celebrate"><div class="card" role="dialog" aria-label="Yeni anı">
+    <div class="eyebrow">Yeni anı · albüme eklendi</div>
+    ${photo ? `<img src="${photo}" alt="">` : ""}
+    <h2 style="font-size:24px">${esc(mem.title)}</h2>
+    <p style="margin:0">${esc(mem.text)}</p>
+    <button class="btn" data-close>Güzel</button>
+  </div></div>`;
+  refresh();
+}
+function showLock(stage) {
+  // stage: "choose" (ekran kapandı, süre seç) | "locked" (bildirimlerle kilit ekranı)
+  screenOff = true;
+  const notifs = awayAcc ? awayAcc.notifs : [];
+  const sup = awayAcc ? awayAcc.suppressed.length : 0;
+  ov.innerHTML = `<div class="overlay lock" role="dialog" aria-label="Kilit ekranı">
+    <div class="clock">${hhmm(V.now)}</div><div class="date">Gün ${dayIdx(V.now) + 1}</div>
+    ${stage === "choose" ? `<p class="note">Ekran kapalı. ${esc(V.baby.name)} donuk bekliyor, hiçbir şey hesaplanmıyor.</p>` :
+      `<p class="note">${awayAcc ? `${esc(durText(awayAcc.to - awayAcc.from))} geçti · ${notifs.length} bildirim${sup ? ` · ${sup} bastırıldı` : ""}` : ""}</p>`}
+    <div class="list">${notifs.map(n => `<div class="n"><small>ORTAK DİJİTAL YAŞAM · ${hhmm(n.t)}${n.kind === "nightcry" ? " · yüksek öncelik" : ""}</small>${esc(n.text)}</div>`).join("")}</div>
+    <div class="note">Zamanı ileri sar</div>
+    <div class="chips">
+      <button data-jump="${10 * MIN}">10 dakika</button><button data-jump="${3 * HOUR}">3 saat</button>
+      <button data-jump="night">Sabaha kadar</button><button data-jump="${DAY}">1 gün</button>
+      <button data-jump="${3 * DAY}">3 gün</button><button data-jump="${7 * DAY}">1 hafta</button>
+    </div>
+    <button class="unlock" id="unlock">Kilidi aç</button>
+  </div>`;
+}
+function jump(val) {
+  let ms = +val;
+  if (val === "night") { const d = new Date(V.now); let target = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 8, 0); if (target <= V.now) target += DAY; ms = target - V.now; }
+  const { sum } = Server.advance(ms, true);
+  if (!awayAcc) awayAcc = sum; else { awayAcc.events.push(...sum.events); awayAcc.notifs.push(...sum.notifs); awayAcc.suppressed.push(...sum.suppressed); awayAcc.to = sum.to; }
+  refresh(); showLock("locked"); renderPanel();
+}
+function unlock() {
+  screenOff = false; ov.innerHTML = "";
+  lastSummary = awayAcc && awayAcc.to > awayAcc.from ? awayAcc : null; awayAcc = null;
+  const nOpens = Server.open();
+  survey = nOpens >= 2 && nOpens % 2 === 0;           // her açılışta sorma: 2 açılışta bir
+  if (survey) Server.surveyShown();
+  tab = "home"; toast = ""; render();
+}
+
+function showOnboarding() {
+  onboarding = true;
+  let look = randomLook(), name = pick(NAMES), call = "anne";
+  const draw = () => {
+    const c = $("#ob-canvas"); if (!c) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1); c.width = 180 * dpr; c.height = 150 * dpr;
+    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.fillStyle = "#EFE1CC"; x.fillRect(0, 0, 180, 150);
+    drawFace(x, 90, 78, 44, look, "happy", 0, 1000);
+  };
+  ov.innerHTML = `<div class="overlay sheet-bg"><form class="sheet" id="ob-form" role="dialog" aria-label="Başlangıç">
+    <div class="eyebrow">Hoş geldin</div>
+    <h2>Bir bebek sana emanet</h2>
+    <canvas id="ob-canvas" class="look-preview" aria-label="Bebeğin görünümü"></canvas>
+    <button type="button" class="btn ghost small" id="ob-reroll" style="align-self:center">Başka bir bebek</button>
+    <label class="small" for="ob-name">Adı</label><input type="text" id="ob-name" value="${esc(name)}" maxlength="16" required>
+    <label class="small">Seni nasıl çağırsın?</label>
+    <div class="row" role="group">${["anne", "baba", "abla", "abi"].map(c => `<button type="button" class="chip" data-call="${c}" aria-pressed="${c === call}">${c}</button>`).join("")}</div>
+    <input type="text" id="ob-call" value="${esc(call)}" maxlength="12" aria-label="Çağırma adı">
+    <p class="small muted" style="margin:0">Görünüm rastgele. Zamanla büyür, ölmez, silinmez.</p>
+    <button class="btn" type="submit">Başla</button>
+  </form></div>`;
+  draw();
+  $("#ob-reroll").onclick = () => { look = randomLook(); draw(); };
+  ov.querySelectorAll("[data-call]").forEach(b => b.onclick = () => {
+    $("#ob-call").value = b.dataset.call; ov.querySelectorAll("[data-call]").forEach(x => x.setAttribute("aria-pressed", x === b));
+  });
+  $("#ob-form").onsubmit = e => {
+    e.preventDefault();
+    Server.create($("#ob-name").value.trim() || "Milo", look, $("#ob-call").value.trim());
+    onboarding = false; ov.innerHTML = ""; Server.open(); render();
+    say("(minik sesler)");
+  };
+}
+
+/* ---------- moderatör paneli ---------- */
+function renderPanel() {
+  if (!V) { $("#p-internals").innerHTML = `<p class="muted small" style="margin:0">Telefonda bebeği başlat.</p>`; $("#p-metrics").innerHTML = ""; $("#p-log").innerHTML = ""; return; }
+  const b = V.baby;
+  const meter = (l, v) => `<div class="meter"><span>${l}</span><span class="bar"><i style="width:${v}%"></i></span><span class="v">${Math.round(v)}</span></div>`;
+  $("#p-internals").innerHTML = `
+    ${meter("Açlık", b.hunger)}${meter("Enerji", b.energy)}${meter("İlgi", b.attention)}
+    ${V.parents.map(p => meter("İlişki: " + esc(p.name), p.rel)).join("")}
+    <dl class="kv" style="margin:10px 0 0">
+      <dt>Durum</dt><dd>${b.crying ? "gece ağlıyor" : b.asleep ? "uyuyor" : "uyanık"}${isNight(V.now) ? " · gece" : ""}</dd>
+      <dt>Aşama</dt><dd>${STAGES[b.stageIdx].name} (${((V.now - b.bornAt) / DAY).toFixed(1)} gün)</dd>
+      <dt>Bekleyen kilometre taşı</dt><dd>${V.pending.length ? V.pending.join(", ") : "–"}</dd>
+      <dt>Kelimeler</dt><dd>${V.vocab.length ? esc(V.vocab.join(", ")) : "–"}</dd>
+      <dt>İhmal süresi (gündüz)</dt><dd>${V.neglectH.toFixed(1)} sa</dd>
+      <dt>Etkileşimler</dt><dd>mama ${V.counts.feed} · uyku ${V.counts.sleep} · oyun ${V.counts.play} · yürüyüş ${V.counts.walk}</dd>
+    </dl>`;
+  const days = [...new Set(V.metrics.opens.map(o => o.day))].sort((a, c) => a - c);
+  const d7 = days.some(d => d >= 6);
+  const reasons = Object.entries(V.metrics.reasons);
+  const fd = Object.entries(V.metrics.fakeDoor);
+  $("#p-metrics").innerHTML = `<dl class="kv" style="margin:0">
+      <dt>Toplam açılış</dt><dd>${V.metrics.opens.length}</dd>
+      <dt>Açılan günler</dt><dd>${days.map(d => "G" + (d + 1)).join(" ") || "–"}</dd>
+      <dt>7. gün ve sonrası açıldı mı</dt><dd>${d7 ? `<span class="pill good">evet</span>` : `<span class="pill warn">henüz değil</span>`}</dd>
+      <dt>Açılış nedeni (${V.metrics.surveys} soru)</dt><dd>${reasons.length ? reasons.map(([k, v]) => `${esc(k)}: ${v}`).join("<br>") : "–"}</dd>
+      <dt>Davet</dt><dd>${V.invite.accepted ? "kabul edildi" : V.invite.code ? "gönderildi" : "yok"}</dd>
+      <dt>Bildirim iletilen / bastırılan</dt><dd>${V.notif.delivered} / ${V.notif.suppressed}</dd>
+      <dt>Premium ilgi (sahte kapı)</dt><dd>${fd.length ? fd.map(([k, v]) => `${esc(k)}: ${v}`).join("<br>") : "–"}</dd>
+      <dt>Anılar</dt><dd>${V.memories.length}</dd>
+    </dl>`;
+  $("#p-log").innerHTML = [...V.log].reverse().slice(0, 60).map(e => {
+    const { t, type, ...rest } = e; const extra = Object.keys(rest).length ? " " + JSON.stringify(rest) : "";
+    return `<li>${esc(stamp(t))}  ${esc(type)}${esc(extra)}</li>`;
+  }).join("");
+  document.querySelectorAll("[data-speed]").forEach(bt => bt.setAttribute("aria-pressed", +bt.dataset.speed === speed));
+}
+
+/* ---------- olaylar ---------- */
+function handleResult(r) {
+  if (r.memory) { refresh(); showCelebrate(r.memory); }
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("button, [data-close-bg], canvas");
+  if (!t) return;
+  if (t === cv) { if (V && !screenOff) { const s = Server.speech(); say(s || "(uyuyor)"); } return; }
+  const d = t.dataset;
+  if (d.tab) { tab = d.tab; toast = ""; render(); if (tab === "home") requestAnimationFrame(sizeCanvas); return; }
+  if (d.act) { const r = Server.act(d.act); toast = r.msg; refresh(); render(); if (r.ok) say(Server.speech()); handleResult(r); return; }
+  if (d.dismissAway !== undefined) { lastSummary = null; render(); return; }
+  if (d.reason !== undefined) { if (d.reason) Server.reason(d.reason); survey = false; render(); return; }
+  if (d.hc) { Server.grantHC(d.hc === "1"); render(); return; }
+  if (d.steps) {
+    const out = Server.addSteps(+d.steps); refresh();
+    const mem = out.find(o => o.memory); toast = out.filter(o => o.text).map(o => o.text).join(" ") || "Adımlar eklendi.";
+    render(); if (mem) showCelebrate(mem.memory); return;
+  }
+  if (d.parent) { Server.setActive(d.parent); render(); return; }
+  if (d.max) { Server.setSettings({ maxPerDay: +d.max }); render(); return; }
+  if (d.outfit) { Server.setOutfit(d.outfit); refresh(); showWardrobe(); return; }
+  if (d.premium) { Server.fakeDoor(d.premium); refresh(); const st = $("#shop-toast"); if (st) st.textContent = "Bu prototipte satın alma yok. İlgin not edildi, teşekkürler."; renderPanel(); return; }
+  if (d.close !== undefined || (d.closeBg !== undefined && e.target === t)) { ov.innerHTML = ""; render(); if (celebQueue.length) showCelebrate(celebQueue.shift()); return; }
+  if (d.jump) { jump(d.jump); return; }
+  if (d.speed !== undefined) { speed = +d.speed; renderPanel(); return; }
+  switch (t.id) {
+    case "power": case "p-lock": if (V && !onboarding) { if (screenOff) unlock(); else { refresh(); awayAcc = null; showLock("choose"); } } return;
+    case "unlock": unlock(); return;
+    case "open-wardrobe": if (V && !screenOff && !onboarding) showWardrobe(); return;
+    case "make-invite": Server.createInvite(); render(); return;
+    case "copy-invite": {
+      const txt = $("#invite-link").textContent;
+      const fallback = () => { const r = document.createRange(); r.selectNodeContents($("#invite-link")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+      try { navigator.clipboard.writeText(txt).then(() => { t.textContent = "Kopyalandı"; }, fallback); } catch (err) { fallback(); }
+      return;
+    }
+    case "s-notif": Server.setSettings({ notif: !V.settings.notif }); render(); return;
+    case "s-night": Server.setSettings({ night: !V.settings.night }); render(); return;
+    case "s-hc": Server.grantHC(V.hc !== "granted"); render(); return;
+    case "p-skip": if (V && !screenOff) { Server.devSkipStage(); render(); } return;
+    case "p-export": {
+      if (!V) return;
+      const json = Server.exportJSON();
+      $("#p-export-out").innerHTML = `<textarea id="export-area" readonly aria-label="Dışa aktarılan veri"></textarea>`;
+      const ta = $("#export-area"); ta.value = json; ta.select();
+      try { navigator.clipboard.writeText(json).then(() => { t.textContent = "Kopyalandı"; }, () => {}); } catch (err) {}
+      return;
+    }
+    case "p-reset":
+      if (t.dataset.confirm) { Server.reset(); V = null; celebQueue.length = 0; screenOff = false; lastSummary = null; awayAcc = null; survey = false; tab = "home"; main.innerHTML = ""; t.textContent = "Sıfırla"; delete t.dataset.confirm; renderPanel(); showOnboarding(); }
+      else { t.dataset.confirm = "1"; t.textContent = "Emin misin? Tüm veri silinir"; setTimeout(() => { if (t.dataset.confirm) { delete t.dataset.confirm; t.textContent = "Sıfırla"; } }, 4000); }
+      return;
+  }
+});
+document.addEventListener("submit", e => {
+  if (e.target.id === "accept-form") {
+    e.preventDefault();
+    const m = Server.acceptInvite($("#acc-name").value.trim() || "Ece", $("#acc-call").value.trim());
+    render(); if (m) { tab = "home"; render(); showCelebrate(m); }
+  }
+});
+window.addEventListener("resize", () => { if (tab === "home") sizeCanvas(); });
+
+setInterval(() => {
+  if (!V || screenOff || onboarding || speed === 0) return;
+  const { memory } = Server.advance(speed * 1000, false);
+  if (memory) { refresh(); if (tab !== "home" && !ov.innerHTML) { tab = "home"; render(); } showCelebrate(memory); }
+  tickUI();
+}, 1000);
+
+if (Server.load()) { Server.open(); render(); } else { renderTabs(); renderPanel(); showOnboarding(); }
+requestAnimationFrame(frame);
+})();
+</script>

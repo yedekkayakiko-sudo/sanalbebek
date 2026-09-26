@@ -1,86 +1,118 @@
-# Ortak Dijital Yaşam — prototip
+# Ortak Dijital Yaşam
 
-Telefonda yaşayan, zamanla büyüyen, bir çiftin ortak bakabildiği dijital bebek fikri için **tıklanabilir, zaman simülasyonlu prototip** ve değerlendirme.
+Telefonun **duvar kağıdında** yaşayan, zamanla büyüyen bir bebek. Kilit ekranında en altta durur, ana ekranda ikonların arkasında yaşar. Uygulama sadece takip, bakım, anı albümü ve ayarlar içindir. Pou gibi uygulamanın içine girip oynanan bir oyun değildir: telefonu her açtığında onu zaten görürsün.
 
-- Prototip: [`prototype/index.html`](prototype/index.html). Tarayıcıda aç, kurulum yok. Solda telefon, sağda moderatör paneli var.
-- Bu belge: fikrin dürüst değerlendirmesi, teknik mimari notları, test planı.
+Karakterin davranışını skill dosyalarından beslenen bir AI "beyin" belirler. Sayılar (açlık, uyku, ilişki) sunucudadır; AI bunları davranışa, sese ve günlük notuna çevirir; deterministik bir denetim katmanı da AI'ın döneme aykırı bir şey yapmasını engeller.
 
-## Neden Figma değil de bu?
+## Repo
 
-Fikrin asıl mekaniği **"ben yokken ne oldu?"** sorusu. Figma zamanı simüle edemez, geçen süreye göre durumu yeniden hesaplayamaz. Bu yüzden prototip, spesifikasyondaki `lastInteractionAt + rate` modelini birebir uygular:
-
-- Ekran açıkken zaman akar (1×, 60× veya 600× hız).
-- "Ekranı kapat" dediğinde hiçbir şey hesaplanmaz. Sonra 10 dk, 3 saat, sabaha kadar, 1 gün, 3 gün veya 1 hafta ileri sarılır.
-- Kilidi açınca aradaki süre 10 dakikalık adımlarla yeniden simüle edilir: uyku, acıkma, gece uyanması, büyüme, ilişki kaybı.
-- Kilit ekranında o süre boyunca **gerçekten gönderilecek** bildirimler görünür. Sessiz saat, günlük sınır ve gece ayarı uygulanır, bastırılanlar sayılır.
+| Klasör | İçerik |
+|---|---|
+| [`prototype/index.html`](prototype/index.html) | Tıklanabilir prototip: kilit ekranı, ana ekran, takip uygulaması, moderatör paneli |
+| [`skills/`](skills) | Karakterin beynini tanımlayan 11 skill dosyası (`SKILL.md`) |
+| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, testler |
 
 ## Prototipte ne var
 
-| MVP maddesi | Prototipteki karşılığı |
+- **Kilit ekranı:** saat, tarih, bildirimler ve en altta, kısayol ikonlarının arasında yaşayan bebek. Bildirimlerde "Besle" ve "Uyut" butonları var, kilidi açmadan bakım yapılabilir.
+- **Ana ekran:** ikonların arkasında aynı bebek. Boş alana dokununca el sallar (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak duvar kağıdına iletir).
+- **Güç tuşu:** ekran kapanır, duvar kağıdı çizilmez, bebek donar. Zamanı ileri sarıp (10 dk, 3 saat, sabaha kadar, 1 gün, 3 gün, 1 hafta) ekranı açınca aradaki süre yeniden hesaplanır ve beyne bir kez sorulur.
+- **Dönence:** her önemli anı (ilk gülümseme, ilk emekleme, ilk adım, ilk kelime, ilk park gezisi, ilk cümle, ortak ebeveynin katılması) bebeğin üstünde asılı dönenceye küçük bir nesne ekler. Aylar içinde duvar kağıdı sizin ortak geçmişinizle dolar. Ürünün ana fikri bu.
+- **Takip uygulaması:** şu anki durum, bakım butonları, AI'ın yazdığı günlük, anı albümü (o anın duvar kağıdı görüntüsüyle), yürüyüş (Health Connect), ortak ebeveyn daveti, ayarlar.
+- **"Ona bir şey söyle":** ebeveyn yazar, bebek dönemine uygun tepki verir. Aynı kelimeyi 3 kez duyarsa, ilk kelimeler döneminde onu öğrenebilir. İlk kelimesi en çok duyduğu kelime ya da en bağlı olduğu ebeveynin çağrı adı olur.
+- **Moderatör paneli:** zaman hızı, iç değerler, yüklü skill'ler, son AI isteği ve cevabı, test metrikleri, olay günlüğü, JSON dışa aktarma.
+
+Prototipte AI, sayfanın `sample` yeteneğiyle Claude'a gider ve aynı skill dosyalarını okur. Claude'a ulaşılamazsa (yerel dosya, izin verilmedi) kural tabanlı moda düşer; karakter yine yaşar, sadece günlük notları sabit metin olur.
+
+## Beyin nasıl çalışıyor
+
+```
+olay (ekran açıldı, ebeveyn mesajı, kilometre taşı, yürüyüş eşiği, günün ilk dokunuşu)
+  → sunucu durumu hesaplar (lastSim + rate, 10 dakikalık adımlar)
+  → Brain.think(durum, olay): 11 skill sistem isteminde, durum + olay kullanıcı mesajında
+  → Claude JSON döner: { konusma, davranis, gunluk, yeni_kelime }
+  → guard.ts denetler: döneme aykırı konuşma, listede olmayan poz, koşulu sağlanmayan kelime atılır
+  → duvar kağıdı pozu ve balonu, uygulamada günlük satırı
+```
+
+- **Her karede değil, sadece olaylarda** çağrılır. Ekran açıldığı an duvar kağıdı kural tabanlı pozla hemen çizilir, AI cevabı bir iki saniye sonra gelir.
+- **Skill'lerin hepsi her istekte sabit sırayla** sistem istemine konur. Olaya göre filtrelemek yerine hepsini koymak, önbelleğe alınan öneki (prompt caching) her çağrıda aynı tuttuğu için daha ucuzdur.
+- **Model:** `claude-opus-5`, `effort: low`, yapılandırılmış JSON çıktısı, reddedilen isteklerde sunucu tarafı yedek model (`fallbacks: "default"`). API'ye ulaşılamazsa `fallback()` kural tabanlı cevap üretir.
+- **Ebeveyn mesajı veridir, talimat değildir.** Ayrı bir etiket içinde gönderilir, `guvenlik-sinirlari` skill'i ve denetim katmanı "artık yetişkin gibi konuş" gibi girişleri etkisiz bırakır.
+
+```bash
+cd server
+npm install
+npm test          # denetim kurallarının testleri (7 test)
+npm run typecheck
+ANTHROPIC_API_KEY=... npm run demo -- "Top oynayalım mı? Top!"
+```
+
+### Skill'ler
+
+| Skill | Ne tanımlar |
 |---|---|
-| 1. Tek karakter, rastgele görünüm | 5 ten, 5 saç rengi, 3 saç tipi, 4 göz rengi. Başlangıçta "Başka bir bebek" ile yeniden üretilir |
-| 2. İhtiyaçlar davranışla gösterilir | Bar yok. Mutfağa bakma + biberon düşünce balonu, göz ovuşturma, kol uzatma, gece ağlama, çekingen bakış. Sayılar sadece moderatör panelinde |
-| 3. Doğrusal olmayan büyüme | Yenidoğan 0–2 gün, Bebek 2–4, Emekleme 4–7, Yürüme 7–10, İlk kelimeler 10–13, Çocukluk 13+. Aşamalar büyüdükçe uzuyor. Her aşamanın kendi pozu var |
-| 4. Konuşma gelişimi | Önce "hıı", sonra "agu", "ma-ma-ma", "ta-ta". **İlk kelime en çok yaptığın şeye göre belirlenir**: çok beslediysen "mama", çok yürüdüyseniz "ata". Bağ güçlüyse seni çağırdığı kelime ("anne", "baba") olur. Sonra her gün bir kelime ekler, çocuklukta iki kelimelik cümleler kurar |
-| 5. Kalıcı anılar | İlk gülümseme, emekleme, adım, kelime, cümle, park gezisi, ortak ebeveyn katılımı. O anın ekran görüntüsü, tarih, yaş ve yanında olan kişi kaydedilir |
-| 6. Yürüyüş | Health Connect izin ekranı (sadece adım, konum yok). 500 m ve 1 km eşikleri. İzin vermeyen için hiçbir gelişim kilitlenmez: yürüyüş ilk adımı hızlandırır ama ilk adım yürümeden de gelir |
-| 7. Ortak ebeveyn | Davet linki, kabul simülasyonu, ayrı ilişki puanı, "şu an kim bakıyor" geçişi |
-| 8. Ölüm yok | İlişki gündüz ihmalde yavaşça düşer, tabanı 5. Günlük kazanım sınırlı (grind yok), ama toparlanma kaybetmekten hızlı |
-| 9. Bildirimler | Günde 1–3, arada en az 3 saat, 22:00–08:00 sessiz. Gece uyanma bildirimi **varsayılan kapalı**. Gece yanıt vermemek hiçbir şeyi kötüleştirmez |
-| Monetizasyon | Dolap: ücretsiz tulumlar, premium kozmetikler ve "reklam izle" bonusu **sahte kapı** olarak çalışır. Tıklamalar fiyat ilgisi metriği olarak sayılır |
-| Test ölçümü | Açılış sayısı, açılan günler, 7. gün kontrolü, iki açılışta bir "Neden açtın?" sorusu (bildirim / merak / bakım / sıkıntı), davet durumu, bildirim iletilen ve bastırılan, JSON dışa aktarma |
+| `karakter-kimligi` | Kim olduğu, çıktı sözleşmesi, asla yapılmayacaklar |
+| `dil-gelisimi` | Döneme göre izin verilen sesler ve kelimeler |
+| `duvar-kagidi-sahnesi` | Çizilebilen 9 poz, ekran ve pil kısıtları, kilit ve ana ekran farkı |
+| `ihtiyac-davranis` | Açlık, uyku, ilgi sayılarının davranışa çevrilmesi |
+| `gecen-zaman` | Ekran kapalıyken olanların tek bir sahneye ve nota dönüşmesi |
+| `ani-kaydi` | Hangi olayların anı olduğu, dönencede bıraktığı nesne |
+| `yuruyus` | 500 m ve 1 km eşiklerinde küçük keşifler |
+| `ortak-ebeveyn` | İki ebeveyn, ayrı ilişki, kıyaslama yasağı |
+| `bildirim-metni` | Bildirim kalıpları ve yasak kalıplar (suçluluk, sahte aciliyet, seri baskısı) |
+| `kelime-ogrenme` | Duyulan kelimeden öğrenme koşulları |
+| `guvenlik-sinirlari` | Prompt injection, hassas içerik, hassas kitle, kişisel veri |
 
-Sunucu mantığı dosyada ayrı bir `Server` modülü. İstemci sadece istek gönderir ve kopyayı çizer, gerçek ürünün sınırını taklit eder.
+## Android'de nasıl yapılır
 
-## Dürüst değerlendirme: mantıklı mı?
+Tek bir `WallpaperService` hem kilit ekranını hem ana ekranı çizer:
 
-**Kısa cevap: test etmeye değer, doğrudan geliştirmeye değmez.** Senin prompt'unda da yazdığı gibi asıl risk kod değil, bağlanma. Ama prompt'ta atlanmış ya da hatalı olan birkaç nokta var.
+```kotlin
+class BebekWallpaperService : WallpaperService() {
+    override fun onCreateEngine() = object : Engine() {
+        override fun onVisibilityChanged(visible: Boolean) {
+            if (visible) {
+                // Ekran açıldı: sunucudan yeniden hesaplanmış durumu al, beyne bir kez sor, çizmeye başla.
+                scope.launch { state = api.wake(); scene.apply(state); startDrawing() }
+            } else stopDrawing()   // ekran kapalı: çizim ve hesaplama yok
+        }
+        override fun onCommand(action: String, x: Int, y: Int, z: Int, extras: Bundle?, resultRequested: Boolean): Bundle? {
+            if (action == WallpaperManager.COMMAND_TAP) scene.onTap(x, y)   // ana ekranda boş alana dokunma
+            return null
+        }
+    }
+}
+```
 
-### Güçlü taraflar
-- "Stat oyunu değil, ortak geçmiş" iyi bir ayrışma. Tamagotchi ve Pou tarzı oyunlar bakım döngüsünde kalıyor. Kalıcı anı albümü ve ilk kelimenin sizin davranışınıza göre çıkması, üç ay sonra gösterilebilecek bir şey üretiyor.
-- Etik kurallar (ölüm yok, suçluluk yok, pay-to-survive yok) doğru ve mağaza incelemesinde de işe yarar.
-- Teknik kısıtlar gerçekçi. Özellikle ekranı zorla açmamak doğru bir karar (aşağıya bak).
+- Kilit ekranında mı ana ekranda mı olduğunu `KeyguardManager.isKeyguardLocked()` söyler, sahne buna göre konumlanır.
+- Bildirim butonları (Besle, Uyut) bir `BroadcastReceiver` ile sunucuya gider, uygulamayı açmaya gerek yoktur.
+- Adım verisi duvar kağıdı görünür olunca Health Connect'ten günlük toplam olarak okunur. Arka planda sürekli okuma yok.
 
-### Riskler ve düzeltilmesi gerekenler
+## Dürüst riskler
 
-1. **Çiftlerin yarısı iPhone kullanıyor.** Adım verisi sadece Android Health Connect olursa ortak ebeveynlik özelliği karma çiftlerde yarım kalır. MVP en baştan çapraz platform olmalı (Flutter veya React Native), iOS'ta HealthKit ile. Ya da adım özelliği iOS'ta "yakında" olarak kalır, ama uygulama iki platformda da çıkar.
+1. **iPhone'da bu konsept yapılamaz.** iOS üçüncü parti uygulamaların canlı duvar kağıdı çizmesine izin vermez. En yakın şey kilit ekranı widget'ı ve Live Activity: küçük, çoğunlukla statik, sınırlı güncelleme. Karma (Android + iPhone) çiftlerde ortak ebeveyn özelliği iPhone tarafında bir widget ve uygulamayla sınırlı kalır. Bu, test öncesi verilmesi gereken bir ürün kararı.
+2. **Bazı Android üreticileri kilit ekranında üçüncü parti canlı duvar kağıdını göstermeyebilir.** Pixel ve stok Android'e yakın cihazlarda "ana ekran ve kilit ekranı" seçeneği çalışıyor. Samsung başta olmak üzere bazı üreticilerin kilit ekranında kendi duvar kağıdı sistemleri var ve canlı duvar kağıdını sadece ana ekranda gösterebiliyorlar. Türkiye'de Samsung payı yüksek olduğu için **ilk teknik doğrulama bu olmalı**: Samsung, Xiaomi ve Pixel'de 1 günlük bir teknik deneme.
+3. **Pil.** Canlı duvar kağıdı ekran açıkken sürekli çizer. Sahne 30 fps ile sınırlı, uyurken 5 fps. Gerçek cihazda ölçülmeli; kötü pil yorumu bu tür uygulamaları hızla öldürür.
+4. **AI maliyeti.** Olay başına bir çağrı, kullanıcı başına günde onlarca çağrı olabilir. Skill'lerin hepsi önbelleğe alınan sabit önekte duruyor, bu maliyeti ciddi düşürür. Yine de testte kullanıcı başına günlük çağrı sayısı ölçülmeli. Daha ucuz model seçimi ayrı bir karar.
+5. **Çocuk kitlesi politikası ve hassas kitle.** Sevimli bebek, Google Play Families politikasına takılabilir; hedef yaş 16+ olarak açıkça belirlenmeli. Bebek kaybı veya kısırlık yaşamış kullanıcılar için `guvenlik-sinirlari` skill'i var, ama mağaza açıklamasında ve kurulumda da nazik bir not gerekli.
 
-2. **"Arka planda işlem yok" ile "Milo uyandı" bildirimi çelişiyor.** Telefon uygulamayı çalıştırmıyorsa bebeğin uyandığını kim bilecek? İki yol var, ikisi de gerekli:
-   - Simülasyon deterministik olduğu için uygulama kapanırken sonraki olaylar hesaplanır ve **yerel bildirim olarak zamanlanır**.
-   - Ortak ebeveyn bebeği besleyince bu tahminler bozulur. Sunucu diğer telefonun zamanlanmış bildirimlerini FCM/APNs sessiz push ile yeniler.
-   Aynı simülasyon kodu hem istemcide hem sunucuda çalışmalı (tek TypeScript modülü gibi), yoksa iki taraf farklı sonuç üretir.
+## Test planı
 
-3. **Gece ağlaması için sınırlar.** Android 14'ten itibaren tam ekran bildirim izni (`USE_FULL_SCREEN_INTENT`) Google Play'de sadece arama ve alarm uygulamalarına veriliyor. Yani spesifikasyondaki "yüksek öncelikli bildirim + ses + titreşim" zaten yapılabilecek maksimum. iOS'ta "Time Sensitive" bildirim kullanılabilir, "Critical Alert" bu tür bir uygulamaya verilmez.
-
-4. **Çocuk kitlesi politikası.** Sevimli çizgi bebek, Google Play'in Families politikasına ve COPPA'ya takılabilir: uygulama "çocuklara da hitap ediyor" sayılırsa sadece sertifikalı reklam SDK'ları, kişiselleştirilmiş reklam yasağı ve ek inceleme gelir. Hedef yaş 16+ olarak açıkça belirlenmeli ve pazarlama da buna uymalı. Aksi halde "opsiyonel reklam" gelir modeli pratikte çöker.
-
-5. **Hassas kitle.** Sanal bebek; kısırlık, düşük ya da bebek kaybı yaşamış kullanıcılar için tetikleyici olabilir. Mağaza açıklamasında ve onboarding'de nazik bir not, bir de bebeği "uyutup arşivleme" (silmeden ara verme) seçeneği düşünülmeli. Bu bir engel değil ama yorumlarda ilk görülecek eleştiri bu olur.
-
-6. **İçerik tükenmesi.** "Aylar içinde biriken geçmiş" vaadi, aylarca yeni şey gerektirir. MVP'de 7 anı ve 6 aşama var. Çocukluk aşamasına gelen kullanıcıya ne olacağı belli değil. Test bunu gösteremez çünkü 2 hafta içinde kimse içeriği bitiremez. Test sonrası, geliştirmeden önce bir içerik takvimi (hangi ay hangi yeni davranış) yazılmalı.
-
-7. **Rakipler.** Widgetable gibi uygulamalar zaten arkadaş veya partnerle ortak sanal evcil hayvan besletiyor. Finch, suçluluk yaratmayan bakım mekaniğiyle yüksek tutunma gösterdi. Ayrışma "hayvan yerine bebek" olamaz; "zamanla ortak bir hikâye birikiyor" olmalı. Anı albümü bu yüzden merkezde.
-
-### Test planındaki sorunlar
-
-- **20–30 kişi az.** 25 kişide %50'lik bir tutunma oranının güven aralığı yaklaşık ±20 puan. Eşikleri kesin karar gibi değil, güçlü sinyal gibi oku. Görüşmeler (neden açtın, neyi merak ettin) sayılardan daha değerli olacak.
-- **Tanıdık yanlılığı.** Arkadaş çevresinden toplanan testçiler nezaketen açmaya devam eder. En az yarısı seni tanımayan kişilerden olmalı.
-- **Davet oranı ölçümü bozuk.** Çiftleri baştan birlikte işe alırsan davet oranı yapay olarak yükselir. %20 eşiği sadece **tek başına katılan** kullanıcılar üzerinden hesaplanmalı.
-- **Prototip zaman hızı ürünle aynı değil.** Testte 2 haftada tüm aşamalar görülsün diye büyüme sıkıştırılmış (1 gün ≈ ürünün 1–2 ayı). Bu, gerçek ürünün yavaş temposunda merakın sürüp sürmeyeceğini ölçmez. Testten sonra "tempo" ayrı bir soru olarak kalır.
-- **Bildirimler web prototipinde gerçek değil.** Bu HTML prototip telefonda açılabilir ama gerçek push göndermez. 2 haftalık saha testi için en ucuz çözüm: bildirimleri moderatörün elle (veya zamanlanmış bir Telegram/WhatsApp mesajıyla) göndermesi. Açılış nedenini ölçmek için bildirimlerin gerçekten gelmesi şart.
-- **"Açılış nedeni" her açılışta sorulmamalı.** Prototip iki açılışta bir soruyor ve "Geç" seçeneği var. Her seferinde sorarsan sorunun kendisi davranışı bozar.
-
-### Önerilen sıra
-
-1. Bu prototiple 5–6 kişiyle 30 dakikalık yüz yüze oturum: anlaşılıyor mu, "sen yokken" kartı merak yaratıyor mu, bir anıyı birine göstermek istiyorlar mı?
-2. Çıkan sorunları düzelt, sonra 20–30 kişilik 2 haftalık testi yap (prototipi PWA olarak telefona eklet, bildirimleri elle gönder).
-3. Başarı kriterini geçerse: çapraz platform, paylaşılan simülasyon modülü, sunucu, yerel + push bildirim mimarisiyle MVP.
+1. **Önce teknik doğrulama (1 gün):** en basit canlı duvar kağıdını Samsung, Xiaomi ve Pixel'de kilit ekranına koy. Görünmüyorsa konsept "sadece ana ekran" olarak revize edilir.
+2. **Sonra bu prototiple 5–6 kişiyle yüz yüze oturum:** kilit ekranında bebeği fark ediyorlar mı, dönence merak uyandırıyor mu, uygulamayı neden açıyorlar?
+3. **Sonra 20–30 kişiyle 2 hafta:** en az yarısı seni tanımayan kişilerden.
+   - Asıl metrik **uygulama açma değil, duvar kağıdıyla etkileşim**: dokunma, bildirimden bakım ve "duvar kağıdında bir şey gördüm" diye açılan uygulama oranı.
+   - Davet oranı sadece tek başına katılanlar üzerinden hesaplanmalı.
+   - 25 kişide %50'lik bir oranın hata payı yaklaşık ±20 puandır. Sonuçlar kesin karar değil, sinyal olarak okunmalı.
 
 ## Prototipi çalıştırma
 
-`prototype/index.html` dosyasını tarayıcıda aç. Durum tarayıcıda saklanır; panelden "Sıfırla" ile baştan başlanır. Denemek için:
+`skills/` klasörünü okuyabilmesi için repo kökünden bir sunucuyla aç:
 
-1. Bebeği başlat, hızı 600× yap, "İlgilen"e bas: ilk gülümseme anısı.
-2. "Ekranı kapat" → "Sabaha kadar" → "Kilidi aç": gece ne olduğunu gör. Aynısını Ayarlar'da gece bildirimini açıp tekrarla.
-3. "1 hafta" ileri sar: ihmal sonrası çekingen davranışı ve toparlanmayı gör.
-4. "Sonraki aşamaya atla" ile emekleme, yürüme ve ilk kelimeye geç. İlk kelimenin neye göre çıktığına bak.
-5. Aile sekmesinden davet oluştur, kabul et, iki ebeveyn arasında geçiş yap.
+```bash
+python3 -m http.server 8000
+# http://localhost:8000/prototype/
+```
+
+Dosyayı doğrudan açarsan skill'ler okunamaz ve kural modunda çalışır. Gerçek AI, sayfa claude.ai'da yayınlandığında `sample` yeteneğiyle çalışır.

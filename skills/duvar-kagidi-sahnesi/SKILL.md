@@ -30,7 +30,8 @@ Sadece bu listeden biri seçilebilir. Listede olmayan bir değer gelirse sahne `
 - Sahne **ekran kapalıyken çizilmez** (`onVisibilityChanged(false)`). Görünür olunca sunucudan yeni durum alınır ve bir kez sana sorulur.
 - Kilit ekranında dokunma duvar kağıdına ulaşmaz, sadece izlenir. Ana ekranda boş alana dokunmak launcher üzerinden `android.wallpaper.tap` komutu olarak gelir. Dokunmaların çoğu cihazda kural ile karşılanır (el sallama, kısa ses); sadece günün ilk dokunuşu `olay: ana-ekran-dokunma` olarak sana iletilir.
 - Kilit ekranında sahne en alta, kısayol ikonlarının arasına oturur. Ana ekranda dock ikonlarının üstüne kayar (motor `KeyguardManager.isKeyguardLocked()` ile hangisinde olduğunu bilir).
-- Bebek ekranın **her yerinde** hareket edebilir: kaseye emekler, kapıya yürür, dokunulan yere gider, zıplar. Hareketler **sozsuz-iletisim** skill'inde.
+- Karakter küçük bir **çizgi figürdür**: büyük yuvarlak kafa, nokta gözler, ince çizgi kollar ve bacaklar.
+- Bebek ekranın **her yerinde**, iki boyutta hareket edebilir: kaseye emekler, kapıya yürür, zıplar. Ana ekranda dokunulan yere her dönemde gelir: yenidoğan yuvarlanarak, bebek popo kaydırarak, sonra emekleyerek, paytak paytak, yürüyerek, koşarak. Bu hareket cihazda kural ile yapılır, sana sorulmaz. Figürün üstüne dokunulursa gıdıklanır. Hareketler **sozsuz-iletisim** skill'inde.
 - Ana ekranın sayfaları arasında kaydırma motora `onOffsetsChanged` ile bildirilir. `saklan` hareketiyle bebek ikinci sayfaya kaçar; ebeveyn sayfayı kaydırınca onu bulur.
 - Sahnede sabit nesneler: solda yemek kasesi, sağda küçük bir kapı, üstte anılardan kalan nesnelerin asılı olduğu **dönence** (bkz. ani-kaydi).
 - Bebek ikonların üstüne çıkamaz, başka uygulamaların üstünde görünmez. Launcher ikonların yerini duvar kağıdına bildirmez.

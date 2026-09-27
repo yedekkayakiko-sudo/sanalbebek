@@ -70,7 +70,10 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1
 .pages i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}
 .pages i.on{background:#fff}
 .dock{margin:10px 14px 16px;background:rgba(255,255,255,.12);border-radius:30px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr)}
-.tapzone{position:absolute;left:0;right:0;border:0;background:transparent;padding:0;cursor:pointer}
+.tapzone{position:absolute;inset:0;border:0;background:transparent;padding:0;cursor:pointer;z-index:0}
+.home > :not(.tapzone){position:relative;z-index:1;pointer-events:none}
+.home .app,.home .pages button{pointer-events:auto}
+.lockhint{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);background:rgba(20,20,24,.85);color:#fff;border-radius:12px;padding:8px 12px;font-size:12.5px;width:max-content;max-width:86%;text-align:center;transition:opacity .3s;pointer-events:none}
 
 /* kapalı ekran */
 .off{background:#000;justify-content:center;align-items:center;gap:14px;padding:24px;text-align:center}
@@ -774,50 +777,94 @@ const Brain = (() => {
 let V = null;
 let mode = "lock", page = 0, tab = "status", view = null, speed = 60, onboarding = false, tick = 0;
 let awayAcc = null, lockNotifs = [], toast = "", survey = false, bubble = null, bubbleUntil = 0, flashPose = null, flashUntil = 0;
-// Hareket durumu: x dünya koordinatı (0..1.3; ana ekran 2 sayfa, duvar kağıdı %30 kayar)
-const M = { x: 0.5, tx: 0.5, g: null, gt: null, gStart: 0, gUntil: 0, hidden: false, facing: 1, tapX: 0.5, lastIdle: 0, foundAt: 0, last: 0 };
+// Hareket durumu. x: dünya koordinatı (0..1.3; ana ekran 2 sayfa, duvar kağıdı sayfa başına %30 kayar), y: ayakların ekran yüksekliğine oranı.
+const M = { x: 0.5, y: 0.955, tx: 0.5, ty: 0.955, g: null, gt: null, gStart: 0, gUntil: 0, hidden: false, facing: 1,
+  lastIdle: 0, userUntil: 0, foundAt: 0, last: 0, arrive: null, roll: 0, feet: null };
+const ripples = [];
 const $ = s => document.querySelector(s);
 const ui = $("#ui"), ov = $("#ov"), cv = $("#wall"), bubbleEl = $("#bubble");
 const refresh = () => { V = Server.view(); };
 function say(text, ms = 3200) { if (!text) return; bubble = text; bubbleUntil = performance.now() + ms; }
 
-const TARGET_X = { kase: 0.2, kapi: 0.8, pencere: 0.66, donence: 0.5, sen: 0.5 };
+// Zemin ve gezinme alanı: kilit ekranında saat ve bildirimlerin altı, ana ekranda durum çubuğu ile dock arası.
+const FLOOR = { home: 0.80, lock: 0.955 };
+const BOUNDS = { home: [0.14, 0.85], lock: [0.64, 0.955] };
+const sceneMode = () => (mode === "home" ? "home" : "lock");
+const floorY = () => FLOOR[sceneMode()];
+const clampY = y => { const [a, b] = BOUNDS[sceneMode()]; return Math.max(a, Math.min(b, y)); };
+const TARGET_X = { kase: 0.2, kapi: 0.8, pencere: 0.7, donence: 0.5, sen: 0.5 };
+// Her dönemin yürüme hızı (piksel/sn, ölçek başına): yuvarlanır → popo kaydırır → emekler → paytak yürür → yürür → koşar
+const SPEED = [34, 46, 62, 80, 96, 112];
+const LOCOMOTION = ["yuvarlanarak", "popo kaydırarak", "emekleyerek", "paytak paytak", "yürüyerek", "koşarak"];
+
+function moveTo(x, y) { M.tx = Math.max(0.04, Math.min(1.26, x)); M.ty = clampY(y); }
 function playGesture(g) {
   if (!g || g === "yok" || !V) return;
-  const [name, target] = g.split(":"), now = performance.now(), st = V.baby.stageIdx;
+  const [name, target] = g.split(":"), now = performance.now();
+  if (now < M.userUntil && (name === "git" || name === "saklan" || name === "kapida_bekle")) return;  // kullanıcının dokunduğu hedef önceliklidir
   Server.gesture(g);
   M.g = name; M.gt = target || null; M.gStart = now;
-  M.gUntil = now + ({ saklan: 7000, kapida_bekle: 12000, git: 7000, dans: 6000 }[name] || 3800);
-  if (M.hidden && name !== "saklan") { M.hidden = false; M.x = 1.18; M.tx = 0.9; }
-  if (st >= 2) {
-    if (name === "git") M.tx = target === "dokunulan_yer" ? M.tapX : (TARGET_X[target] ?? M.tx);
-    if (name === "kapida_bekle") M.tx = TARGET_X.kapi - 0.06;
-    if (name === "saklan") M.tx = 1.2;
-  }
+  M.gUntil = now + ({ saklan: 9000, kapida_bekle: 12000, git: 9000, dans: 6000 }[name] || 3800);
+  if (M.hidden && name !== "saklan") { M.hidden = false; M.x = 1.18; moveTo(0.9, M.y); }
+  const fy = floorY();
+  if (name === "git") moveTo(target === "sen" ? 0.5 : (TARGET_X[target] ?? M.x), target === "sen" ? fy - 0.12 : fy);
+  if (name === "kapida_bekle") moveTo(TARGET_X.kapi - 0.07, fy);
+  if (name === "isaret" && target === "sen") M.facing = 1;
+  if (name === "saklan") moveTo(1.2, M.y);
 }
+// Dokunulan yere gel. Uyuyorsa gelmez; ağlıyorsa önce sakinleşmesi gerekir.
+function tapTo(fx, fy) {
+  const now = performance.now();
+  ripples.push({ x: fx, y: fy, t: now });
+  if (!V) return "none";
+  if (V.baby.asleep) { say("zzz", 1400); return "asleep"; }
+  if (V.baby.crying) { say("ııh!", 1400); return "crying"; }
+  // Figürün üstüne dokunmak: gıdıklanır, yerinden kıpırdamaz
+  if (M.feet && Math.hypot(fx * CW - M.feet.x, fy * CH - (M.feet.y - 22 * CW / 400)) < 30 * CW / 400) {
+    M.g = "kahkaha"; M.gStart = now; M.gUntil = now + 2400; M.userUntil = now + 15000; say(pick(["hı-hı-hı!", "ah!", "aaa!"].concat(V.baby.stageIdx >= 2 ? ["da-da!"] : [])), 1600);
+    Server.gesture("kahkaha"); return "tickle";
+  }
+  M.hidden = false; M.g = null; M.userUntil = now + 30000; M.lastIdle = now;
+  moveTo(fx + page * 0.3, fy);
+  M.arrive = now;
+  return "coming";
+}
+function tapSound(st) { return [pick(["hıı", "ah"]), pick(["agu", "hı-hı"]), pick(["da!", "ma-ma!"]), pick(["ta-ta!", "bu?"]), (V.vocab[0] || "ma") + "!", (V.vocab[0] || "mama") + " " + pick(["daha", "ver"])][st]; }
+
 function updateMotion(now) {
   const dt = Math.min(0.1, (now - (M.last || now)) / 1000); M.last = now;
-  if (!V) return;
-  const st = V.baby.stageIdx, b = V.baby, speedX = [0, 0, 0.07, 0.13, 0.15, 0.17][st];
-  if (b.asleep || b.crying || st < 2) M.tx = st < 2 ? 0.5 : M.x;
-  if (st < 2) M.x = 0.5;
-  const dx = M.tx - M.x;
-  if (Math.abs(dx) > 0.004) { M.x += Math.sign(dx) * Math.min(Math.abs(dx), speedX * dt); M.facing = Math.sign(dx); }
+  if (!V || !CW) return;
+  const st = V.baby.stageIdx, b = V.baby, S = CW / 400 * 0.95;
+  if (b.asleep || b.crying) { M.tx = M.x; M.ty = M.y; }
+  const dxp = (M.tx - M.x) * CW, dyp = (M.ty - M.y) * CH, dist = Math.hypot(dxp, dyp);
+  if (dist > 1.5) {
+    const stepPx = Math.min(dist, SPEED[st] * S * dt);
+    M.x += dxp / dist * stepPx / CW; M.y += dyp / dist * stepPx / CH;
+    if (Math.abs(dxp) > 2) M.facing = Math.sign(dxp);
+    M.roll += stepPx / (9 * S) * (M.facing || 1);
+  } else if (M.arrive) {
+    // Vardı: sana bakıp el sallar
+    M.arrive = null; flashPose = "gulumsuyor"; flashUntil = now + 2600;
+    M.g = st >= 1 ? "el_salla" : "goz_temasi"; M.gStart = now; M.gUntil = now + 2200; say(tapSound(st), 1800);
+  }
   if (M.g === "saklan" && M.x >= 1.15) M.hidden = true;
   if (M.g && now > M.gUntil) M.g = null;
-  // Kendi başına gezinme: uyanıkken, arada bir, AI çağrısı yapmadan.
-  if (!M.g && !M.hidden && !b.asleep && !b.crying && mode !== "off" && mode !== "app" && now - M.lastIdle > 22000) {
+  // Kendi başına gezinme: uyanıkken, kullanıcı son 30 sn dokunmadıysa, AI çağrısı yapmadan.
+  if (!M.g && !M.hidden && !b.asleep && !b.crying && mode !== "off" && mode !== "app" && now > M.userUntil && now - M.lastIdle > 20000) {
     M.lastIdle = now;
-    if (Math.random() < 0.6) playGesture(ruleGesture(Server.brainState()));
+    const r = Math.random();
+    if (r < 0.45) playGesture(ruleGesture(Server.brainState()));
+    else if (r < 0.8) moveTo(0.15 + Math.random() * 0.7, floorY() - Math.random() * (mode === "home" ? 0.2 : 0.05));
   }
   // Saklambaç: ana ekranın 2. sayfasında bulundu
   if (M.hidden && mode === "home" && page === 1 && !M.foundAt) M.foundAt = now;
-  if (M.foundAt && now - M.foundAt > 1200) { M.foundAt = 0; M.hidden = false; M.x = 1.12; playGesture("kahkaha"); M.tx = 0.95; say("ce-e!"); Server.found(); refresh(); renderPanel(); }
+  if (M.foundAt && now - M.foundAt > 1200) { M.foundAt = 0; M.hidden = false; M.x = 1.14; moveTo(0.95, M.y); M.g = "kahkaha"; M.gStart = now; M.gUntil = now + 3000; say("ce-e!"); Server.found(); refresh(); renderPanel(); }
 }
 
 /* ---------- çizim ---------- */
 function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 function circle(c, x, y, r, f) { c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = f; c.fill(); }
+function line(c, x1, y1, x2, y2) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 function drawWallpaper(c, W, H, now, t, off = 0) {
   const h = hourOf(now) + new Date(now).getUTCMinutes() / 60;
   const night = h >= 21 || h < 6, dusk = (h >= 17.5 && h < 21) || (h >= 6 && h < 8);
@@ -835,149 +882,156 @@ function drawWallpaper(c, W, H, now, t, off = 0) {
   if (night) { c.fillStyle = "rgba(255,255,255,.55)"; [[.12, .08], [.3, .16], [.72, .07], [.86, .2], [.55, .12], [.2, .3], [1.1, .1]].forEach(([a, b]) => c.fillRect(W * a + ox, H * b, 1.5, 1.5)); }
 }
 function drawKeepsake(c, kind) {
-  if (kind === "smile") { circle(c, 0, 0, 8, "#FFC857"); c.strokeStyle = "#FFC857"; c.lineWidth = 2; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; c.beginPath(); c.moveTo(Math.cos(a) * 11, Math.sin(a) * 11); c.lineTo(Math.cos(a) * 14, Math.sin(a) * 14); c.stroke(); } }
-  if (kind === "crawl") { circle(c, 0, 0, 10, "#E4572E"); c.strokeStyle = "#FFF"; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, 10, -0.6, 0.9); c.stroke(); }
-  if (kind === "step") { c.fillStyle = "#6EA8D8"; rr(c, -11, -4, 22, 9, 4); c.fill(); c.fillStyle = "#FFF"; c.fillRect(-11, 3, 22, 2); }
-  if (kind === "firstword") { c.fillStyle = "#F3E3C3"; rr(c, -10, -10, 20, 20, 3); c.fill(); c.fillStyle = "#B4521F"; c.font = "700 13px 'Bricolage Grotesque', sans-serif"; c.textAlign = "center"; c.fillText("A", 0, 5); c.textAlign = "start"; }
-  if (kind === "park") { c.fillStyle = "#8FBF6A"; c.beginPath(); c.ellipse(0, 0, 11, 5, -0.5, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#5E8B45"; c.lineWidth = 1.5; c.beginPath(); c.moveTo(-9, 5); c.lineTo(9, -5); c.stroke(); }
-  if (kind === "sentence") { c.fillStyle = "#C45B7A"; rr(c, -12, -6, 24, 12, 2); c.fill(); c.fillStyle = "#F7E9D7"; c.fillRect(-11, -5, 22, 2); }
-  if (kind === "family") { c.fillStyle = "#D9B36C"; rr(c, -17, -9, 15, 18, 2); c.fill(); rr(c, 2, -9, 15, 18, 2); c.fill(); c.fillStyle = "#3B2A20"; c.fillRect(-15, -7, 11, 14); c.fillRect(4, -7, 11, 14); }
+  if (kind === "smile") { circle(c, 0, 0, 7, "#FFC857"); c.strokeStyle = "#FFC857"; c.lineWidth = 2; for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; line(c, Math.cos(a) * 9.5, Math.sin(a) * 9.5, Math.cos(a) * 12.5, Math.sin(a) * 12.5); } }
+  if (kind === "crawl") { circle(c, 0, 0, 8, "#E4572E"); c.strokeStyle = "#FFF"; c.lineWidth = 1.8; c.beginPath(); c.arc(0, 0, 8, -0.6, 0.9); c.stroke(); }
+  if (kind === "step") { c.fillStyle = "#6EA8D8"; rr(c, -9, -3, 18, 8, 4); c.fill(); c.fillStyle = "#FFF"; c.fillRect(-9, 3, 18, 1.8); }
+  if (kind === "firstword") { c.fillStyle = "#F3E3C3"; rr(c, -8, -8, 16, 16, 3); c.fill(); c.fillStyle = "#B4521F"; c.font = "700 11px 'Bricolage Grotesque', sans-serif"; c.textAlign = "center"; c.fillText("A", 0, 4); c.textAlign = "start"; }
+  if (kind === "park") { c.fillStyle = "#8FBF6A"; c.beginPath(); c.ellipse(0, 0, 9, 4, -0.5, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#5E8B45"; c.lineWidth = 1.4; line(c, -8, 4, 8, -4); }
+  if (kind === "sentence") { c.fillStyle = "#C45B7A"; rr(c, -10, -5, 20, 10, 2); c.fill(); c.fillStyle = "#F7E9D7"; c.fillRect(-9, -4, 18, 2); }
+  if (kind === "family") { c.fillStyle = "#D9B36C"; rr(c, -14, -8, 12, 15, 2); c.fill(); rr(c, 2, -8, 12, 15, 2); c.fill(); c.fillStyle = "#3B2A20"; c.fillRect(-12, -6, 8, 11); c.fillRect(4, -6, 8, 11); }
 }
 // Sabit sahne: kase (sol), kapı (sağ), anı dönencesi (üst). Sayfa kaydırınca birlikte kayar.
-function drawProps(c, W, base, S, t, off, mems) {
+function drawProps(c, W, base, S, t, off, mems, lock) {
   const X = f => (f - off) * W;
-  const bx = X(0.2); c.fillStyle = "#E7DCCB"; c.beginPath(); c.ellipse(bx, base - 6 * S, 16 * S, 6 * S, 0, 0, Math.PI * 2); c.fill();
-  c.fillStyle = "#C9B8A0"; c.beginPath(); c.moveTo(bx - 16 * S, base - 6 * S); c.quadraticCurveTo(bx, base + 12 * S, bx + 16 * S, base - 6 * S); c.fill();
-  const dx = X(0.84); c.fillStyle = "#5A3B2B"; rr(c, dx - 20 * S, base - 64 * S, 40 * S, 64 * S, 4 * S); c.fill();
-  c.fillStyle = "#7A523C"; rr(c, dx - 15 * S, base - 58 * S, 30 * S, 58 * S, 3 * S); c.fill(); circle(c, dx + 9 * S, base - 30 * S, 2.4 * S, "#E7B35A");
+  c.lineCap = "round";
+  if (!lock) {   // kilit ekranında köşelerde kısayol ikonları var: kase ve kapı sadece ana ekranda
+  const bx = X(0.2); c.fillStyle = "#E7DCCB"; c.beginPath(); c.ellipse(bx, base - 4 * S, 11 * S, 4 * S, 0, 0, Math.PI * 2); c.fill();
+  c.fillStyle = "#C9B8A0"; c.beginPath(); c.moveTo(bx - 11 * S, base - 4 * S); c.quadraticCurveTo(bx, base + 8 * S, bx + 11 * S, base - 4 * S); c.fill();
+  const dx = X(0.84); c.strokeStyle = "#FFF1E0"; c.lineWidth = 2.2 * S; rr(c, dx - 13 * S, base - 44 * S, 26 * S, 44 * S, 3 * S); c.stroke(); circle(c, dx + 7 * S, base - 21 * S, 1.8 * S, "#FFB684");
+  }
   const items = mems.filter(m => m.kind in MEM_OBJ).slice(0, 7); if (!items.length) return;
-  const x1 = X(0.2), x2 = X(0.8), y0 = base - 205 * S, sag = 22 * S;
+  const x1 = X(0.22), x2 = X(0.78), y0 = base - 130 * S, sag = 16 * S;
   c.strokeStyle = "rgba(255,230,210,.35)"; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x1, y0); c.quadraticCurveTo((x1 + x2) / 2, y0 + sag * 2, x2, y0); c.stroke();
   items.forEach((m, i) => {
     const u = (i + 1) / (items.length + 1), x = x1 + (x2 - x1) * u, y = y0 + sag * 4 * u * (1 - u);
-    const sw = REDUCED ? 0 : Math.sin(t / 1400 + i) * 0.08, len = (18 + (i % 2) * 10) * S;
-    c.save(); c.translate(x, y); c.rotate(sw); c.strokeStyle = "rgba(255,230,210,.35)"; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, len); c.stroke();
-    c.translate(0, len + 10 * S); c.scale(S, S); drawKeepsake(c, m.kind); c.restore();
+    const sw = REDUCED ? 0 : Math.sin(t / 1400 + i) * 0.08, len = (14 + (i % 2) * 8) * S;
+    c.save(); c.translate(x, y); c.rotate(sw); c.strokeStyle = "rgba(255,230,210,.35)"; line(c, 0, 0, 0, len);
+    c.translate(0, len + 8 * S); c.scale(S, S); drawKeepsake(c, m.kind); c.restore();
   });
 }
-function drawHair(c, x, y, r, look, stage) {
-  c.fillStyle = look.hair; c.strokeStyle = look.hair;
-  const style = stage < 2 ? 0 : look.style;
-  if (style === 0) {
-    c.lineWidth = r * 0.13; c.lineCap = "round"; c.beginPath(); c.moveTo(x - r * 0.05, y - r * 0.95); c.quadraticCurveTo(x + r * 0.35, y - r * 1.35, x + r * 0.15, y - r * 1.05); c.stroke();
-    if (stage >= 2) { c.beginPath(); c.arc(x, y - r * 0.1, r * 1.02, Math.PI * 1.1, Math.PI * 1.9); c.lineWidth = r * 0.25; c.stroke(); }
-  } else if (style === 1) { for (let a = 1.05; a <= 1.95; a += 0.13) circle(c, x + Math.cos(a * Math.PI) * r * 0.92, y + Math.sin(a * Math.PI) * r * 0.92, r * 0.22, look.hair); }
-  else { c.beginPath(); c.arc(x, y, r * 1.04, Math.PI * 1.02, Math.PI * 1.98); c.quadraticCurveTo(x + r * 0.2, y - r * 0.55, x - r * 1.02, y - r * 0.1); c.fill(); }
-}
-function drawFace(c, x, y, r, look, mood, stage, t, lookX = 0, lookY = 0) {
-  circle(c, x - r * 0.95, y + r * 0.05, r * 0.2, look.skin); circle(c, x + r * 0.95, y + r * 0.05, r * 0.2, look.skin);
-  circle(c, x, y, r, look.skin); drawHair(c, x, y, r, look, stage);
-  circle(c, x - r * 0.52, y + r * 0.3, r * 0.16, "rgba(230,120,120,.32)"); circle(c, x + r * 0.52, y + r * 0.3, r * 0.16, "rgba(230,120,120,.32)");
-  const ex = r * 0.36, ey = y - r * 0.02, er = r * 0.13;
-  c.strokeStyle = "#2B1D14"; c.lineWidth = Math.max(1.5, r * 0.07); c.lineCap = "round";
-  const lx = mood === "hungry" ? -1 : mood === "shy" ? 0.8 : lookX, ly = mood === "shy" ? 0.5 : lookY;
-  if (mood === "sleep" || mood === "laugh") [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey + (mood === "laugh" ? er * 0.6 : 0), er, mood === "laugh" ? 1.15 * Math.PI : 0.15 * Math.PI, mood === "laugh" ? 1.85 * Math.PI : 0.85 * Math.PI); c.stroke(); });
+
+/* ---------- çizgi figür ---------- */
+const LINE = "#FFF1E0", INK = "#2B1D14";
+function drawHead(c, x, y, r, look, mood, st, t, lookX, lookY) {
+  circle(c, x, y, r, look.skin);
+  c.strokeStyle = LINE; c.lineWidth = r * 0.16; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.stroke();
+  // saç: yenidoğanda tek bukle, sonra görünüme göre
+  c.strokeStyle = look.hair; c.fillStyle = look.hair; c.lineWidth = r * 0.2;
+  const style = st < 2 ? 0 : look.style;
+  if (style === 0) { c.beginPath(); c.moveTo(x - r * 0.1, y - r * 0.92); c.quadraticCurveTo(x + r * 0.45, y - r * 1.5, x + r * 0.2, y - r * 1.02); c.stroke(); }
+  else if (style === 1) [-0.45, 0, 0.45].forEach(o => circle(c, x + o * r, y - r * 0.92, r * 0.26, look.hair));
+  else { c.beginPath(); c.arc(x, y, r * 1.02, Math.PI * 1.08, Math.PI * 1.92); c.quadraticCurveTo(x, y - r * 0.45, x - r, y - r * 0.2); c.fill(); }
+  const ex = r * 0.36, ey = y + r * 0.02, lx = mood === "hungry" ? -0.9 : mood === "shy" ? 0.7 : lookX, ly = mood === "shy" ? 0.6 : lookY;
+  circle(c, x - r * 0.58, y + r * 0.32, r * 0.2, "rgba(255,120,130,.45)"); circle(c, x + r * 0.58, y + r * 0.32, r * 0.2, "rgba(255,120,130,.45)");
+  c.strokeStyle = INK; c.lineWidth = Math.max(1.3, r * 0.13); c.lineCap = "round";
+  if (mood === "sleep") [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey - r * 0.05, r * 0.14, 0.1 * Math.PI, 0.9 * Math.PI); c.stroke(); });
+  else if (mood === "laugh") [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey + r * 0.06, r * 0.14, 1.1 * Math.PI, 1.9 * Math.PI); c.stroke(); });
   else if (mood === "cry") {
-    [-1, 1].forEach(s => { c.beginPath(); c.moveTo(x + s * ex - er, ey - er * 0.6); c.lineTo(x + s * ex + er * 0.6 * s, ey); c.lineTo(x + s * ex - er, ey + er * 0.6); c.stroke(); });
-    const d = (t / 600) % 1; circle(c, x - ex - er, ey + r * 0.3 + d * r * 0.5, r * 0.07, "rgba(120,180,240,.9)"); circle(c, x + ex + er, ey + r * 0.3 + ((d + .5) % 1) * r * 0.5, r * 0.07, "rgba(120,180,240,.9)");
-  } else {
-    const blink = !REDUCED && (t % 4200) < 140;
-    [-1, 1].forEach(s => {
-      if (blink) { c.beginPath(); c.moveTo(x + s * ex - er, ey); c.lineTo(x + s * ex + er, ey); c.stroke(); return; }
-      circle(c, x + s * ex, ey, er * 1.05, "#FFFFFF"); circle(c, x + s * ex + lx * er * 0.45, ey + ly * er * 0.4, er * 0.8, look.eye);
-      circle(c, x + s * ex + lx * er * 0.45, ey + ly * er * 0.4, er * 0.42, "#15100C"); circle(c, x + s * ex + lx * er * 0.45 + er * 0.25, ey - er * 0.3, er * 0.18, "#FFFFFF");
-      if (mood === "sleepy") { c.fillStyle = look.skin; c.fillRect(x + s * ex - er * 1.3, ey - er * 1.4, er * 2.6, er * 1.35); c.beginPath(); c.moveTo(x + s * ex - er * 1.1, ey); c.lineTo(x + s * ex + er * 1.1, ey); c.stroke(); }
-    });
-  }
-  const my = y + r * 0.45; c.beginPath();
-  if (mood === "happy" || mood === "needy") c.arc(x, my - r * 0.12, r * 0.22, 0.15 * Math.PI, 0.85 * Math.PI);
-  else if (mood === "laugh") { c.arc(x, my - r * 0.14, r * 0.24, 0, Math.PI); c.fillStyle = "#7A2E2E"; c.fill(); c.beginPath(); }
-  else if (mood === "cry" || mood === "sleepy") { c.ellipse(x, my, mood === "cry" ? r * 0.16 : r * 0.08, mood === "cry" ? r * 0.13 : r * 0.11, 0, 0, Math.PI * 2); c.fillStyle = "#7A2E2E"; c.fill(); c.beginPath(); }
-  else if (mood === "hungry") c.arc(x, my + r * 0.12, r * 0.16, 1.15 * Math.PI, 1.85 * Math.PI);
-  else { c.moveTo(x - r * 0.1, my); c.lineTo(x + r * 0.1, my); }
-  c.stroke();
+    [-1, 1].forEach(s => { line(c, x + s * ex - r * 0.12, ey - r * 0.1, x + s * ex + r * 0.12, ey); });
+    const d = (t / 500) % 1; circle(c, x - ex, ey + r * 0.25 + d * r * 0.6, r * 0.09, "rgba(130,190,255,.95)"); circle(c, x + ex, ey + r * 0.25 + ((d + .5) % 1) * r * 0.6, r * 0.09, "rgba(130,190,255,.95)");
+  } else if (mood === "sleepy") [-1, 1].forEach(s => line(c, x + s * ex - r * 0.13, ey, x + s * ex + r * 0.13, ey));
+  else if (!REDUCED && (t % 3800) < 130) [-1, 1].forEach(s => line(c, x + s * ex - r * 0.12, ey, x + s * ex + r * 0.12, ey));
+  else [-1, 1].forEach(s => { circle(c, x + s * ex + lx * r * 0.12, ey + ly * r * 0.1, r * 0.13, INK); circle(c, x + s * ex + lx * r * 0.12 + r * 0.05, ey + ly * r * 0.1 - r * 0.05, r * 0.045, "#FFF"); });
+  const my = y + r * 0.42; c.fillStyle = "#8A3B3B"; c.beginPath();
+  if (mood === "happy" || mood === "needy") { c.arc(x, my - r * 0.1, r * 0.2, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke(); }
+  else if (mood === "laugh") { c.arc(x, my - r * 0.12, r * 0.22, 0, Math.PI); c.fill(); }
+  else if (mood === "cry") { c.ellipse(x, my, r * 0.15, r * 0.12, 0, 0, Math.PI * 2); c.fill(); }
+  else if (mood === "sleepy") { c.ellipse(x, my, r * 0.08, r * 0.11, 0, 0, Math.PI * 2); c.fill(); }
+  else if (mood === "hungry") { c.arc(x, my + r * 0.1, r * 0.13, 1.15 * Math.PI, 1.85 * Math.PI); c.stroke(); }
+  else { line(c, x - r * 0.09, my, x + r * 0.09, my); }
 }
 const MOOD = { uyuyor: "sleep", agliyor: "cry", mutfaga_bakiyor: "hungry", esniyor: "sleepy", kollarini_uzatiyor: "needy", cekingen: "shy", gulumsuyor: "happy", el_salliyor: "happy", oynuyor: "happy" };
 
-// A: { cx, lift, arms: none|up|wave|point|clap|eyes|dance, pdx, pdy, moving, facing, shoes, mood }
-function drawBaby(c, v, base, S, t, A) {
-  const b = v.baby, st = b.stageIdx, look = b.look, mood = A.mood;
-  const outfit = (OUTFITS.find(o => o.id === v.outfit) || OUTFITS[0]).color;
-  const a = REDUCED ? 0 : 1, br = 1 + a * 0.02 * Math.sin(t / 700), cx = A.cx, by = base - A.lift;
-  c.lineCap = "round";
-  c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(cx, base, (st < 2 ? 70 : 50) * S * (1 - A.lift / (200 * S)), 9 * S, 0, 0, Math.PI * 2); c.fill();
-  let head, hand = null;
-  const armTo = (sx, sy, len) => {           // kolun ucu, kol moduna göre
-    const k = t / 150;
-    if (A.arms === "up") return [sx + (sx < cx ? -0.3 : 0.3) * len, sy - len];
-    if (A.arms === "wave") return [sx + (sx < cx ? -0.4 : 0.4) * len + a * Math.sin(k) * len * 0.25, sy - len * 0.9];
-    if (A.arms === "clap") { const o = (Math.sin(t / 110) + 1) / 2; return [cx + (sx < cx ? -1 : 1) * (4 + o * 14) * S, sy - len * 0.35]; }
-    if (A.arms === "dance") return [sx + (sx < cx ? -0.5 : 0.5) * len, sy - len * (0.6 + 0.4 * Math.sin(t / 200 + (sx < cx ? 0 : Math.PI)))];
-    if (A.arms === "point" && ((A.pdx >= 0) === (sx > cx))) return [sx + A.pdx * len, sy + A.pdy * len];
-    return null;
-  };
-  if (st === 0) {
-    c.fillStyle = "#6B4B3A"; c.beginPath(); c.ellipse(cx, base - 16 * S, 64 * S, 22 * S, 0, 0, Math.PI); c.fill();
-    c.fillStyle = "#F2E6D6"; c.beginPath(); c.ellipse(cx, base - 18 * S, 60 * S, 10 * S, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = outfit; c.beginPath(); c.ellipse(cx + 14 * S, base - 26 * S, 44 * S, 17 * S * br, 0, 0, Math.PI * 2); c.fill();
-    if (A.arms === "up") { c.strokeStyle = look.skin; c.lineWidth = 7 * S; c.beginPath(); c.moveTo(cx - 10 * S, base - 34 * S); c.lineTo(cx - 20 * S, base - 58 * S); c.stroke(); }
-    head = { x: cx - 36 * S, y: base - 34 * S, r: 24 * S };
-  } else if (st === 1) {
-    c.fillStyle = "#E9D9C2"; c.beginPath(); c.ellipse(cx, base - 8 * S, 58 * S, 14 * S, 0, 0, Math.PI * 2); c.fill();
-    const k = a * Math.sin(t / 260) * (mood === "laugh" ? 9 : 5) * S;
-    c.strokeStyle = look.skin; c.lineWidth = 11 * S; c.beginPath(); c.moveTo(cx - 10 * S, base - 14 * S); c.lineTo(cx - 26 * S, base - 6 * S + k); c.moveTo(cx + 10 * S, base - 14 * S); c.lineTo(cx + 26 * S, base - 6 * S - k); c.stroke();
-    c.fillStyle = outfit; rr(c, cx - 26 * S, base - 58 * S, 52 * S, 46 * S * br, 20 * S); c.fill();
-    c.strokeStyle = look.skin; c.lineWidth = 9 * S; c.beginPath();
-    [[-1, cx - 22 * S], [1, cx + 22 * S]].forEach(([s, sx]) => { const sy = base - 48 * S, e = armTo(sx, sy, 30 * S) || [sx + s * 14 * S, base - 22 * S]; c.moveTo(sx, sy); c.lineTo(e[0], e[1]); if (A.arms === "eyes") hand = 1; });
-    c.stroke();
-    head = { x: cx, y: base - 84 * S, r: 30 * S };
-  } else if (st === 2) {
-    c.save(); c.translate(cx, 0); c.scale(A.facing < 0 ? -1 : 1, 1); c.translate(-cx, 0);
-    const sh = (A.moving ? 1 : 0.3) * a * Math.sin(t / (A.moving ? 140 : 380)) * 5 * S;
-    c.strokeStyle = look.skin; c.lineWidth = 11 * S; c.beginPath(); c.moveTo(cx + 24 * S, by - 34 * S); c.lineTo(cx + 26 * S + sh, by - 3 * S); c.moveTo(cx - 30 * S, by - 34 * S); c.lineTo(cx - 32 * S - sh, by - 3 * S); c.stroke();
-    c.fillStyle = outfit; c.beginPath(); c.ellipse(cx - 4 * S, by - 42 * S, 46 * S, 22 * S * br, 0.06, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = outfit; c.lineWidth = 12 * S; c.beginPath(); c.moveTo(cx - 36 * S, by - 36 * S); c.lineTo(cx - 40 * S - sh, by - 4 * S); c.stroke();
-    // ön kol: işaret ederken kalkar
-    c.beginPath(); c.moveTo(cx + 36 * S, by - 36 * S);
-    if (A.arms === "point" || A.arms === "up" || A.arms === "wave") c.lineTo(cx + 62 * S, by - 60 * S + (A.arms === "wave" ? Math.sin(t / 150) * 6 * S : 0)); else c.lineTo(cx + 40 * S + sh, by - 4 * S);
-    c.stroke(); c.restore();
-    head = { x: cx + (A.facing < 0 ? -1 : 1) * 52 * S, y: by - 70 * S, r: 30 * S };
-  } else {
-    const wob = (st === 3 && !REDUCED ? Math.sin(t / 500) * 0.04 : 0) + (A.arms === "dance" ? Math.sin(t / 260) * 0.14 : 0) + (mood === "laugh" ? Math.sin(t / 60) * 0.03 : 0);
-    c.save(); c.translate(cx, base); c.rotate(wob); c.translate(-cx, -base);
-    const legH = (st === 5 ? 40 : 30) * S, bodyH = (st === 5 ? 60 : 50) * S, bodyW = 52 * S;
-    const step = A.moving ? a * Math.sin(t / 110) * 7 * S : 0;
-    c.strokeStyle = look.skin; c.lineWidth = 11 * S; c.beginPath(); c.moveTo(cx - 11 * S, by - legH); c.lineTo(cx - 12 * S + step, by - 4 * S); c.moveTo(cx + 11 * S, by - legH); c.lineTo(cx + 12 * S - step, by - 4 * S); c.stroke();
-    c.fillStyle = A.shoes ? "#6EA8D8" : "#EDEDED"; [[-1, step], [1, -step]].forEach(([s, o]) => { c.beginPath(); c.ellipse(cx + s * 14 * S + o, by - 2 * S, 9 * S, 5 * S, 0, 0, Math.PI * 2); c.fill(); });
-    const bt = by - legH - bodyH;
-    c.fillStyle = outfit; rr(c, cx - bodyW / 2, bt, bodyW, bodyH * br + 5 * S, 18 * S); c.fill();
-    c.strokeStyle = look.skin; c.lineWidth = 9 * S; c.beginPath();
-    const sway = a * Math.sin(t / 450) * 4 * S;
-    [[-1, cx - bodyW / 2 + 4 * S], [1, cx + bodyW / 2 - 4 * S]].forEach(([s, sx]) => {
-      const sy = bt + 12 * S; let e = armTo(sx, sy, 36 * S);
-      if (!e && A.arms === "eyes") e = [cx + s * 12 * S, bt - 26 * S];
-      if (!e && mood === "sleepy" && s === 1) e = [cx + 18 * S, bt - 24 * S];
-      if (!e) e = [sx + s * 13 * S, bt + 36 * S + s * sway];
-      c.moveTo(sx, sy); c.lineTo(e[0], e[1]);
-    });
-    c.stroke();
-    head = { x: cx, y: bt - 26 * S, r: 32 * S };
-    c.restore();
+// Kolun ucu: kol moduna göre. (sx, sy) omuz, s -1 sol / +1 sağ, u ölçek.
+function armEnd(A, sx, sy, s, u, t, def) {
+  const a = REDUCED ? 0 : 1;
+  switch (A.arms) {
+    case "up": return [sx + s * 5 * u, sy - 11 * u];
+    case "wave": return s > 0 ? [sx + 7 * u + a * Math.sin(t / 110) * 3 * u, sy - 10 * u] : def;
+    case "clap": { const o = (Math.sin(t / 100) + 1) / 2; return [sx - s * (2 - o * 4) * u + (s < 0 ? 4 : -4) * u, sy - 4 * u]; }
+    case "dance": return [sx + s * 7 * u, sy - (5 + 5 * Math.sin(t / 180 + (s > 0 ? Math.PI : 0))) * u];
+    case "eyes": return null;
+    case "point": if ((A.pdx >= 0) === (s > 0)) return [sx + A.pdx * 11 * u, sy + A.pdy * 11 * u]; return def;
   }
-  drawFace(c, head.x, head.y, head.r, look, mood, st, t, A.lookX || 0, A.lookY || 0);
-  if (A.arms === "eyes") { circle(c, head.x - head.r * 0.36, head.y, head.r * 0.26, look.skin); circle(c, head.x + head.r * 0.36, head.y, head.r * 0.26, look.skin); }
-  if (mood === "sleepy" && st >= 3) circle(c, cx + 18 * S, head.y, 7 * S, look.skin);
-  if (mood === "sleep") {
-    c.fillStyle = "rgba(255,255,255,.85)"; c.font = `700 ${15 * S}px "Bricolage Grotesque", sans-serif`;
-    for (let i = 0; i < 3; i++) { const p = REDUCED ? i / 3 : ((t / 2400) + i / 3) % 1; c.globalAlpha = 1 - p; c.fillText("z", head.x + 26 * S + p * 24 * S, head.y - 16 * S - p * 40 * S); }
-    c.globalAlpha = 1;
-  }
-  if (A.arms === "dance") { c.fillStyle = "rgba(255,210,160,.9)"; c.font = `700 ${16 * S}px sans-serif`; for (let i = 0; i < 2; i++) { const p = ((t / 1600) + i / 2) % 1; c.globalAlpha = 1 - p; c.fillText("♪", head.x + (i ? -40 : 34) * S, head.y - 10 * S - p * 40 * S); } c.globalAlpha = 1; }
-  if (mood === "hungry" && st < 2) { const x = head.x - 50 * S, y = head.y - 30 * S; circle(c, head.x - 30 * S, head.y - 18 * S, 3 * S, "#FFF"); circle(c, x, y, 15 * S, "#FFF"); c.fillStyle = "#CFE3EF"; rr(c, x - 5 * S, y - 7 * S, 10 * S, 16 * S, 3 * S); c.fill(); }
-  return { x: head.x, y: head.y - head.r - 10 * S };
+  return def;
 }
 
-function actorFor(v, pose, t, base, S, off, W, lock) {
+// A: { X, Y (ayak pikseli), mood, arms, pdx, pdy, lift, moving, facing, shoes, lookX, lookY }. Baş üstü noktasını döndürür.
+function drawStick(c, v, S, t, A) {
+  const st = v.baby.stageIdx, look = v.baby.look, mood = A.mood, u = S * 1.35;
+  const outfit = (OUTFITS.find(o => o.id === v.outfit) || OUTFITS[0]).color;
+  const a = REDUCED ? 0 : 1, X = A.X, Y = A.Y - A.lift, f = A.facing < 0 ? -1 : 1;
+  c.lineCap = "round"; c.lineJoin = "round";
+  c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(X, A.Y + 1, 13 * u * (1 - Math.min(0.5, A.lift / (60 * u))), 3 * u, 0, 0, Math.PI * 2); c.fill();
+  const limbs = () => { c.strokeStyle = LINE; c.lineWidth = 2.6 * u; };
+  let head;
+  if (mood === "sleep" && st >= 1) {
+    // uyurken yan yatar
+    c.strokeStyle = outfit; c.lineWidth = 7 * u; line(c, X - 6 * u, Y - 4 * u, X + 8 * u, Y - 4 * u);
+    limbs(); line(c, X + 8 * u, Y - 3 * u, X + 18 * u, Y - 1 * u); line(c, X + 4 * u, Y - 6 * u, X + 10 * u, Y - 10 * u);
+    head = { x: X - 15 * u, y: Y - 8 * u, r: 9 * u };
+  } else if (st === 0) {
+    // kundaktaki bebek: yürüyemez, yuvarlanır
+    c.save(); c.translate(X, Y - 8 * u); if (A.moving) c.rotate(M.roll * 0.35);
+    c.fillStyle = outfit; c.beginPath(); c.ellipse(4 * u, 0, 13 * u, 8 * u, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = LINE; c.lineWidth = 1.6 * u; c.beginPath(); c.ellipse(4 * u, 0, 13 * u, 8 * u, 0, 0, Math.PI * 2); c.stroke();
+    if (A.arms === "up" || A.arms === "wave") { limbs(); line(c, 0, -5 * u, -2 * u + (A.arms === "wave" ? Math.sin(t / 120) * 2 * u : 0), -13 * u); }
+    c.restore();
+    head = { x: X - 9 * u, y: Y - 11 * u, r: 9 * u };
+    if (A.moving) { head.x = X + Math.cos(M.roll * 0.35 + Math.PI) * 13 * u; head.y = Y - 8 * u + Math.sin(M.roll * 0.35 + Math.PI) * 6 * u; }
+  } else if (st === 1) {
+    // oturan bebek: popo kaydırarak ilerler
+    const hop = A.moving ? Math.abs(Math.sin(t / 130)) * 3 * u : 0, by = Y - hop;
+    limbs(); line(c, X - 1 * u, by - 3 * u, X - 10 * u, Y - 1 * u); line(c, X + 1 * u, by - 3 * u, X + 10 * u, Y - 1 * u);
+    circle(c, X - 11 * u, Y - 1 * u, 1.8 * u, LINE); circle(c, X + 11 * u, Y - 1 * u, 1.8 * u, LINE);
+    c.strokeStyle = outfit; c.lineWidth = 8 * u; line(c, X, by - 4 * u, X, by - 14 * u);
+    limbs(); const sy = by - 13 * u;
+    [-1, 1].forEach(s => { const e = armEnd(A, X + s * 2 * u, sy, s, u, t, [X + s * 8 * u, sy + 6 * u + a * Math.sin(t / 400 + s) * u]); if (e) line(c, X + s * 2 * u, sy, e[0], e[1]); });
+    head = { x: X, y: by - 25 * u, r: 11 * u };
+  } else if (st === 2) {
+    // emekleme: gövde yatay, baş önde
+    const k = A.moving ? Math.sin(t / 120) * 3 * u : 0;
+    c.strokeStyle = outfit; c.lineWidth = 8 * u; line(c, X - 7 * u * f, Y - 10 * u, X + 6 * u * f, Y - 11 * u);
+    limbs();
+    line(c, X - 7 * u * f, Y - 9 * u, X - 9 * u * f - k * f, Y); line(c, X - 9 * u * f - k * f, Y, X - 15 * u * f, Y - 2 * u);    // bacak (diz yerde)
+    const shx = X + 6 * u * f, shy = Y - 10 * u;
+    const front = A.arms === "point" || A.arms === "up" || A.arms === "wave" ? [shx + 8 * u * f, shy - 9 * u + (A.arms === "wave" ? Math.sin(t / 110) * 2 * u : 0)] : [shx + 2 * u * f + k * f, Y];
+    line(c, shx, shy, front[0], front[1]); line(c, shx - 2 * u * f, shy, shx - 1 * u * f - k * f, Y);
+    head = { x: X + 14 * u * f, y: Y - 18 * u, r: 10.5 * u };
+  } else {
+    // ayakta: 3 paytak, 4-5 daha uzun
+    const legH = [0, 0, 0, 9, 10, 12][st] * u, bodyH = [0, 0, 0, 11, 12, 14][st] * u;
+    const wob = (st === 3 && !REDUCED ? Math.sin(t / 420) * 0.05 : 0) + (A.arms === "dance" ? Math.sin(t / 240) * 0.18 : 0) + (mood === "laugh" ? Math.sin(t / 55) * 0.04 : 0);
+    c.save(); c.translate(X, A.Y); c.rotate(wob); c.translate(-X, -A.Y);
+    const step = A.moving ? Math.sin(t / (st === 3 ? 120 : 95)) * 4 * u : 0, hip = Y - legH, neck = hip - bodyH;
+    limbs(); line(c, X - 1.5 * u, hip, X - 4 * u + step, Y - 1 * u); line(c, X + 1.5 * u, hip, X + 4 * u - step, Y - 1 * u);
+    c.fillStyle = A.shoes ? "#6EA8D8" : LINE;
+    c.beginPath(); c.ellipse(X - 5 * u + step, Y - 0.5 * u, 3 * u, 1.8 * u, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(X + 5 * u - step, Y - 0.5 * u, 3 * u, 1.8 * u, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = outfit; c.lineWidth = 9 * u; line(c, X, hip - 1 * u, X, neck + 3 * u);
+    limbs(); const sy = neck + 3 * u, sway = a * Math.sin(t / 420) * 1.2 * u;
+    [-1, 1].forEach(s => {
+      let e = armEnd(A, X + s * 3 * u, sy, s, u, t, [X + s * 7 * u, sy + 9 * u + s * sway]);
+      if (A.arms === "eyes") e = [X + s * 3 * u, neck - 9 * u];
+      if (!e && mood === "sleepy") e = [X + s * 3 * u, neck - 9 * u];
+      line(c, X + s * 3 * u, sy, e[0], e[1]);
+    });
+    head = { x: X, y: neck - 10 * u, r: 12 * u };
+    c.restore();
+  }
+  drawHead(c, head.x, head.y, head.r, look, mood, st, t, A.lookX || 0, A.lookY || 0);
+  if (A.arms === "eyes") { circle(c, head.x - head.r * 0.36, head.y, head.r * 0.24, look.skin); circle(c, head.x + head.r * 0.36, head.y, head.r * 0.24, look.skin); }
+  if (mood === "sleep") {
+    c.fillStyle = "rgba(255,255,255,.85)"; c.font = `700 ${11 * u}px "Bricolage Grotesque", sans-serif`;
+    for (let i = 0; i < 3; i++) { const p = REDUCED ? i / 3 : ((t / 2400) + i / 3) % 1; c.globalAlpha = 1 - p; c.fillText("z", head.x + 10 * u + p * 16 * u, head.y - 10 * u - p * 26 * u); }
+    c.globalAlpha = 1;
+  }
+  if (A.arms === "dance") { c.fillStyle = "rgba(255,210,160,.9)"; c.font = `700 ${11 * u}px sans-serif`; for (let i = 0; i < 2; i++) { const p = ((t / 1600) + i / 2) % 1; c.globalAlpha = 1 - p; c.fillText("♪", head.x + (i ? -24 : 18) * u, head.y - 6 * u - p * 26 * u); } c.globalAlpha = 1; }
+  if (mood === "hungry") { const bx = head.x - 20 * u, by = head.y - 16 * u; circle(c, head.x - 12 * u, head.y - 9 * u, 1.6 * u, "#FFF"); circle(c, bx, by, 8 * u, "#FFF"); c.fillStyle = "#CFE3EF"; rr(c, bx - 2.5 * u, by - 4 * u, 5 * u, 8 * u, 1.5 * u); c.fill(); }
+  return { x: head.x, y: head.y - head.r - 6 * u };
+}
+
+function actorFor(v, pose, off, W, H, lock) {
   const now = performance.now(), g = M.g, st = v.baby.stageIdx;
   let mood = MOOD[pose] || "happy", arms = "none", lift = 0, pdx = 0, pdy = 0, lookX = 0, lookY = 0, shoes = false;
   if (mood === "needy") arms = "up";
@@ -985,28 +1039,28 @@ function actorFor(v, pose, t, base, S, off, W, lock) {
   if (g && !v.baby.asleep && !v.baby.crying) {
     const ph = (now - M.gStart) / 1000;
     if (g === "gerin" || g === "uzan") { arms = "up"; if (g === "gerin") mood = ph < 1.6 ? "sleepy" : "happy"; }
+    if (g === "el_salla") { arms = "wave"; mood = "happy"; }
     if (g === "el_cirp") { arms = "clap"; mood = "happy"; }
     if (g === "kahkaha") { mood = "laugh"; arms = st >= 1 ? "wave" : "none"; }
     if (g === "dans" || (g === "taklit" && Server.rhythm()?.bugun?.kulaklik_takili)) { arms = "dance"; mood = "happy"; }
-    if (g === "zipla") { lift = Math.abs(Math.sin(ph * Math.PI * 1.6)) * 26 * S; mood = "laugh"; arms = "up"; }
+    if (g === "zipla") { lift = Math.abs(Math.sin(ph * Math.PI * 1.6)) * 14 * (W / 400); mood = "laugh"; arms = "up"; }
     if (g === "ce_e") { arms = (ph % 1.6) < 0.9 ? "eyes" : "wave"; mood = (ph % 1.6) < 0.9 ? "happy" : "laugh"; }
-    if (g === "yuzunu_cevir") { mood = "shy"; }
-    if (g === "goz_temasi") { mood = "happy"; }
+    if (g === "yuzunu_cevir") mood = "shy";
+    if (g === "goz_temasi") mood = "happy";
     if (g === "isaret") {
       arms = "point"; const tg = M.gt;
-      if (tg === "pencere" || tg === "donence") { pdx = tg === "pencere" ? 0.5 : 0.1; pdy = -0.95; lookY = -1; }
+      if (tg === "pencere" || tg === "donence") { pdx = tg === "pencere" ? 0.45 : 0.1; pdy = -0.9; lookY = -1; }
       else { const tx = tg === "sen" ? M.x : (TARGET_X[tg] ?? M.x); pdx = tx < M.x ? -0.95 : 0.95; pdy = -0.3; lookX = pdx > 0 ? 1 : -1; }
       mood = "happy";
     }
     if (g === "kapida_bekle") { shoes = true; lookX = 0.8; }
-    if (g === "taklit" && arms !== "dance") { arms = "wave"; }
+    if (g === "taklit" && arms !== "dance") arms = "wave";
   }
-  const moving = Math.abs(M.tx - M.x) > 0.004 && st >= 2;
-  if (moving && st >= 3 && (g === "kapida_bekle")) shoes = true;
-  let x = M.x;
-  let facing = M.facing;
-  if (M.hidden) { x = lock ? 1.04 : 1.18; if (lock) facing = -1; }   // kilit ekranında kenardan göz ucuyla bakar
-  return { cx: (x - (lock ? 0 : off)) * W, lift, arms, pdx, pdy, moving, facing, shoes, mood, lookX, lookY };
+  const moving = Math.hypot((M.tx - M.x) * W, (M.ty - M.y) * H) > 1.5;
+  if (moving) { lookX = M.facing * 0.6; if (g === "kapida_bekle") shoes = true; }
+  let x = M.x, y = lock ? Math.max(M.y, BOUNDS.lock[0]) : M.y, facing = M.facing;
+  if (M.hidden) { x = lock ? 1.03 : 1.18; if (lock) facing = -1; }       // kilit ekranında kenardan göz ucuyla bakar
+  return { X: (x - (lock ? 0 : off)) * W, Y: y * H, lift, arms, pdx, pdy, moving, facing, shoes, mood, lookX, lookY };
 }
 
 let ctx = null, CW = 0, CH = 0, headPt = null;
@@ -1016,7 +1070,6 @@ function sizeCanvas() {
   CW = r.width; CH = r.height;
   if (!ctx || cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
 }
-const sceneBase = m => (m || mode) === "home" ? CH * 0.78 : CH * 0.955;
 function currentPose(v) {
   if (v.baby.crying) return "agliyor"; if (v.baby.asleep) return "uyuyor";
   if (flashPose && performance.now() < flashUntil) return flashPose;
@@ -1026,27 +1079,34 @@ function currentPose(v) {
 function drawNow(t = performance.now(), m = mode) {
   if (!ctx) return;
   if (m === "off" || !V) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, CW, CH); headPt = null; return; }   // ekran kapalı: çizim yok
-  const lock = m !== "home", off = lock ? 0 : page * 0.3;
+  const lock = m !== "home", off = lock ? 0 : page * 0.3, S = CW / 400 * 0.95;
   drawWallpaper(ctx, CW, CH, V.now, t, off);
-  const S = CW / 400 * 0.95, base = sceneBase(m);
-  drawProps(ctx, CW, base, S, t, off, V.memories);
-  const A = actorFor(V, currentPose(V), t, base, S, off, CW, lock);
-  headPt = drawBaby(ctx, V, base, S, t, A);
+  drawProps(ctx, CW, (lock ? FLOOR.lock : FLOOR.home) * CH, S, t, off, V.memories, lock);
+  // dokunma dalgası: dokunuşun alındığını gösterir
+  for (let i = ripples.length - 1; i >= 0; i--) {
+    const p = (t - ripples[i].t) / 700; if (p > 1) { ripples.splice(i, 1); continue; }
+    ctx.strokeStyle = `rgba(255,241,224,${0.7 * (1 - p)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(ripples[i].x * CW, ripples[i].y * CH, 6 + p * 22, 0, Math.PI * 2); ctx.stroke();
+  }
+  const A = actorFor(V, currentPose(V), off, CW, CH, lock);
+  M.feet = { x: A.X, y: A.Y };
+  headPt = drawStick(ctx, V, S, t, A);
 }
 function frame(t) {
   updateMotion(t);
   if (mode !== "app") drawNow(t);
   const on = bubble && performance.now() < bubbleUntil && (mode === "lock" || mode === "home") && headPt && headPt.x > 0 && headPt.x < CW && !onboarding;
   bubbleEl.style.opacity = on ? 1 : 0;
-  if (on) { bubbleEl.textContent = bubble; bubbleEl.style.left = Math.min(CW - 60, Math.max(60, headPt.x)) + "px"; bubbleEl.style.top = headPt.y + "px"; }
+  if (on) { bubbleEl.textContent = bubble; bubbleEl.style.left = Math.min(CW - 50, Math.max(50, headPt.x)) + "px"; bubbleEl.style.top = headPt.y + "px"; }
   requestAnimationFrame(frame);
 }
+// Anı fotoğrafı: figürün etrafından 3:4 bir kare
 function snapshot() {
-  drawNow(performance.now(), "lock");
+  drawNow(performance.now(), mode === "app" ? "lock" : mode);
   const s = document.createElement("canvas"); s.width = 240; s.height = 320;
-  const sh = CW * 4 / 3, sy = Math.max(0, CH - sh);
-  s.getContext("2d").drawImage(cv, 0, sy * (cv.width / CW), cv.width, sh * (cv.width / CW), 0, 0, 240, 320);
-  try { return s.toDataURL("image/jpeg", 0.75); } catch (e) { return null; }
+  const f = M.feet || { x: CW / 2, y: CH * 0.9 }, cw = Math.min(CW, 180), ch = cw * 4 / 3;
+  const sx = Math.max(0, Math.min(CW - cw, f.x - cw / 2)), sy = Math.max(0, Math.min(CH - ch, f.y + 20 - ch)), k = cv.width / CW;
+  s.getContext("2d").drawImage(cv, sx * k, sy * k, cw * k, ch * k, 0, 0, 240, 320);
+  try { return s.toDataURL("image/jpeg", 0.8); } catch (e) { return null; }
 }
 
 /* ---------- beyin olayları ---------- */
@@ -1102,6 +1162,7 @@ function renderLock() {
       <div class="acts">${acts(n)}<button data-ndismiss="${n.id}">Kapat</button></div></div>`).join("")}</div>
     <button class="unlock" id="unlock">Kilidi açmak için dokun</button>
     <div class="lock-bottom" style="margin-top:auto"><span class="round" aria-hidden="true">${I.torch}</span><span class="round" aria-hidden="true">${I.cam}</span></div>
+    <div class="lockhint" id="lockhint" style="opacity:0">Kilit ekranında dokunma duvar kağıdına ulaşmaz (Android kısıtı). Kilidi açıp ana ekranda dokun.</div>
   </div>`;
 }
 function renderHome() {
@@ -1109,14 +1170,20 @@ function renderHome() {
     [["Telefon", "#3DDC84", "T"], ["Mesajlar", "#4E8DF5", "M"], ["Kamera", "#6B6F76", "K"], ["Takvim", "#F5B94E", String(new Date(V.now).getUTCDate())], ["Harita", "#34A0A4", "H"], ["Müzik", "#E4572E", "♪"], ["Ayarlar", "#8A8F98", "A"], ["Ortak Yaşam", "#B4521F", "O"]],
     [["Notlar", "#F2C94C", "N"], ["Hava", "#56CCF2", "☀"], ["Saat", "#333A44", "S"], ["Dosyalar", "#9B51E0", "D"]],
   ];
-  ui.innerHTML = `<div class="layer">
+  // Gerçek launcher'da da böyle: ikona dokunmak uygulamayı açar, boş alana dokunmak duvar kağıdına iletilir.
+  ui.innerHTML = `<div class="layer home">
+    <button class="tapzone" id="tapzone" aria-label="Duvar kağıdına dokun: ${esc(V.baby.name)} oraya gelir"></button>
     <div class="sbar"><span>${hhmm(V.now)}</span><span>5G · 82%</span></div>
-    <div class="home-grid">${pages[page].map(([n, c, g]) => `<button class="app" ${n === "Ortak Yaşam" ? 'id="open-app"' : 'tabindex="-1" aria-hidden="true"'}><i style="background:${c};color:#fff">${esc(g)}</i>${esc(n)}</button>`).join("")}</div>
-    <button class="tapzone" id="tapzone" style="top:46%;height:34%" aria-label="Duvar kağıdına dokun"></button>
-    <p class="home-hint">Boş alana dokun: ${esc(V.baby.name)} o noktaya gelir. Sayfayı kaydır: saklandıysa bulursun.</p>
+    <div class="home-grid">${pages[page].map(([n, c, g]) => n === "Ortak Yaşam" ? `<button class="app" id="open-app"><i style="background:${c};color:#fff">${esc(g)}</i>${esc(n)}</button>` : `<span class="app" aria-hidden="true"><i style="background:${c};color:#fff">${esc(g)}</i>${esc(n)}</span>`).join("")}</div>
+    <p class="home-hint" id="home-hint">Boş bir yere dokun, ${esc(V.baby.name)} ${esc(LOCOMOTION[V.baby.stageIdx])} oraya gelir.</p>
     <div class="pages"><button data-page="0" aria-label="Önceki sayfa">‹</button><i class="${page === 0 ? "on" : ""}"></i><i class="${page === 1 ? "on" : ""}"></i><button data-page="1" aria-label="Sonraki sayfa">›</button></div>
     <div class="dock"><span class="app"><i style="background:#3DDC84;color:#fff">T</i></span><span class="app"><i style="background:#4E8DF5;color:#fff">M</i></span><span class="app"><i style="background:#F2F2F2;color:#333">W</i></span><button class="app" id="lock-btn" aria-label="Ekranı kilitle"><i style="background:#2B2F36;color:#fff">⏻</i></button></div>
   </div>`;
+}
+function setMode(m) {
+  mode = m;
+  if (m === "home") { M.y = M.ty = Math.min(M.y, FLOOR.home); M.tx = M.x; }
+  if (m === "lock") { M.y = M.ty = FLOOR.lock; M.tx = M.x; }
 }
 function renderApp() {
   const v = V, pose = currentPose(v);
@@ -1268,12 +1335,12 @@ function jump(val) {
   refresh(); renderOff(); renderPanel();
 }
 async function screenOn() {
-  mode = "lock"; page = 0; Server.screenOn();
+  setMode("lock"); page = 0; Server.screenOn();
   const acc = awayAcc; awayAcc = null;
   const seen = new Set();
   lockNotifs = acc ? [...acc.notifs].sort((a, b) => b.t - a.t).filter(n => !seen.has(n.text) && seen.add(n.text)).slice(0, 3) : [];
   // Ekran açıldığında bebek aynı yerde bulunmasın: bazen başka bir yerde
-  if (acc && V.baby.stageIdx >= 2 && !M.hidden) { M.x = pick([0.3, 0.5, 0.7]); M.tx = M.x; }
+  if (acc && !M.hidden) { M.x = M.tx = pick([0.3, 0.5, 0.7]); }
   render(); renderPanel();
   if (acc && acc.to > acc.from) {
     const olanlar = [...new Set(acc.events.map(e => e.text))].slice(-6);
@@ -1307,7 +1374,7 @@ function showOnboarding() {
   </form></div>`;
   const draw = () => {
     const c = $("#ob-canvas"), dpr = Math.min(2, window.devicePixelRatio || 1); c.width = 140 * dpr; c.height = 140 * dpr;
-    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); drawWallpaper(x, 140, 140, T0, 0); drawFace(x, 70, 74, 38, look, "happy", 0, 1000);
+    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); drawWallpaper(x, 140, 140, T0, 0); drawStick(x, { baby: { stageIdx: 3, look }, outfit: "o1" }, 1.9, 1000, { X: 70, Y: 124, mood: "happy", arms: "wave", lift: 0, facing: 1, moving: false, lookX: 0, lookY: 0 });
   };
   draw();
   $("#ob-reroll").onclick = () => { look = randomLook(); draw(); };
@@ -1364,7 +1431,12 @@ function renderPanel() {
 
 /* ---------- olaylar ---------- */
 document.addEventListener("click", async e => {
-  const t = e.target.closest("button"); if (!t || (t.type === "submit" && t.form)) return;
+  const t = e.target.closest("button");
+  if (!t && mode === "lock" && !onboarding && e.target.closest("#ui")) {   // kilit ekranında dokunma: gerçek cihazdaki gibi duvar kağıdına ulaşmaz
+    const h = $("#lockhint"); if (h) { h.style.opacity = 1; clearTimeout(h._t); h._t = setTimeout(() => { h.style.opacity = 0; }, 2800); }
+    return;
+  }
+  if (!t || (t.type === "submit" && t.form)) return;
   const d = t.dataset;
   if (d.speed !== undefined) { speed = +d.speed; renderPanel(); return; }
   if (d.scale !== undefined) { if (V) { Server.setScale(+d.scale); refresh(); render(); renderPanel(); } return; }
@@ -1385,19 +1457,16 @@ document.addEventListener("click", async e => {
   switch (t.id) {
     case "power": case "p-power": power(); return;
     case "screen-on": screenOn(); return;
-    case "unlock": mode = "home"; page = 0; render(); renderPanel(); return;
+    case "unlock": setMode("home"); page = 0; render(); renderPanel(); return;
     case "lock-btn": Server.screenOff(); mode = "off"; awayAcc = null; render(); renderPanel(); return;
     case "open-app": openApp(); return;
-    case "close-app": mode = "home"; render(); renderPanel(); return;
+    case "close-app": setMode("home"); render(); renderPanel(); return;
     case "open-settings": view = "settings"; render(); return;
     case "close-settings": view = null; render(); return;
     case "tapzone": {
-      const rect = t.getBoundingClientRect(), fx = (e.clientX - rect.left) / rect.width;
-      M.tapX = Math.max(0.1, Math.min(0.9, fx)) + page * 0.3;
-      const first = Server.tap(); refresh();
-      if (V.baby.asleep) { say("zzz", 1200); renderPanel(); return; }
-      if (first) brainEvent({ olay: "ana-ekran-dokunma" });
-      else { playGesture(V.baby.stageIdx >= 2 ? "git:dokunulan_yer" : "kahkaha"); flashPose = "gulumsuyor"; flashUntil = performance.now() + 2500; }
+      const r = $("#screen").getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+      const res = tapTo(fx, fy), first = Server.tap(); refresh();
+      if (res === "coming" && first) brainEvent({ olay: "ana-ekran-dokunma" }, { noGesture: true });   // günün ilk dokunuşu: günlüğe AI notu, hareket yine dokunulan yere
       renderPanel(); return;
     }
     case "weekly": {
@@ -1416,7 +1485,7 @@ document.addEventListener("click", async e => {
     case "p-export": { if (!V) return; const json = Server.exportJSON(); $("#p-export-out").innerHTML = `<textarea id="export-area" readonly aria-label="Dışa aktarılan veri"></textarea>`; const ta = $("#export-area"); ta.value = json; ta.select();
       try { navigator.clipboard.writeText(json).then(() => { t.textContent = "Kopyalandı"; }, () => {}); } catch (err) {} return; }
     case "p-reset":
-      if (t.dataset.confirm) { Server.reset(); V = null; awayAcc = null; lockNotifs = []; M.hidden = false; M.x = M.tx = 0.5; delete t.dataset.confirm; t.textContent = "Sıfırla"; renderPanel(); showOnboarding(); }
+      if (t.dataset.confirm) { Server.reset(); V = null; awayAcc = null; lockNotifs = []; M.hidden = false; M.x = M.tx = 0.5; M.y = M.ty = FLOOR.lock; delete t.dataset.confirm; t.textContent = "Sıfırla"; renderPanel(); showOnboarding(); }
       else { t.dataset.confirm = "1"; t.textContent = "Emin misin? Tüm veri silinir"; setTimeout(() => { if (t.dataset.confirm) { delete t.dataset.confirm; t.textContent = "Sıfırla"; } }, 4000); }
       return;
   }
@@ -1447,7 +1516,7 @@ setInterval(() => {
   const { memory } = Server.advance(speed * 1000, false); refresh();
   if (memory) { render(); showCelebrate(memory); }
   else if (mode === "lock") { const c = document.querySelector(".lock-clock"); if (c) c.textContent = hhmm(V.now); }
-  else if (mode === "home") { const s = document.querySelector(".sbar span"); if (s) s.textContent = hhmm(V.now); }
+  else if (mode === "home") { const s = document.querySelector(".sbar span"); if (s) s.textContent = hhmm(V.now); const h = $("#home-hint"); if (h) h.textContent = `Boş bir yere dokun, ${V.baby.name} ${LOCOMOTION[V.baby.stageIdx]} oraya gelir.`; }
   else if (mode === "app" && tick % 5 === 0 && !(document.activeElement && document.activeElement.closest("form"))) render();
   renderPanel();
 }, 1000);

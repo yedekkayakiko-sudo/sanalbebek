@@ -17,6 +17,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.service.wallpaper.WallpaperService
+import android.view.MotionEvent
 import android.view.SurfaceHolder
 import kotlin.math.abs
 import kotlin.math.min
@@ -32,6 +33,7 @@ import kotlin.math.sin
  *  4. Sayfa kaydırma (onOffsetsChanged) geliyor mu? Bebek öbür sayfaya saklanabilir mi?
  *  5. Bebeğe dokununca uygulama açılabiliyor mu?
  *  6. Şarj ve kulaklık durumu, arka plan işi olmadan, görünür olunca okunabiliyor mu?
+ *  7. Ham dokunma ve sürükleme (onTouchEvent) duvar kağıdına ulaşıyor mu? Bebeği parmakla taşımak mümkün mü?
  */
 class BebekWallpaperService : WallpaperService() {
 
@@ -49,6 +51,7 @@ class BebekWallpaperService : WallpaperService() {
         private var waveUntil = 0L
         private var frames = 0
         private var visibleSince = 0L
+        private var touchMoves = 0
 
         private val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 26f; color = 0x55EC6E32 }
         private val skin = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFD39C74.toInt() }
@@ -117,6 +120,16 @@ class BebekWallpaperService : WallpaperService() {
                 waveUntil = SystemClock.uptimeMillis() + 1500
             }
             return super.onCommand(action, x, y, z, extras, resultRequested)
+        }
+
+        override fun onTouchEvent(event: MotionEvent) {
+            // Birçok launcher dokunmaları sadece COMMAND_TAP olarak iletir; sürükleme gelirse burada görürüz.
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> touchMoves = 0
+                MotionEvent.ACTION_MOVE -> touchMoves++
+                MotionEvent.ACTION_UP -> if (touchMoves > 3) DiagLog.add(applicationContext, "SÜRÜKLEME geldi · $touchMoves hareket olayı")
+            }
+            super.onTouchEvent(event)
         }
 
         override fun onDestroy() {

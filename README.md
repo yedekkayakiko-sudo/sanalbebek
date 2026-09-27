@@ -15,11 +15,13 @@ Bebek **seni tanır**: rıza verdiğin sinyallerden (ekran açma-kapama, adım, 
 | [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), 15 test |
 | [`android/`](android) | Cihaz testi: kilit ekranında canlı duvar kağıdı görünüyor mu? ([talimat](android/README.md)) |
 | [`ROADMAP.md`](ROADMAP.md) | Aşama aşama Android yol haritası |
+| [`DEGERLENDIRME.md`](DEGERLENDIRME.md) | Alan alan detaylı değerlendirme, eksikler ve öncelikler |
 
 ## Prototipte ne var
 
 - **Kilit ekranı:** saat, tarih, bildirimler ve en altta, kısayol ikonlarının arasında yaşayan bebek. Bildirimlerde "Besle" ve "Uyut" butonları var, kilidi açmadan bakım yapılabilir.
-- **Ana ekran:** ikonların arkasında aynı bebek. Boş alana dokununca o noktaya emekler ya da yürür (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak iletir). Ana ekranın ikinci sayfasına saklanabilir; sayfayı kaydırınca onu bulursun.
+- **Karakter:** küçük, tatlı bir çizgi figür. Her dönemde duruşu ve hareket şekli değişir.
+- **Ana ekran:** ikonların arkasında aynı bebek. Boş bir yere dokununca her dönemde oraya gelir (yuvarlanarak, popo kaydırarak, emekleyerek, paytak paytak, yürüyerek, koşarak); üstüne dokununca gıdıklanır (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak iletir). Ana ekranın ikinci sayfasına saklanabilir; sayfayı kaydırınca onu bulursun.
 - **Konuşmadan önceki 8 hafta:** bebek 14 hareketle anlaşır: gerinmek, kaseyi göstermek, kapıya yürümek, ce-e, el çırpmak, zıplamak, dans, saklanmak, seni taklit etmek. Heceleri senin kelimelerinden gelir: ona sık sık "top" dersen "to-to" der, ilk kelimesi büyük ihtimalle "top" olur.
 - **Güç tuşu:** ekran kapanır, duvar kağıdı çizilmez, bebek donar. Zamanı ileri sarıp (10 dk, 3 saat, sabaha kadar, 1 gün, 3 gün, 1 hafta) ekranı açınca aradaki süre yeniden hesaplanır ve beyne bir kez sorulur.
 - **Dönence:** her önemli anı (ilk gülümseme, ilk emekleme, ilk adım, ilk kelime, ilk park gezisi, ilk cümle, ortak ebeveynin katılması) bebeğin üstünde asılı dönenceye küçük bir nesne ekler. Aylar içinde duvar kağıdı sizin ortak geçmişinizle dolar. Ürünün ana fikri bu.

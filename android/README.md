@@ -24,7 +24,8 @@ Uygulamayı aç, "Duvar kağıdı olarak ayarla"ya bas. Seçim ekranında **"Ana
 | 5 | Sayfa kaydırma geliyor mu? | Ana ekranda sağa kaydır: bebek ve yaylar kayıyor mu? Günlükte "sayfa · xOffset" var mı? |
 | 6 | Bebeğe dokununca uygulama açılıyor mu? | Bebeğin üstüne dokun. Uygulama açıldı mı? Günlükte "MainActivity AÇILDI" var mı? |
 | 7 | Şarj ve kulaklık okunuyor mu? | Şarja tak veya kulaklık tak, ekranı kilitle-aç. "GÖRÜNÜR" satırında "şarj: true" ve "kulaklık: true" görünüyor mu? |
-| 8 | Pil | Bir gün boyunca kullan. Ayarlar → Pil ekranında "Ortak Yaşam Test" kaç % harcamış? |
+| 8 | Sürükleme geliyor mu? | Ana ekranda boş bir yerde parmağını sürükle (sayfa değiştirmeden, yukarı-aşağı). Günlükte "SÜRÜKLEME geldi" var mı? Varsa bebeği parmakla taşıyabiliriz. |
+| 9 | Pil | Bir gün boyunca kullan. Ayarlar → Pil ekranında "Ortak Yaşam Test" kaç % harcamış? |
 
 Sonunda uygulamada **"Günlüğü paylaş"** ile günlüğü bana gönder (WhatsApp ya da e-posta).
 
@@ -34,6 +35,6 @@ En az şu üçü: **bir Samsung** (One UI), **bir Xiaomi / Redmi / POCO** (Hyper
 
 ## Sonuç tablosu
 
-| Cihaz | Android | 1 Kilit | 2 Hareket | 3 Durma | 4 Dokunma | 5 Sayfa | 6 Uygulama açma | 7 Sinyaller | 8 Pil % |
-|---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | |
+| Cihaz | Android | 1 Kilit | 2 Hareket | 3 Durma | 4 Dokunma | 5 Sayfa | 6 Uygulama açma | 7 Sinyaller | 8 Sürükleme | 9 Pil % |
+|---|---|---|---|---|---|---|---|---|---|---|
+| | | | | | | | | | | |

@@ -11,8 +11,8 @@ android {
         applicationId = "com.ortakyasam.spike"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3-deneme"
+        versionCode = 4
+        versionName = "0.4-deneme"
     }
 
     // Sabit imza: her yeni APK eskisinin üstüne kurulabilsin (Android imzası değişince güncellemeyi reddeder).

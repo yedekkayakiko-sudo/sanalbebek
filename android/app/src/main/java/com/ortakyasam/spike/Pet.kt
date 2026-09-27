@@ -16,6 +16,8 @@ class Pet(private val ctx: Context) {
     var stage: Int = p.getInt("stage", 3)                 // 0 Yenidoğan … 5 Çocukluk (deneme için ayarlardan seçilir)
     var hunger: Float = p.getFloat("hunger", 30f)
     var energy: Float = p.getFloat("energy", 80f)
+    var joy: Float = p.getFloat("joy", 70f)                  // neşe: oynayınca artar
+    var clean: Float = p.getFloat("clean", 80f)              // temizlik: banyoda artar
     var asleep: Boolean = p.getBoolean("asleep", false)
     var hatched: Boolean = p.getBoolean("hatched", false)
     var batteryX: Float = p.getFloat("batteryX", 0.9f)     // pil ikonunun yatay yeri (0 sol, 1 sağ)
@@ -40,13 +42,14 @@ class Pet(private val ctx: Context) {
         while (dtH > 0f) {
             val s = min(dtH, 1f / 6f)
             if (asleep) {
-                hunger += 3.5f * s; energy += 16f * s
+                hunger += 3.5f * s; energy += 16f * s; joy -= 1f * s; clean -= 1f * s
                 if (energy >= 85f || hunger >= 88f) asleep = false
             } else {
-                hunger += 9f * s; energy -= 8f * s
+                hunger += 9f * s; energy -= 8f * s; joy -= 5f * s; clean -= 3f * s
                 if (energy <= 12f) asleep = true
             }
             hunger = hunger.coerceIn(0f, 100f); energy = energy.coerceIn(0f, 100f)
+            joy = joy.coerceIn(0f, 100f); clean = clean.coerceIn(0f, 100f)
             dtH -= s
         }
         save()
@@ -57,6 +60,15 @@ class Pet(private val ctx: Context) {
         hunger = max(0f, hunger - 60f); fedAt = System.currentTimeMillis(); save(); return true
     }
 
+    /** Oyun ekranında tek lokma. Tokken yemez. */
+    fun eatBite(amount: Float): Boolean {
+        if (asleep || hunger < 4f) return false
+        hunger = max(0f, hunger - amount); fedAt = System.currentTimeMillis(); save(); return true
+    }
+
+    fun bathe(amount: Float) { clean = min(100f, clean + amount) }
+    fun cheer(amount: Float) { if (!asleep) { joy = min(100f, joy + amount); energy = max(0f, energy - amount * 0.1f) } }
+
     fun wake() { asleep = false; if (energy < 40f) energy = 40f; save() }
 
     fun sleep(): Boolean {
@@ -66,7 +78,7 @@ class Pet(private val ctx: Context) {
 
     fun play(): Boolean {
         if (asleep || energy < 15f) return false
-        energy = max(0f, energy - 4f); save(); return true
+        energy = max(0f, energy - 4f); joy = min(100f, joy + 8f); save(); return true
     }
 
     fun hatch() { hatched = true; save() }
@@ -78,6 +90,7 @@ class Pet(private val ctx: Context) {
             .putBoolean("asleep", asleep).putBoolean("hatched", hatched)
             .putFloat("batteryX", batteryX).putLong("last", last)
             .putBoolean("overlayOn", overlayOn).putLong("fedAt", fedAt)
+            .putFloat("joy", joy).putFloat("clean", clean)
             .apply()
     }
 

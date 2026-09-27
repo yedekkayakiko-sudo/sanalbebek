@@ -29,6 +29,9 @@ events: [her-zaman]
 | `dans` | Sallanarak dans eder | Yürüme |
 | `taklit` | Ebeveynin son yaptığı şeyi taklit eder (yürüme, kulaklık, esneme) | Yürüme |
 | `kapida_bekle` | Ayakkabısıyla kapının önüne gider, bekler | Yürüme |
+| `ikon_arkasi` | Ana ekranda bir uygulama ikonunun arkasına saklanıp yandan bakar | Emekleme |
+| `pile_asil` | Durum çubuğundaki pil ikonuna tırmanıp asılır, ayaklarını sallar (şarjdayken sarılır) | Yürüme |
+| `saate_otur` | Kilit ekranında saatin rakamlarının üstüne oturup bacaklarını sallar | Yürüme |
 
 Hedefler: `kase` (sol alt, yemek), `kapi` (sağ alt, dışarı), `pencere` (yukarı, gökyüzü), `donence` (üstte asılı anılar), `sen` (ekrana doğru), `dokunulan_yer` (ana ekranda son dokunulan nokta).
 
@@ -44,6 +47,8 @@ Döneminin henüz yapamadığı bir hareket seçersen sunucu onu `goz_temasi` il
 | Tok, istemiyor | `yuzunu_cevir` |
 | Dışarı çıkmak istiyor | `isaret:kapi` veya `kapida_bekle` |
 | Anılarına bakıyor | `isaret:donence` |
+| Telefon şarjda | Ana ekranda `pile_asil`, kilit ekranında `saate_otur` |
+| Canı sıkılmış, oyun istiyor | `ikon_arkasi` (saklambaç) |
 
 ## Çeşitlilik
 

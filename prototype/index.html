@@ -64,16 +64,23 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1
 .app{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:5px;color:#fff;font-size:11.5px;font-weight:500;cursor:default}
 .app#open-app,.app#lock-btn{cursor:pointer}
 .app i{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;font:700 20px var(--f-display);font-style:normal}
-.home-hint{margin:auto 24px 0;text-align:center;font-size:12px;color:rgba(255,255,255,.6)}
+.home-hint{margin:14px 28px 0;text-align:center;font-size:11.5px;line-height:1.4;color:rgba(255,255,255,.55)}
+.home .pages{margin-top:auto}
 .pages{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:6px}
 .pages button{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:999px;width:30px;height:24px;font-weight:700}
 .pages i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.35)}
 .pages i.on{background:#fff}
 .dock{margin:10px 14px 16px;background:rgba(255,255,255,.12);border-radius:30px;padding:10px;display:grid;grid-template-columns:repeat(4,1fr)}
 .tapzone{position:absolute;inset:0;border:0;background:transparent;padding:0;cursor:pointer;z-index:0}
+.home{touch-action:none}
 .home > :not(.tapzone){position:relative;z-index:1;pointer-events:none}
 .home .app,.home .pages button{pointer-events:auto}
-.lockhint{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);background:rgba(20,20,24,.85);color:#fff;border-radius:12px;padding:8px 12px;font-size:12.5px;width:max-content;max-width:86%;text-align:center;transition:opacity .3s;pointer-events:none}
+.sicons{display:inline-flex;align-items:center;gap:6px}
+.batt{position:relative;display:inline-block;width:22px;height:11px;border:1.5px solid rgba(255,255,255,.85);border-radius:3px;padding:1px}
+.batt::after{content:"";position:absolute;right:-4px;top:3px;width:2px;height:4px;background:rgba(255,255,255,.85);border-radius:0 1px 1px 0}
+.batt b{display:block;height:100%;background:rgba(255,255,255,.9);border-radius:1px}
+.batt.chg b{background:#7CE08A}
+.lockhint{position:absolute;left:50%;bottom:92px;z-index:3;transform:translateX(-50%);background:rgba(20,20,24,.85);color:#fff;border-radius:12px;padding:8px 12px;font-size:12.5px;width:max-content;max-width:86%;text-align:center;transition:opacity .3s;pointer-events:none}
 
 /* kapalı ekran */
 .off{background:#000;justify-content:center;align-items:center;gap:14px;padding:24px;text-align:center}
@@ -214,6 +221,8 @@ textarea{width:100%;min-height:120px;font:12px var(--f-mono);border:1px solid va
         <button class="btn" id="p-power">Güç tuşu</button>
         <button class="btn ghost" id="p-skip">Sonraki döneme atla</button>
         <button class="btn ghost" id="p-steps">+700 adım</button>
+        <button class="btn ghost" id="p-charge">Şarja tak</button>
+        <button class="btn ghost" id="p-sound">Ses: açık</button>
       </div>
       <p class="small muted m0">Ekran kapalıyken duvar kağıdı çizilmez, hiçbir şey hesaplanmaz. Ekran açılınca aradaki süre 10 dakikalık adımlarla yeniden simüle edilir.</p>
     </div>
@@ -276,10 +285,10 @@ const STAGES = [
   { name: "Çocukluk",      from: 90, hunger: 7,  drain: 7,  attn: 8, sound: "iki kelime" },
 ];
 const POSES = ["uyuyor", "esniyor", "mutfaga_bakiyor", "kollarini_uzatiyor", "gulumsuyor", "el_salliyor", "oynuyor", "cekingen", "agliyor"];
-const GESTURES = { yok: 0, gerin: 0, goz_temasi: 0, yuzunu_cevir: 0, kahkaha: 1, uzan: 1, el_cirp: 1, git: 2, isaret: 2, ce_e: 2, saklan: 2, zipla: 3, dans: 3, taklit: 3, kapida_bekle: 3 };
+const GESTURES = { yok: 0, gerin: 0, goz_temasi: 0, yuzunu_cevir: 0, kahkaha: 1, uzan: 1, el_cirp: 1, git: 2, isaret: 2, ce_e: 2, saklan: 2, ikon_arkasi: 2, zipla: 3, dans: 3, taklit: 3, kapida_bekle: 3, pile_asil: 3, saate_otur: 3 };
 const TARGETS = ["kase", "kapi", "pencere", "donence", "sen", "dokunulan_yer"];
 const GESTURE_TEXT = { gerin: "gerindi", goz_temasi: "sana uzun uzun baktı", yuzunu_cevir: "başını çevirdi", kahkaha: "kahkahalarla güldü", uzan: "sana uzandı", el_cirp: "el çırptı",
-  git: "emekleyip gitti", isaret: "bir şeyi gösterdi", ce_e: "ce-e oynadı", saklan: "saklandı", zipla: "zıpladı", dans: "dans etti", taklit: "seni taklit etti", kapida_bekle: "kapıda bekledi" };
+  git: "emekleyip gitti", isaret: "bir şeyi gösterdi", ce_e: "ce-e oynadı", saklan: "saklandı", zipla: "zıpladı", dans: "dans etti", taklit: "seni taklit etti", kapida_bekle: "kapıda bekledi", ikon_arkasi: "ikonun arkasına saklandı", pile_asil: "pil ikonuna asıldı", saate_otur: "saatin üstüne oturdu" };
 const LOOK = { skin: ["#F6D7C3", "#EBC0A0", "#D39C74", "#A8704A", "#6F4630"], hair: ["#2B1D14", "#5A3A22", "#9C6A3A", "#D9B36C", "#B5532E"], eye: ["#4A3222", "#2F5E7A", "#4F6B3A", "#6B6E73"] };
 const NAMES = ["Milo", "Deniz", "Ada", "Ekin", "Toprak", "Nil", "Aras", "Umay"];
 const OUTFITS = [{ id: "o1", name: "Adaçayı", color: "#7FA38A" }, { id: "o2", name: "Hardal", color: "#E1B24C" }, { id: "o3", name: "Gök mavisi", color: "#7C9DC6" }];
@@ -847,7 +856,9 @@ let mode = "lock", page = 0, tab = "status", view = null, speed = 60, onboarding
 let awayAcc = null, lockNotifs = [], toast = "", survey = false, bubble = null, bubbleUntil = 0, flashPose = null, flashUntil = 0;
 // Hareket durumu. x: dünya koordinatı (0..1.3; ana ekran 2 sayfa, duvar kağıdı sayfa başına %30 kayar), y: ayakların ekran yüksekliğine oranı.
 const M = { x: 0.5, y: 0.955, tx: 0.5, ty: 0.955, g: null, gt: null, gStart: 0, gUntil: 0, hidden: false, facing: 1,
-  lastIdle: 0, userUntil: 0, foundAt: 0, last: 0, arrive: null, roll: 0, feet: null };
+  lastIdle: 0, userUntil: 0, foundAt: 0, last: 0, arrive: null, roll: 0, feet: null,
+  task: null, perch: null, perchDone: false, perchX: 0.5, peek: null, carried: null, suppressClick: false, ball: { x: 0.62, vx: 0 }, lastCharge: -1e9 };
+let charging = false;
 const ripples = [];
 const $ = s => document.querySelector(s);
 const ui = $("#ui"), ov = $("#ov"), cv = $("#wall"), bubbleEl = $("#bubble");
@@ -865,71 +876,200 @@ const TARGET_X = { kase: 0.2, kapi: 0.8, pencere: 0.7, donence: 0.5, sen: 0.5 };
 const SPEED = [34, 46, 62, 80, 96, 112];
 const LOCOMOTION = ["yuvarlanarak", "popo kaydırarak", "emekleyerek", "paytak paytak", "yürüyerek", "koşarak"];
 
-function moveTo(x, y) { M.tx = Math.max(0.04, Math.min(1.26, x)); M.ty = clampY(y); }
+function moveTo(x, y) { M.tx = Math.max(0.04, Math.min(1.26, x)); M.ty = clampY(y); M.perch = null; M.peek = null; }
+
+/* ---------- sesler: bağlama ve döneme göre ---------- */
+// Balondaki ses kısa ve döneme uygun olmalı (dil-gelisimi). Gerçek üründe ses sadece dokunuşa cevap olarak çalar.
+const VOICE = {
+  walk: ["la-la", "da-da", "ta-ta", "hop-hop"], arrive: ["da!", "ma!", "bu?", "ta-da!"], pickup: ["vii!", "aaa!", "ııı!"], drop: ["hop!", "pıt!", "hıh!"],
+  eat: ["ham!", "ham-ham", "nam-nam"], full: ["ııh", "ıh-ıh"], sleep: ["hıı...", "aah..."], ball: ["da!", "bu!", "ha-ha!"], perch: ["vii!", "ha-ha!", "hop!"],
+  peek: ["ce-e!", "ce!"], found: ["ce-e!", "ha-ha-ha!"], charge: ["vıız!", "hmm!"], tickle: ["hı-hı-hı!", "ha-ha!", "ahh!"],
+};
+function voice(ctx) {
+  const st = V.baby.stageIdx;
+  if (st === 0) return pick(["hıı", "ııh", "ah", "(minik sesler)"]);
+  if (st === 1) return pick(ctx === "tickle" || ctx === "ball" || ctx === "found" ? ["hı-hı-hı!", "aaa!", "agu!"] : ["agu", "aaa", "ağğ", "hı-hı"]);
+  if (st >= 2 && V.style.bip >= 3 && V.consent.mesaj && Math.random() < 0.08) return "bip!";
+  const hs = heardSyllables(V.heard);
+  if (st <= 3 && hs.length && Math.random() < 0.3) { const h = pick(hs); return `${h}-${h}!`; }
+  if (st >= 4 && V.vocab.length && Math.random() < 0.45) {
+    const w = ctx === "eat" && V.vocab.includes("mama") ? "mama" : ctx === "ball" && V.vocab.includes("top") ? "top" : pick(V.vocab);
+    return st === 5 && Math.random() < 0.5 ? `${w} ${pick(["daha", "ver", "yok"])}!` : `${w}!`;
+  }
+  return pick(VOICE[ctx] || VOICE.arrive);
+}
+// Ses: minik, kısa "cıvıltılar". Sadece kullanıcı etkileşimden sonra ve açıksa çalar.
+let audioCtx = null, soundOn = true, userTouched = false;
+function chirp(text) {
+  if (!soundOn || !userTouched || (mode !== "home" && mode !== "lock") || !V) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const n = Math.max(1, Math.min(5, (String(text).match(/[aeıioöuü]/g) || ["a"]).length)), base = 620 + (5 - V.baby.stageIdx) * 55, t0 = audioCtx.currentTime + 0.02;
+    for (let i = 0; i < n; i++) {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain(), s = t0 + i * 0.12, f = base * (0.85 + Math.random() * 0.4);
+      o.type = "sine"; o.frequency.setValueAtTime(f, s); o.frequency.exponentialRampToValueAtTime(f * (text.includes("?") && i === n - 1 ? 1.5 : 1.15), s + 0.1);
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.07, s + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.11);
+      o.connect(g).connect(audioCtx.destination); o.start(s); o.stop(s + 0.12);
+    }
+  } catch (e) {}
+}
+function speak(ctx, ms = 1800) { const s = voice(ctx); say(s, ms); chirp(s); }
+
 function playGesture(g) {
   if (!g || g === "yok" || !V) return;
   const [name, target] = g.split(":"), now = performance.now();
-  if (now < M.userUntil && (name === "git" || name === "saklan" || name === "kapida_bekle")) return;  // kullanıcının dokunduğu hedef önceliklidir
+  if (now < M.userUntil && ["git", "saklan", "kapida_bekle", "pile_asil", "saate_otur", "ikon_arkasi"].includes(name)) return;  // kullanıcının hedefi önceliklidir
+  if (M.carried) return;
   Server.gesture(g);
   M.g = name; M.gt = target || null; M.gStart = now;
-  M.gUntil = now + ({ saklan: 9000, kapida_bekle: 12000, git: 9000, dans: 6000 }[name] || 3800);
+  M.gUntil = now + ({ saklan: 9000, kapida_bekle: 12000, git: 9000, dans: 6000, pile_asil: 14000, saate_otur: 16000, ikon_arkasi: 14000 }[name] || 3800);
   if (M.hidden && name !== "saklan") { M.hidden = false; M.x = 1.18; moveTo(0.9, M.y); }
   const fy = floorY();
   if (name === "git") moveTo(target === "sen" ? 0.5 : (TARGET_X[target] ?? M.x), target === "sen" ? fy - 0.12 : fy);
   if (name === "kapida_bekle") moveTo(TARGET_X.kapi - 0.07, fy);
   if (name === "isaret" && target === "sen") M.facing = 1;
   if (name === "saklan") moveTo(1.2, M.y);
+  if (name === "pile_asil") { if (mode === "home") { M.perch = "pil"; M.perchDone = false; } else { M.g = "saate_otur"; } }
+  if (name === "saate_otur" || M.g === "saate_otur") { if (mode === "lock") { M.perch = "saat"; M.perchDone = false; M.perchX = 0.3 + Math.random() * 0.4; } else M.g = null; }
+  if (name === "ikon_arkasi") { if (mode === "home") { const icons = [...document.querySelectorAll(".home-grid .app i")]; if (icons.length) { M.peek = pick(icons).getBoundingClientRect(); M.perchDone = false; } } else M.g = null; }
 }
+
+// Ekrandaki nesneler (ana ekran, dünya koordinatı). Kaba dokununca oraya gider ve yer; yatağa dokununca uyur; topa dokununca oynar.
+const PROPS = { kase: 0.18, yatak: 0.4, kapi: 0.86 };
+function propAt(fx, fy) {
+  if (mode !== "home") return null;
+  const px = f => (f - page * 0.3) * CW, py = FLOOR.home * CH, X = fx * CW, Y = fy * CH, R = 30 * CW / 400;
+  if (Math.hypot(X - px(PROPS.kase), Y - py) < R) return "kase";
+  if (Math.hypot(X - px(PROPS.yatak), Y - py) < R) return "yatak";
+  if (Math.hypot(X - px(M.ball.x), Y - (py - 6)) < R) return "top";
+  return null;
+}
+function goDo(task) {
+  const now = performance.now(), x = task === "top" ? M.ball.x - 0.06 * (M.ball.x > M.x ? 1 : -1) : PROPS[task === "kase" ? "kase" : "yatak"] + (task === "kase" ? 0.07 : 0);
+  M.task = task; M.userUntil = now + 30000; M.lastIdle = now; M.g = null;
+  moveTo(x, FLOOR.home); M.arrive = now;
+  if (Math.abs(x - M.x) * CW > 60) speak("walk", 1200);
+}
+function doTask(task) {
+  const now = performance.now(), act = { kase: "feed", yatak: "sleep", top: "play" }[task];
+  const r = Server.act(act, "wall"); refresh(); renderPanel();
+  if (task === "kase") {
+    if (r.ok) { M.g = "yemek"; M.gStart = now; M.gUntil = now + 4200; speak("eat", 2000); }
+    else { M.g = "yuzunu_cevir"; M.gStart = now; M.gUntil = now + 2200; speak("full", 1500); homeToast(r.msg); }
+  } else if (task === "yatak") {
+    if (r.ok) speak("sleep", 1800); else { M.g = "yuzunu_cevir"; M.gStart = now; M.gUntil = now + 2200; homeToast(r.msg); }
+  } else {
+    if (r.ok) { M.g = "top"; M.gStart = now; M.gUntil = now + 1800; M.ball.vx = (M.ball.x >= M.x ? 1 : -1) * (0.25 + V.baby.stageIdx * 0.05); speak("ball", 1500); }
+    else homeToast(r.msg);
+  }
+  if (r.memory) showCelebrate(r.memory);
+}
+function homeToast(msg) { const h = $("#lockhint"); if (!h || !msg) return; h.textContent = msg; h.style.opacity = 1; clearTimeout(h._t); h._t = setTimeout(() => { h.style.opacity = 0; }, 2600); }
+
 // Dokunulan yere gel. Uyuyorsa gelmez; ağlıyorsa önce sakinleşmesi gerekir.
 function tapTo(fx, fy) {
   const now = performance.now();
   ripples.push({ x: fx, y: fy, t: now });
   if (!V) return "none";
-  if (V.baby.asleep) { say("zzz", 1400); return "asleep"; }
+  const prop = propAt(fx, fy);
+  if (V.baby.asleep) { if (prop === "kase" || prop === "top") homeToast(`${V.baby.name} uyuyor.`); say("zzz", 1400); return "asleep"; }
   if (V.baby.crying) { say("ııh!", 1400); return "crying"; }
   // Figürün üstüne dokunmak: gıdıklanır, yerinden kıpırdamaz
   if (M.feet && Math.hypot(fx * CW - M.feet.x, fy * CH - (M.feet.y - 22 * CW / 400)) < 30 * CW / 400) {
-    M.g = "kahkaha"; M.gStart = now; M.gUntil = now + 2400; M.userUntil = now + 15000; say(pick(["hı-hı-hı!", "ah!", "aaa!"].concat(V.baby.stageIdx >= 2 ? ["da-da!"] : [])), 1600);
+    M.g = "kahkaha"; M.gStart = now; M.gUntil = now + 2400; M.userUntil = now + 15000; speak("tickle", 1600);
     Server.gesture("kahkaha"); return "tickle";
   }
-  M.hidden = false; M.g = null; M.userUntil = now + 30000; M.lastIdle = now;
+  if (prop) { M.hidden = false; goDo(prop); return "task"; }
+  // Pil ikonuna dokunmak: oraya tırmanıp asılır (yürüme döneminden itibaren)
+  const batt = $("#batt");
+  if (batt && V.baby.stageIdx >= 3) { const r = batt.getBoundingClientRect(), s = $("#screen").getBoundingClientRect(); if (Math.hypot(fx * s.width - (r.left - s.left + r.width / 2), fy * s.height - (r.top - s.top + r.height / 2)) < 26) { M.hidden = false; M.task = null; M.g = null; M.userUntil = now + 30000; playGestureForce("pile_asil"); return "perch"; } }
+  M.hidden = false; M.g = null; M.task = null; M.userUntil = now + 30000; M.lastIdle = now;
   moveTo(fx + page * 0.3, fy);
   M.arrive = now;
+  if (Math.hypot((M.tx - M.x) * CW, (M.ty - M.y) * CH) > 90) speak("walk", 1200);
   return "coming";
 }
-function tapSound(st) { if (st >= 2 && V.style.bip >= 3 && V.consent.mesaj && Math.random() < 0.12) return "bip!"; return [pick(["hıı", "ah"]), pick(["agu", "hı-hı"]), pick(["da!", "ma-ma!"]), pick(["ta-ta!", "bu?"]), (V.vocab[0] || "ma") + "!", (V.vocab[0] || "mama") + " " + pick(["daha", "ver"])][st]; }
+function playGestureForce(g) { const u = M.userUntil; M.userUntil = 0; playGesture(g); M.userUntil = u; }
+
+/* ---------- sürükleme: parmağınla alıp istediğin yere koy ---------- */
+function dragStart(e) {
+  if (mode !== "home" || onboarding || !V || !M.feet) return;
+  const s = $("#screen").getBoundingClientRect(), X = e.clientX - s.left, Y = e.clientY - s.top, k = CW / 400;
+  if (Math.hypot(X - M.feet.x, Y - (M.feet.y - 24 * k)) > 34 * k) return;
+  M.carried = { id: e.pointerId, moved: false }; M.perch = null; M.peek = null; M.task = null; M.hidden = false; M.g = null;
+  M.userUntil = performance.now() + 30000;
+  if (!V.baby.asleep) speak("pickup", 1300);
+  try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+}
+function dragMove(e) {
+  if (!M.carried || M.carried.id !== e.pointerId) return;
+  const s = $("#screen").getBoundingClientRect();
+  const fx = Math.max(0.03, Math.min(0.97, (e.clientX - s.left) / s.width)), fy = Math.max(0.06, Math.min(0.9, (e.clientY - s.top) / s.height));
+  M.carried.moved = true; M.x = M.tx = fx + page * 0.3; M.y = M.ty = fy;
+}
+function dragEnd(e) {
+  if (!M.carried || M.carried.id !== e.pointerId) return;
+  const moved = M.carried.moved; M.carried = null;
+  if (!moved) return;
+  M.suppressClick = true;
+  const s = $("#screen").getBoundingClientRect(), fx = (e.clientX - s.left) / s.width, fy = (e.clientY - s.top) / s.height;
+  Server.gesture("tasindi"); refresh();
+  // Pilin yanına bırakıldıysa asılır, bir nesnenin yanına bırakıldıysa onu kullanır, yoksa yere konur
+  const batt = $("#batt"), r = batt && batt.getBoundingClientRect();
+  if (r && V.baby.stageIdx >= 1 && Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) < 40) { M.perch = "pil"; M.perchDone = false; M.g = "pile_asil"; M.gStart = performance.now(); M.gUntil = M.gStart + 12000; speak("perch"); return; }
+  const prop = propAt(fx, Math.max(fy, FLOOR.home - 0.03));
+  if (prop && !V.baby.asleep) { M.x = M.tx = (prop === "top" ? M.ball.x - 0.05 : PROPS[prop] + (prop === "kase" ? 0.07 : 0)) ; M.y = M.ty = FLOOR.home; doTask(prop); return; }
+  M.ty = clampY(M.y); M.tx = M.x;
+  if (!V.baby.asleep) speak("drop", 1200);
+}
 
 function updateMotion(now) {
   const dt = Math.min(0.1, (now - (M.last || now)) / 1000); M.last = now;
   if (!V || !CW) return;
   const st = V.baby.stageIdx, b = V.baby, S = CW / 400 * 0.95;
+  // top yuvarlanır
+  if (M.ball.vx) { M.ball.x += M.ball.vx * dt; M.ball.vx *= Math.pow(0.35, dt); if (Math.abs(M.ball.vx) < 0.01) M.ball.vx = 0; if (M.ball.x < 0.08 || M.ball.x > 1.2) { M.ball.vx *= -0.6; M.ball.x = Math.max(0.08, Math.min(1.2, M.ball.x)); } }
+  if (M.carried) return;
+  // Tünek hedefleri: pil ikonu (ana ekran), saatin üstü (kilit ekranı), bir ikonun arkası
+  const sr = $("#screen").getBoundingClientRect();
+  if (M.perch === "pil" && mode === "home") { const r = $("#batt") && $("#batt").getBoundingClientRect(); if (r) { M.tx = (r.left - sr.left + r.width / 2) / sr.width + page * 0.3; M.ty = (r.bottom - sr.top + 1) / sr.height; } }
+  if (M.perch === "saat" && mode === "lock") { const r = $(".lock-clock") && $(".lock-clock").getBoundingClientRect(); if (r) { M.tx = M.perchX; M.ty = (r.top - sr.top + r.height * 0.14) / sr.height; } }
+  if (M.peek && mode === "home") { M.tx = (M.peek.right - sr.left - 4) / sr.width + page * 0.3; M.ty = (M.peek.bottom - sr.top - 1) / sr.height; }
   if (b.asleep || b.crying) { M.tx = M.x; M.ty = M.y; }
   const dxp = (M.tx - M.x) * CW, dyp = (M.ty - M.y) * CH, dist = Math.hypot(dxp, dyp);
   if (dist > 1.5) {
-    const stepPx = Math.min(dist, SPEED[st] * (1 + (V.persona.enerji || 0) * 0.12) * S * dt);
+    const stepPx = Math.min(dist, SPEED[st] * (1 + (V.persona.enerji || 0) * 0.12) * (M.perch || M.peek ? 1.4 : 1) * S * dt);
     M.x += dxp / dist * stepPx / CW; M.y += dyp / dist * stepPx / CH;
     if (Math.abs(dxp) > 2) M.facing = Math.sign(dxp);
     M.roll += stepPx / (9 * S) * (M.facing || 1);
-  } else if (M.arrive) {
-    // Vardı: sana bakıp el sallar
-    M.arrive = null; flashPose = "gulumsuyor"; flashUntil = now + 2600;
-    M.g = st >= 1 ? "el_salla" : "goz_temasi"; M.gStart = now; M.gUntil = now + 2200; say(tapSound(st), 1800);
+  } else {
+    if ((M.perch || M.peek) && !M.perchDone) { M.perchDone = true; speak(M.peek ? "peek" : "perch", 1600); }
+    if (M.task) { const t = M.task; M.task = null; M.arrive = null; doTask(t); }
+    else if (M.arrive) { M.arrive = null; flashPose = "gulumsuyor"; flashUntil = now + 2600; M.g = st >= 1 ? "el_salla" : "goz_temasi"; M.gStart = now; M.gUntil = now + 2200; speak("arrive"); }
   }
   if (M.g === "saklan" && M.x >= 1.15) M.hidden = true;
-  if (M.g && now > M.gUntil) M.g = null;
-  // Kendi başına gezinme: uyanıkken, kullanıcı son 30 sn dokunmadıysa, AI çağrısı yapmadan.
-  if (!M.g && !M.hidden && !b.asleep && !b.crying && mode !== "off" && mode !== "app" && now > M.userUntil && now - M.lastIdle > 20000) {
+  if (M.g && now > M.gUntil) {
+    if (M.perch || M.peek) { M.perch = null; M.peek = null; M.ty = clampY(floorY() - Math.random() * 0.05); M.tx = M.x; if (!b.asleep) speak("drop", 1000); }
+    M.g = null;
+  }
+  // Şarj: pile koşar ve sarılır (ana ekran), kilit ekranında saatin üstünde uyuklar
+  if (charging && !M.g && !b.asleep && !M.carried && now > M.userUntil && st >= 3 && now - M.lastCharge > 25000) { M.lastCharge = now; playGesture(mode === "home" ? "pile_asil" : "saate_otur"); speak("charge"); }
+  // Kendi başına gezinme: uyanıkken, kullanıcı son 30 sn dokunmadıysa, AI çağrısı yapmadan
+  if (!M.g && !M.hidden && !b.asleep && !b.crying && mode !== "off" && mode !== "app" && now > M.userUntil && now - M.lastIdle > 18000) {
     M.lastIdle = now;
     const r = Math.random(), huy = V.persona.huylar, bs = Server.brainState();
-    const huyG = { saklambacci: "saklan", pencere_hayrani: "isaret:pencere", topa_duskun: "isaret:donence", muzik_kulagi: "dans", uykucu: "gerin", ayak_parmagi: "kahkaha" };
+    const huyG = { saklambacci: mode === "home" ? "ikon_arkasi" : "saklan", pencere_hayrani: "isaret:pencere", topa_duskun: "isaret:donence", muzik_kulagi: "dans", uykucu: "gerin", ayak_parmagi: "kahkaha" };
     const fav = huy.map(h => huyG[h]).filter(g => allowedGesture(bs, g));
-    if (r < 0.2 && fav.length) playGesture(pick(fav));        // kisilik: huyları sık görünür
-    else if (r < 0.5) playGesture(ruleGesture(bs));
-    else if (r < 0.8) moveTo(0.15 + Math.random() * 0.7, floorY() - Math.random() * (mode === "home" ? 0.2 : 0.05));
+    const place = (mode === "home" ? ["ikon_arkasi", "pile_asil"] : ["saate_otur"]).filter(g => allowedGesture(bs, g));
+    if (r < 0.18 && fav.length) playGesture(pick(fav));        // kisilik: huyları sık görünür
+    else if (r < 0.36 && place.length) playGesture(pick(place));
+    else if (r < 0.46 && mode === "home" && st >= 2) { M.task = "top"; moveTo(M.ball.x - 0.05, FLOOR.home); M.arrive = now; M.userUntil = 0; }
+    else if (r < 0.66) playGesture(ruleGesture(bs));
+    else moveTo(0.15 + Math.random() * 0.7, floorY() - Math.random() * (mode === "home" ? 0.2 : 0.05));
   }
   // Saklambaç: ana ekranın 2. sayfasında bulundu
   if (M.hidden && mode === "home" && page === 1 && !M.foundAt) M.foundAt = now;
-  if (M.foundAt && now - M.foundAt > 1200) { M.foundAt = 0; M.hidden = false; M.x = 1.14; moveTo(0.95, M.y); M.g = "kahkaha"; M.gStart = now; M.gUntil = now + 3000; say("ce-e!"); Server.found(); refresh(); renderPanel(); }
+  if (M.foundAt && now - M.foundAt > 1200) { M.foundAt = 0; M.hidden = false; M.x = 1.14; moveTo(0.95, M.y); M.g = "kahkaha"; M.gStart = now; M.gUntil = now + 3000; speak("found"); Server.found(); refresh(); renderPanel(); }
 }
 
 /* ---------- çizim ---------- */
@@ -969,7 +1109,12 @@ function drawProps(c, W, base, S, t, off, mems, lock) {
   if (!lock) {   // kilit ekranında köşelerde kısayol ikonları var: kase ve kapı sadece ana ekranda
   const bx = X(0.2); c.fillStyle = "#E7DCCB"; c.beginPath(); c.ellipse(bx, base - 4 * S, 11 * S, 4 * S, 0, 0, Math.PI * 2); c.fill();
   c.fillStyle = "#C9B8A0"; c.beginPath(); c.moveTo(bx - 11 * S, base - 4 * S); c.quadraticCurveTo(bx, base + 8 * S, bx + 11 * S, base - 4 * S); c.fill();
-  const dx = X(0.84); c.strokeStyle = "#FFF1E0"; c.lineWidth = 2.2 * S; rr(c, dx - 13 * S, base - 44 * S, 26 * S, 44 * S, 3 * S); c.stroke(); circle(c, dx + 7 * S, base - 21 * S, 1.8 * S, "#FFB684");
+  const dx = X(0.86); c.strokeStyle = "#FFF1E0"; c.lineWidth = 2.2 * S; rr(c, dx - 13 * S, base - 44 * S, 26 * S, 44 * S, 3 * S); c.stroke(); circle(c, dx + 7 * S, base - 21 * S, 1.8 * S, "#FFB684");
+  // yatak: minder ve battaniye
+  const yx = X(0.4); c.fillStyle = "#E8D6F0"; rr(c, yx - 18 * S, base - 8 * S, 36 * S, 9 * S, 4 * S); c.fill(); c.fillStyle = "#FFFFFF"; rr(c, yx - 16 * S, base - 12 * S, 11 * S, 6 * S, 3 * S); c.fill();
+  c.fillStyle = "#B9A2D6"; rr(c, yx - 3 * S, base - 10 * S, 20 * S, 8 * S, 3 * S); c.fill();
+  // top: kendi fiziğiyle yuvarlanır
+  const tx = X(M.ball.x), rot = M.ball.x * 30; c.save(); c.translate(tx, base - 6 * S); c.rotate(rot); circle(c, 0, 0, 6 * S, "#E4572E"); c.strokeStyle = "#FFF"; c.lineWidth = 1.4 * S; c.beginPath(); c.arc(0, 0, 6 * S, -0.6, 0.9); c.stroke(); c.restore();
   }
   const items = mems.filter(m => m.kind in MEM_OBJ).slice(0, 7); if (!items.length) return;
   const x1 = X(0.22), x2 = X(0.78), y0 = base - 130 * S, sag = 16 * S;
@@ -1121,117 +1266,154 @@ function fillOutfit(c, path, of, x0, y0, w, h) {
 }
 function chibiHead(c, x, y, r, look, mood, st, t, lookX, lookY) {
   const H = look.hair;
-  // arka saç
-  c.fillStyle = H; c.beginPath(); c.ellipse(x, y + r * 0.05, r * 1.12, r * 1.08, 0, 0, Math.PI * 2); c.fill();
-  // kulaklar: kedi ya da tavşan (küçük varlık)
-  if (look.ears === "kedi") [-1, 1].forEach(s => { c.fillStyle = H; c.beginPath(); c.moveTo(x + s * r * 0.35, y - r * 0.85); c.lineTo(x + s * r * 0.95, y - r * 1.45); c.lineTo(x + s * r * 0.9, y - r * 0.5); c.fill(); c.fillStyle = "#F5A3B5"; c.beginPath(); c.moveTo(x + s * r * 0.5, y - r * 0.85); c.lineTo(x + s * r * 0.86, y - r * 1.25); c.lineTo(x + s * r * 0.82, y - r * 0.7); c.fill(); });
-  if (look.ears === "tavsan") [-1, 1].forEach(s => { c.fillStyle = H; c.beginPath(); c.ellipse(x + s * r * 0.45, y - r * 1.35, r * 0.2, r * 0.55, s * 0.2, 0, Math.PI * 2); c.fill(); c.fillStyle = "#F5A3B5"; c.beginPath(); c.ellipse(x + s * r * 0.45, y - r * 1.32, r * 0.09, r * 0.38, s * 0.2, 0, Math.PI * 2); c.fill(); });
-  // yüz
-  c.fillStyle = look.skin; c.beginPath(); c.ellipse(x, y + r * 0.08, r * 0.98, r * 0.9, 0, 0, Math.PI * 2); c.fill();
-  // perçem
-  c.fillStyle = H; c.beginPath(); c.moveTo(x - r * 1.02, y + r * 0.1); c.quadraticCurveTo(x - r * 1.05, y - r * 1.05, x, y - r * 1.02); c.quadraticCurveTo(x + r * 1.05, y - r * 1.05, x + r * 1.02, y + r * 0.1);
+  // arka saç ve kulaklar
+  c.fillStyle = H; c.beginPath(); c.ellipse(x, y + r * 0.08, r * 1.1, r * 1.04, 0, 0, Math.PI * 2); c.fill();
+  if (look.ears === "kedi") [-1, 1].forEach(s => { c.fillStyle = H; c.beginPath(); c.moveTo(x + s * r * 0.3, y - r * 0.8); c.quadraticCurveTo(x + s * r * 0.9, y - r * 1.55, x + s * r * 0.98, y - r * 0.42); c.fill(); c.fillStyle = "#F7A9BC"; c.beginPath(); c.moveTo(x + s * r * 0.48, y - r * 0.78); c.quadraticCurveTo(x + s * r * 0.86, y - r * 1.3, x + s * r * 0.86, y - r * 0.6); c.fill(); });
+  if (look.ears === "tavsan") [-1, 1].forEach(s => { const sw = REDUCED ? 0 : Math.sin(t / 700 + s) * 0.08; c.fillStyle = H; c.beginPath(); c.ellipse(x + s * r * 0.42, y - r * 1.32, r * 0.22, r * 0.58, s * 0.22 + sw, 0, Math.PI * 2); c.fill(); c.fillStyle = "#F7A9BC"; c.beginPath(); c.ellipse(x + s * r * 0.42, y - r * 1.28, r * 0.1, r * 0.4, s * 0.22 + sw, 0, Math.PI * 2); c.fill(); });
+  // yüz: yuvarlak, altı biraz daha dolgun (tombul yanak)
+  c.fillStyle = look.skin; c.beginPath(); c.ellipse(x, y + r * 0.14, r * 0.96, r * 0.86, 0, 0, Math.PI * 2); c.fill();
+  // perçem ve tepede tek tel saç (ahoge)
+  c.fillStyle = H; c.beginPath(); c.moveTo(x - r * 1.0, y + r * 0.12); c.quadraticCurveTo(x - r * 1.05, y - r * 1.02, x, y - r * 1.0); c.quadraticCurveTo(x + r * 1.05, y - r * 1.02, x + r * 1.0, y + r * 0.12);
   const tips = st < 2 ? 3 : 5;
-  for (let i = tips; i >= 0; i--) { const px = x + r * 0.95 - (i / tips) * r * 1.9; c.lineTo(px, y - r * (i % 2 ? 0.35 : 0.1) - (st < 2 ? r * 0.25 : 0)); }
+  for (let i = tips; i >= 0; i--) { const px = x + r * 0.95 - (i / tips) * r * 1.9; c.lineTo(px, y - r * (i % 2 ? 0.34 : 0.12) - (st < 2 ? r * 0.22 : 0)); }
   c.closePath(); c.fill();
-  // gözler
-  const ex = r * 0.4, ey = y + r * 0.2, rx = r * 0.21, ry = r * 0.27;
+  c.strokeStyle = H; c.lineWidth = r * 0.12; c.lineCap = "round"; const wob = REDUCED ? 0 : Math.sin(t / 500) * r * 0.06;
+  c.beginPath(); c.moveTo(x + r * 0.05, y - r * 0.98); c.quadraticCurveTo(x + r * 0.35 + wob, y - r * 1.55, x + r * 0.55 + wob, y - r * 1.25); c.stroke();
+  // gözler: büyük, iki parlama
+  const ex = r * 0.38, ey = y + r * 0.24, rx = r * 0.235, ry = r * 0.3;
   const lx = mood === "hungry" ? -0.8 : mood === "shy" ? 0.6 : lookX, ly = mood === "shy" ? 0.5 : lookY;
-  c.strokeStyle = INK; c.lineCap = "round"; c.lineWidth = r * 0.09;
-  if (mood === "sleep") [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey - r * 0.02, rx, 0.1 * Math.PI, 0.9 * Math.PI); c.stroke(); });
-  else if (mood === "laugh") [-1, 1].forEach(s => { c.beginPath(); c.moveTo(x + s * ex - rx, ey + r * 0.05); c.lineTo(x + s * ex, ey - r * 0.12); c.lineTo(x + s * ex + rx, ey + r * 0.05); c.stroke(); });
+  c.strokeStyle = INK; c.lineWidth = r * 0.085;
+  if (mood === "sleep") [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey - r * 0.02, rx * 0.9, 0.1 * Math.PI, 0.9 * Math.PI); c.stroke(); });
+  else if (mood === "laugh") [-1, 1].forEach(s => { c.beginPath(); c.moveTo(x + s * ex - rx, ey + r * 0.04); c.quadraticCurveTo(x + s * ex, ey - r * 0.2, x + s * ex + rx, ey + r * 0.04); c.stroke(); });
+  else if (mood === "surprise") [-1, 1].forEach(s => { circle(c, x + s * ex, ey, rx * 0.95, "#FFFFFF"); circle(c, x + s * ex, ey, rx * 0.5, INK); circle(c, x + s * ex - rx * 0.2, ey - rx * 0.25, rx * 0.2, "#FFFFFF"); });
   else if (!REDUCED && (t % 4100) < 120) [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey, rx, 0.1 * Math.PI, 0.9 * Math.PI); c.stroke(); });
   else [-1, 1].forEach(s => {
-    const cx = x + s * ex;
+    const cx = x + s * ex, ox = lx * rx * 0.25, oy = ly * ry * 0.2;
     c.fillStyle = "#FFFFFF"; c.beginPath(); c.ellipse(cx, ey, rx, ry, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = look.eye; c.beginPath(); c.ellipse(cx + lx * rx * 0.25, ey + ly * ry * 0.2 + ry * 0.08, rx * 0.86, ry * 0.86, 0, 0, Math.PI * 2); c.fill();
-    c.fillStyle = INK; c.beginPath(); c.ellipse(cx + lx * rx * 0.25, ey + ly * ry * 0.2 + ry * 0.12, rx * 0.45, ry * 0.5, 0, 0, Math.PI * 2); c.fill();
-    circle(c, cx + lx * rx * 0.25 - rx * 0.32, ey - ry * 0.3, rx * 0.3, "#FFFFFF"); circle(c, cx + lx * rx * 0.25 + rx * 0.35, ey + ry * 0.35, rx * 0.14, "#FFFFFF");
-    c.beginPath(); c.ellipse(cx, ey, rx, ry, 0, Math.PI * 1.05, Math.PI * 1.95); c.stroke();          // üst kirpik çizgisi
-    if (mood === "sleepy") { c.fillStyle = look.skin; c.fillRect(cx - rx * 1.2, ey - ry * 1.2, rx * 2.4, ry * 1.15); c.beginPath(); c.moveTo(cx - rx, ey); c.lineTo(cx + rx, ey); c.stroke(); }
+    const g = c.createLinearGradient(0, ey - ry, 0, ey + ry); g.addColorStop(0, INK); g.addColorStop(0.55, look.eye); g.addColorStop(1, look.eye);
+    c.fillStyle = g; c.beginPath(); c.ellipse(cx + ox, ey + oy + ry * 0.06, rx * 0.9, ry * 0.9, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = INK; c.beginPath(); c.ellipse(cx + ox, ey + oy + ry * 0.1, rx * 0.42, ry * 0.46, 0, 0, Math.PI * 2); c.fill();
+    circle(c, cx + ox - rx * 0.3, ey + oy - ry * 0.32, rx * 0.34, "#FFFFFF"); circle(c, cx + ox + rx * 0.36, ey + oy + ry * 0.38, rx * 0.15, "#FFFFFF");
+    c.beginPath(); c.ellipse(cx, ey, rx * 1.02, ry * 1.02, 0, Math.PI * 1.08, Math.PI * 1.92); c.stroke();
+    if (mood === "sleepy") { c.fillStyle = look.skin; c.fillRect(cx - rx * 1.2, ey - ry * 1.25, rx * 2.4, ry * 1.2); c.beginPath(); c.moveTo(cx - rx, ey); c.lineTo(cx + rx, ey); c.stroke(); }
   });
   if (mood === "cry") { const d = (t / 500) % 1; circle(c, x - ex, ey + ry + d * r * 0.5, r * 0.08, "rgba(130,190,255,.95)"); circle(c, x + ex, ey + ry + ((d + .5) % 1) * r * 0.5, r * 0.08, "rgba(130,190,255,.95)"); }
-  // yanaklar: pembe ve üç çizgi
-  [-1, 1].forEach(s => { c.fillStyle = mood === "shy" ? "rgba(255,110,130,.6)" : "rgba(255,130,150,.4)"; c.beginPath(); c.ellipse(x + s * r * 0.64, y + r * 0.5, r * 0.18, r * 0.1, 0, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = "rgba(220,90,110,.6)"; c.lineWidth = r * 0.04; for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(x + s * r * 0.64 + i * r * 0.08 - r * 0.03, y + r * 0.55); c.lineTo(x + s * r * 0.64 + i * r * 0.08 + r * 0.03, y + r * 0.45); c.stroke(); } });
+  // yanaklar
+  [-1, 1].forEach(s => { c.fillStyle = mood === "shy" ? "rgba(255,105,130,.62)" : "rgba(255,125,150,.45)"; c.beginPath(); c.ellipse(x + s * r * 0.62, y + r * 0.56, r * 0.2, r * 0.11, 0, 0, Math.PI * 2); c.fill(); });
   // ağız
-  const my = y + r * 0.62; c.strokeStyle = INK; c.lineWidth = r * 0.07; c.fillStyle = "#C0485A";
-  if (mood === "laugh" || mood === "cry") { c.beginPath(); c.moveTo(x - r * 0.14, my - r * 0.04); c.quadraticCurveTo(x, my + r * 0.26, x + r * 0.14, my - r * 0.04); c.closePath(); c.fill(); }
+  const my = y + r * 0.64; c.strokeStyle = INK; c.lineWidth = r * 0.07; c.fillStyle = "#C0485A";
+  if (mood === "laugh" || mood === "cry" || mood === "surprise") { c.beginPath(); if (mood === "surprise") c.ellipse(x, my + r * 0.02, r * 0.07, r * 0.09, 0, 0, Math.PI * 2); else { c.moveTo(x - r * 0.13, my - r * 0.03); c.quadraticCurveTo(x, my + r * 0.24, x + r * 0.13, my - r * 0.03); c.closePath(); } c.fill(); }
+  else if (mood === "eat") { const o = Math.abs(Math.sin(t / 150)); c.beginPath(); c.ellipse(x, my, r * 0.08, r * (0.03 + o * 0.08), 0, 0, Math.PI * 2); c.fill(); }
   else if (mood === "sleepy") { c.beginPath(); c.ellipse(x, my, r * 0.06, r * 0.08, 0, 0, Math.PI * 2); c.fill(); }
   else if (mood === "hungry") { c.beginPath(); c.arc(x, my + r * 0.06, r * 0.08, 1.1 * Math.PI, 1.9 * Math.PI); c.stroke(); }
-  else if (look.ears === "kedi") { c.beginPath(); c.arc(x - r * 0.06, my - r * 0.02, r * 0.06, 0, Math.PI); c.arc(x + r * 0.06, my - r * 0.02, r * 0.06, 0, Math.PI); c.stroke(); }   // ω
-  else if (mood === "happy" || mood === "needy") { c.beginPath(); c.arc(x, my - r * 0.06, r * 0.1, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke(); }
+  else if (look.ears === "kedi" || mood === "happy" || mood === "needy") { c.beginPath(); c.arc(x - r * 0.06, my - r * 0.02, r * 0.06, 0.1, Math.PI - 0.1); c.arc(x + r * 0.06, my - r * 0.02, r * 0.06, 0.1, Math.PI - 0.1); c.stroke(); }   // ω
   else { c.beginPath(); c.moveTo(x - r * 0.05, my); c.lineTo(x + r * 0.05, my); c.stroke(); }
 }
+
+// Pozlar: stand, sit, crawl, lie, egg, dangle (taşınırken), hang (pile asılı), edge (saatin kenarında oturur), eat
+const CH_SIZE = [0.8, 0.86, 0.92, 1, 1.06, 1.14];
 function drawChibi(c, v, S, t, A) {
-  const st = v.baby.stageIdx, look = v.baby.look, mood = A.mood, u = S * 1.45, of = outfitOf(v);
-  const a = REDUCED ? 0 : 1, X = A.X, Y = A.Y - A.lift, f = A.facing < 0 ? -1 : 1, skin = look.skin;
+  const st = v.baby.stageIdx, look = v.baby.look, mood = A.mood, of = outfitOf(v), skin = look.skin, a = REDUCED ? 0 : 1;
+  const u = S * 1.5 * CH_SIZE[st], r = 12.5 * u, bw = 12 * u, bh = 8.5 * u, lg = 4.5 * u;
+  const X = A.X, Y = A.Y - A.lift;
   c.lineCap = "round"; c.lineJoin = "round";
-  c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(X, A.Y + 1, 14 * u * (1 - Math.min(0.5, A.lift / (60 * u))), 3.2 * u, 0, 0, Math.PI * 2); c.fill();
   const limb = w => { c.strokeStyle = skin; c.lineWidth = w * u; };
+  const foot = (x, y) => { c.fillStyle = A.shoes ? "#6EA8D8" : "#FFF4EA"; c.beginPath(); c.ellipse(x, y, 2.8 * u, 1.9 * u, 0, 0, Math.PI * 2); c.fill(); };
+  const shadow = w => { c.fillStyle = "rgba(0,0,0,.33)"; c.beginPath(); c.ellipse(X, A.Y + 1, w * (1 - Math.min(0.5, A.lift / (60 * u))), 3 * u, 0, 0, Math.PI * 2); c.fill(); };
+  const onesie = (cx, top, w, h) => fillOutfit(c, () => { c.beginPath(); c.moveTo(cx - w * 0.36, top); c.lineTo(cx + w * 0.36, top); c.quadraticCurveTo(cx + w * 0.64, top + h, cx + w * 0.5, top + h + 1.5 * u); c.lineTo(cx - w * 0.5, top + h + 1.5 * u); c.quadraticCurveTo(cx - w * 0.64, top + h, cx - w * 0.36, top); c.closePath(); }, of, cx - w * 0.64, top, w * 1.28, h + 2 * u);
+  const blob = (cx, cy, rx, ry) => fillOutfit(c, () => { c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); }, of, cx - rx, cy - ry, rx * 2, ry * 2);
+  let pose = A.special || (mood === "sleep" && st >= 1 ? "lie" : st === 0 ? "egg" : st === 1 ? "sit" : st === 2 ? "crawl" : "stand");
+  if (st === 0 && pose !== "egg") pose = "egg";
   let head;
-  if (mood === "sleep" && st >= 1) {
-    fillOutfit(c, () => { c.beginPath(); c.ellipse(X + 5 * u, Y - 5 * u, 11 * u, 5.5 * u, 0, 0, Math.PI * 2); }, of, X - 6 * u, Y - 11 * u, 22 * u, 12 * u);
-    limb(3.5); line(c, X + 15 * u, Y - 4 * u, X + 20 * u, Y - 2 * u);
-    head = { x: X - 11 * u, y: Y - 10 * u, r: 11 * u };
-  } else if (st === 0) {
-    // yumurtadan yeni çıkmış: alt kabuk içinde, kafa dışarıda. Yuvarlanarak gelir.
+  if (pose === "egg") {
     const hatch = hatchStart ? Math.min(1, (performance.now() - hatchStart) / 2500) : 1;
-    c.save(); c.translate(X, Y - 9 * u); if (A.moving) c.rotate(Math.sin(M.roll * 0.5) * 0.35); else if (hatch < 1) c.rotate(Math.sin(t / 60) * 0.12 * (1 - hatch));
+    shadow(12 * u);
+    c.save(); c.translate(X, Y - 9 * u);
+    if (A.moving) c.rotate(Math.sin(M.roll * 0.5) * 0.35); else if (A.carried) c.rotate(Math.sin(t / 150) * 0.2); else if (hatch < 1) c.rotate(Math.sin(t / 60) * 0.12 * (1 - hatch));
     c.fillStyle = "#FFF6E6"; c.strokeStyle = LINE; c.lineWidth = 1.5 * u;
     c.beginPath(); c.moveTo(-11 * u, -2 * u);
     for (let i = 0; i <= 6; i++) c.lineTo(-11 * u + i * (22 * u / 6), (i % 2 ? -5 : -1) * u);
     c.quadraticCurveTo(12 * u, 10 * u, 0, 10 * u); c.quadraticCurveTo(-12 * u, 10 * u, -11 * u, -2 * u); c.fill(); c.stroke();
-    c.fillStyle = "rgba(240,190,140,.5)"; circle(c, -4 * u, 4 * u, 1.6 * u, "rgba(240,190,140,.5)"); circle(c, 5 * u, 6 * u, 1.2 * u, "rgba(240,190,140,.5)");
+    circle(c, -4 * u, 4 * u, 1.6 * u, "rgba(240,190,140,.5)"); circle(c, 5 * u, 6 * u, 1.2 * u, "rgba(240,190,140,.5)");
     c.restore();
     if (hatch < 1) { c.fillStyle = "#FFF6E6"; c.save(); c.translate(X + hatch * 26 * u, Y - 22 * u - hatch * 30 * u); c.rotate(hatch * 3); c.beginPath(); c.ellipse(0, 0, 11 * u, 7 * u, 0, Math.PI, 0); c.fill(); c.restore(); }
-    head = { x: X, y: Y - 17 * u, r: 10 * u };
+    head = { x: X, y: Y - 18 * u, r: r * 0.88 };
     if (A.arms === "up" || A.arms === "wave") { limb(3); line(c, X + 8 * u, Y - 12 * u, X + 12 * u + (A.arms === "wave" ? Math.sin(t / 110) * 2 * u : 0), Y - 20 * u); }
-  } else if (st === 1) {
-    const hop = A.moving ? Math.abs(Math.sin(t / 130)) * 3 * u : 0, by = Y - hop;
-    limb(4.5); line(c, X - 3 * u, by - 3 * u, X - 9 * u, Y - 1.5 * u); line(c, X + 3 * u, by - 3 * u, X + 9 * u, Y - 1.5 * u);
-    fillOutfit(c, () => { c.beginPath(); c.ellipse(X, by - 8 * u, 8.5 * u, 7.5 * u, 0, 0, Math.PI * 2); }, of, X - 9 * u, by - 16 * u, 18 * u, 16 * u);
-    limb(3.6); const sy = by - 11 * u;
-    [-1, 1].forEach(s => { const e = armEnd(A, X + s * 6 * u, sy, s, u * 0.8, t, [X + s * 9 * u, sy + 5 * u]); if (e) line(c, X + s * 6 * u, sy, e[0], e[1]); });
-    head = { x: X, y: by - 25 * u, r: 12 * u };
-  } else if (st === 2) {
-    const k = A.moving ? Math.sin(t / 120) * 2.5 * u : 0;
+    if (mood === "eat") { c.fillStyle = "#DCEFFA"; rr(c, X + 9 * u, Y - 22 * u, 5 * u, 9 * u, 1.5 * u); c.fill(); c.fillStyle = "#F2C57C"; rr(c, X + 10 * u, Y - 25 * u, 3 * u, 3.5 * u, 1 * u); c.fill(); }
+  } else if (pose === "dangle" || pose === "hang") {
+    // taşınırken ya da pile asılıyken: sallanır, ayakları tepinir
+    const sw = a * Math.sin(t / (pose === "hang" ? 420 : 240)) * (pose === "hang" ? 0.1 : 0.16);
+    const hy = pose === "hang" ? 14 * u + r : r * 0.9;
+    c.save(); c.translate(X, Y); c.rotate(sw);
+    if (pose === "hang") { limb(3.4); line(c, -5 * u, hy - r * 0.6, -3 * u, 0); line(c, 5 * u, hy - r * 0.6, 3 * u, 0); circle(c, -3 * u, 0, 1.8 * u, skin); circle(c, 3 * u, 0, 1.8 * u, skin); }
+    const top = hy + r * 0.72, kick = a * Math.sin(t / 130) * 2.4 * u;
+    limb(4.2); line(c, -2.5 * u, top + bh, -3.5 * u + kick, top + bh + lg + 2 * u); line(c, 2.5 * u, top + bh, 3.5 * u - kick, top + bh + lg + 2 * u);
+    foot(-3.5 * u + kick, top + bh + lg + 2.6 * u); foot(3.5 * u - kick, top + bh + lg + 2.6 * u);
+    onesie(0, top, bw, bh);
+    if (pose === "dangle") { limb(3.4); line(c, -bw * 0.4, top + 2 * u, -bw * 0.85, top - 4 * u + kick); line(c, bw * 0.4, top + 2 * u, bw * 0.85, top - 4 * u - kick); }
+    c.restore();
+    head = { x: X - Math.sin(sw) * hy, y: Y + Math.cos(sw) * hy, r };
+  } else if (pose === "sit" || pose === "edge" || pose === "eat") {
+    const edge = pose === "edge", hop = A.moving ? Math.abs(Math.sin(t / 130)) * 3 * u : 0, by = Y - hop;
+    if (!edge) shadow(13 * u);
+    if (edge) { const sw = a * Math.sin(t / 320) * 2 * u; limb(4); line(c, X - 3 * u, by - 1 * u, X - 4 * u + sw, by + lg + 3 * u); line(c, X + 3 * u, by - 1 * u, X + 4 * u - sw, by + lg + 3 * u); foot(X - 4 * u + sw, by + lg + 3.5 * u); foot(X + 4 * u - sw, by + lg + 3.5 * u); }
+    else { limb(4.4); line(c, X - 3 * u, by - 3 * u, X - 9 * u, Y - 1.5 * u); line(c, X + 3 * u, by - 3 * u, X + 9 * u, Y - 1.5 * u); foot(X - 10 * u, Y - 1.5 * u); foot(X + 10 * u, Y - 1.5 * u); }
+    blob(X, by - 7.5 * u, 8.5 * u, 7.5 * u);
+    limb(3.5); const sy = by - 11 * u;
+    if (pose === "eat") {
+      const k = Math.abs(Math.sin(t / 300));
+      line(c, X - 6 * u, sy, X - 8 * u, sy + 6 * u);
+      line(c, X + 6 * u, sy, X + 3 * u, sy - 7 * u + k * 8 * u);
+      c.strokeStyle = "#D9D9D9"; c.lineWidth = 1.4 * u; line(c, X + 3 * u, sy - 7 * u + k * 8 * u, X + 1 * u, sy - 10 * u + k * 8 * u);
+      if (!REDUCED) for (let i = 0; i < 3; i++) { const p = ((t / 900) + i / 3) % 1; circle(c, X + (i - 1) * 4 * u, sy - 4 * u + p * 14 * u, 0.9 * u, "rgba(240,210,150,.8)"); }
+    } else [-1, 1].forEach(s => { const e = armEnd(A, X + s * 6 * u, sy, s, u * 0.8, t, edge ? [X + s * 9 * u, sy + 3 * u] : [X + s * 9 * u, sy + 5 * u]); if (e) line(c, X + s * 6 * u, sy, e[0], e[1]); });
+    head = { x: X, y: by - 15 * u - r * 0.82, r };
+  } else if (pose === "crawl") {
+    const f = A.facing < 0 ? -1 : 1, k = A.moving ? Math.sin(t / 120) * 2.5 * u : 0;
+    shadow(14 * u);
     limb(4); line(c, X - 7 * u * f, Y - 7 * u, X - 10 * u * f - k * f, Y - 0.5 * u); line(c, X - 4 * u * f, Y - 7 * u, X - 3 * u * f + k * f, Y - 0.5 * u);
-    fillOutfit(c, () => { c.beginPath(); c.ellipse(X - 1 * u * f, Y - 9 * u, 10 * u, 6.5 * u, 0, 0, Math.PI * 2); }, of, X - 11 * u, Y - 16 * u, 22 * u, 14 * u);
-    limb(3.6); const shx = X + 6 * u * f, shy = Y - 9 * u;
-    const up = A.arms === "point" || A.arms === "up" || A.arms === "wave";
+    blob(X - 1 * u * f, Y - 9 * u, 10 * u, 6.5 * u);
+    limb(3.6); const shx = X + 6 * u * f, shy = Y - 9 * u, up = A.arms === "point" || A.arms === "up" || A.arms === "wave";
     line(c, shx, shy, up ? shx + 6 * u * f : shx + 1 * u * f + k * f, up ? shy - 8 * u + (A.arms === "wave" ? Math.sin(t / 110) * 2 * u : 0) : Y - 0.5 * u);
-    head = { x: X + 11 * u * f, y: Y - 19 * u, r: 11.5 * u };
+    head = { x: X + 11 * u * f, y: Y - 11 * u - r * 0.8, r };
+  } else if (pose === "lie") {
+    shadow(16 * u);
+    blob(X + 5 * u, Y - 5 * u, 11 * u, 5.5 * u);
+    limb(3.5); line(c, X + 15 * u, Y - 4 * u, X + 20 * u, Y - 2 * u);
+    head = { x: X - 11 * u, y: Y - 10 * u, r: r * 0.92 };
   } else {
-    const legH = [0, 0, 0, 5, 6, 7.5][st] * u, bodyH = [0, 0, 0, 10, 11, 12.5][st] * u, bw = [0, 0, 0, 13, 14, 15][st] * u;
+    // ayakta: yürürken zıplayarak (squash-stretch), tekmelerken bir bacak önde
+    const hop = A.moving ? Math.abs(Math.sin(t / (st === 3 ? 130 : 105))) * 3.2 * u : 0;
     const wob = (st === 3 && !REDUCED ? Math.sin(t / 420) * 0.05 : 0) + (A.arms === "dance" ? Math.sin(t / 240) * 0.18 : 0) + (mood === "laugh" ? Math.sin(t / 55) * 0.04 : 0);
-    c.save(); c.translate(X, A.Y); c.rotate(wob); c.translate(-X, -A.Y);
-    const step = A.moving ? Math.sin(t / (st === 3 ? 120 : 95)) * 2.5 * u : 0, hip = Y - legH, neck = hip - bodyH;
-    limb(4.2); line(c, X - 2.5 * u, hip, X - 3 * u + step, Y - 1.5 * u); line(c, X + 2.5 * u, hip, X + 3 * u - step, Y - 1.5 * u);
-    c.fillStyle = A.shoes ? "#6EA8D8" : "#F4EDE4";
-    c.beginPath(); c.ellipse(X - 3.5 * u + step, Y - 1 * u, 3 * u, 1.9 * u, 0, 0, Math.PI * 2); c.fill();
-    c.beginPath(); c.ellipse(X + 3.5 * u - step, Y - 1 * u, 3 * u, 1.9 * u, 0, 0, Math.PI * 2); c.fill();
-    const body = () => { c.beginPath(); c.moveTo(X - bw * 0.36, neck); c.lineTo(X + bw * 0.36, neck); c.quadraticCurveTo(X + bw * 0.62, hip, X + bw * 0.5, hip + 1.5 * u); c.lineTo(X - bw * 0.5, hip + 1.5 * u); c.quadraticCurveTo(X - bw * 0.62, hip, X - bw * 0.36, neck); c.closePath(); };
-    fillOutfit(c, body, of, X - bw * 0.62, neck, bw * 1.24, bodyH + 2 * u);
-    limb(3.6); const sy = neck + 2 * u, sway = a * Math.sin(t / 420) * 0.8 * u;
+    const squash = 1 + (A.moving ? Math.sin(t / 105) * 0.05 : a * Math.sin(t / 700) * 0.02);
+    shadow(12 * u);
+    c.save(); c.translate(X, A.Y); c.rotate(wob); c.scale(1 / squash, squash); c.translate(-X, -A.Y);
+    const by = Y - hop, step = A.moving ? Math.sin(t / (st === 3 ? 120 : 95)) * 2.5 * u : 0, hip = by - lg, neck = hip - bh;
+    limb(4.2);
+    if (A.kick) { line(c, X - 2.5 * u, hip, X - 3 * u, by - 1.5 * u); line(c, X + 2.5 * u, hip, X + 9 * u * (A.facing || 1), by - 5 * u); foot(X - 3.5 * u, by - 1 * u); foot(X + 9.5 * u * (A.facing || 1), by - 5 * u); }
+    else { line(c, X - 2.5 * u, hip, X - 3 * u + step, by - 1.5 * u); line(c, X + 2.5 * u, hip, X + 3 * u - step, by - 1.5 * u); foot(X - 3.5 * u + step, by - 1 * u); foot(X + 3.5 * u - step, by - 1 * u); }
+    onesie(X, neck, bw, bh);
+    limb(3.5); const sy = neck + 2 * u, sway = a * Math.sin(t / 420) * 0.8 * u;
     [-1, 1].forEach(s => {
-      let e = armEnd(A, X + s * bw * 0.38, sy, s, u * 0.8, t, [X + s * bw * 0.62, sy + 6.5 * u + s * sway]);
-      if (A.arms === "eyes") e = [X + s * 4 * u, neck - 12 * u];
-      if (!e && mood === "sleepy") e = [X + s * 4 * u, neck - 12 * u];
+      let e = armEnd(A, X + s * bw * 0.38, sy, s, u * 0.8, t, [X + s * bw * 0.6, sy + 6.5 * u + s * sway]);
+      if (A.arms === "eyes" || (!e && mood === "sleepy")) e = [X + s * 4 * u, neck - 11 * u];
       line(c, X + s * bw * 0.38, sy, e[0], e[1]);
     });
-    head = { x: X, y: neck - 12 * u, r: [0, 0, 0, 13, 13.5, 14][st] * u };
+    head = { x: X, y: neck - r * 0.82, r };
     c.restore();
+    head.y = A.Y + (head.y - A.Y) * squash;
   }
   chibiHead(c, head.x, head.y, head.r, look, mood, st, t, A.lookX || 0, A.lookY || 0);
-  if (A.arms === "eyes") { circle(c, head.x - head.r * 0.4, head.y + head.r * 0.2, head.r * 0.26, skin); circle(c, head.x + head.r * 0.4, head.y + head.r * 0.2, head.r * 0.26, skin); }
+  if (A.arms === "eyes") { circle(c, head.x - head.r * 0.38, head.y + head.r * 0.24, head.r * 0.26, skin); circle(c, head.x + head.r * 0.38, head.y + head.r * 0.24, head.r * 0.26, skin); }
   if (mood === "sleep") {
     c.fillStyle = "rgba(255,255,255,.85)"; c.font = `700 ${10 * u}px "Bricolage Grotesque", sans-serif`;
     for (let i = 0; i < 3; i++) { const p = REDUCED ? i / 3 : ((t / 2400) + i / 3) % 1; c.globalAlpha = 1 - p; c.fillText("z", head.x + 11 * u + p * 14 * u, head.y - 10 * u - p * 22 * u); }
     c.globalAlpha = 1;
   }
+  if (A.charge) { c.fillStyle = "#FFE066"; c.font = `700 ${9 * u}px sans-serif`; const p = (t / 900) % 1; c.globalAlpha = 1 - p; c.fillText("⚡", head.x + 10 * u, head.y - 8 * u - p * 14 * u); c.globalAlpha = 1; }
   if (A.arms === "dance") { c.fillStyle = "rgba(255,210,160,.9)"; c.font = `700 ${10 * u}px sans-serif`; for (let i = 0; i < 2; i++) { const p = ((t / 1600) + i / 2) % 1; c.globalAlpha = 1 - p; c.fillText("♪", head.x + (i ? -22 : 16) * u, head.y - 6 * u - p * 22 * u); } c.globalAlpha = 1; }
   if (mood === "hungry") { const bx = head.x - 20 * u, by = head.y - 14 * u; circle(c, head.x - 13 * u, head.y - 7 * u, 1.5 * u, "#FFF"); circle(c, bx, by, 7 * u, "#FFF"); c.fillStyle = "#CFE3EF"; rr(c, bx - 2.2 * u, by - 3.5 * u, 4.4 * u, 7 * u, 1.4 * u); c.fill(); }
-  return { x: head.x, y: head.y - head.r * (look.ears === "tavsan" ? 1.9 : look.ears === "kedi" ? 1.5 : 1.1) - 4 * u };
+  return { x: head.x, y: head.y - head.r * (look.ears === "tavsan" ? 1.9 : look.ears === "kedi" ? 1.5 : 1.3) - 4 * u };
 }
 
 function actorFor(v, pose, off, W, H, lock) {
@@ -1261,9 +1443,18 @@ function actorFor(v, pose, off, W, H, lock) {
   }
   const moving = Math.hypot((M.tx - M.x) * W, (M.ty - M.y) * H) > 1.5;
   if (moving) { lookX = M.facing * 0.6; if (g === "kapida_bekle") shoes = true; }
-  let x = M.x, y = lock ? Math.max(M.y, BOUNDS.lock[0]) : M.y, facing = M.facing;
+  // özel pozlar: taşınma, pile asılma, saatin kenarında oturma, yemek, top
+  let special = null, kick = false;
+  if (M.carried) { special = "dangle"; if (!v.baby.asleep) mood = "surprise"; lookY = 0.4; }
+  else if (!moving && M.perch === "pil" && mode === "home") { special = "hang"; if (!v.baby.asleep) mood = "laugh"; }
+  else if (!moving && M.perch === "saat" && lock) { special = "edge"; lookY = 0.6; }
+  else if (g === "yemek" && !v.baby.asleep) { special = "eat"; mood = "eat"; }
+  else if (g === "top") { kick = (now - M.gStart) < 500; mood = "laugh"; }
+  if (!v.baby.asleep && lock && lockNotifs.length && now - (M.lookUpAt || 0) < 3000) lookY = -1;   // bildirim geldiğinde yukarı bakar
+  if (special === "edge" && v.baby.stageIdx < 3) special = null;
+  let x = M.x, y = lock && !M.perch ? Math.max(M.y, BOUNDS.lock[0]) : M.y, facing = M.facing;
   if (M.hidden) { x = lock ? 1.03 : 1.18; if (lock) facing = -1; }       // kilit ekranında kenardan göz ucuyla bakar
-  return { X: (x - (lock ? 0 : off)) * W, Y: y * H, lift, arms, pdx, pdy, moving, facing, shoes, mood, lookX, lookY };
+  return { X: (x - (lock ? 0 : off)) * W, Y: y * H, lift, arms, pdx, pdy, moving, facing, shoes, mood, lookX, lookY, special, kick, carried: !!M.carried, charge: charging && special === "hang" };
 }
 
 let ctx = null, CW = 0, CH = 0, headPt = null;
@@ -1318,7 +1509,7 @@ async function brainEvent(ev, opts = {}) {
   const out = await Brain.think(ev);
   Server.applyBrain(out, ev); refresh();
   if (opts.memoryId && out.gunluk) Server.setMemoryText(opts.memoryId, out.gunluk);
-  if (out.konusma) say(out.konusma);
+  if (out.konusma) { say(out.konusma); chirp(out.konusma); }
   if (!opts.noGesture) playGesture(out.hareket);
   refresh(); if (mode === "app") render(); renderPanel();
   return out;
@@ -1376,17 +1567,23 @@ function renderHome() {
   // Gerçek launcher'da da böyle: ikona dokunmak uygulamayı açar, boş alana dokunmak duvar kağıdına iletilir.
   ui.innerHTML = `<div class="layer home">
     <button class="tapzone" id="tapzone" aria-label="Duvar kağıdına dokun: ${esc(V.baby.name)} oraya gelir"></button>
-    <div class="sbar"><span>${hhmm(V.now)}</span><span>5G · 82%</span></div>
+    <div class="sbar"><span>${hhmm(V.now)}</span><span class="sicons">5G <i id="batt" class="batt${charging ? " chg" : ""}"><b style="width:${charging ? 64 : 82}%"></b></i></span></div>
     <div class="home-grid">${pages[page].map(([n, c, g]) => n === "Ortak Yaşam" ? `<button class="app" id="open-app"><i style="background:${c};color:#fff">${esc(g)}</i>${esc(n)}</button>` : `<span class="app" aria-hidden="true"><i style="background:${c};color:#fff">${esc(g)}</i>${esc(n)}</span>`).join("")}</div>
-    <p class="home-hint" id="home-hint">Boş bir yere dokun, ${esc(V.baby.name)} ${esc(LOCOMOTION[V.baby.stageIdx])} oraya gelir.</p>
+    <p class="home-hint" id="home-hint">${esc(hint())}</p>
+    <div class="lockhint" id="lockhint" style="opacity:0"></div>
     <div class="pages"><button data-page="0" aria-label="Önceki sayfa">‹</button><i class="${page === 0 ? "on" : ""}"></i><i class="${page === 1 ? "on" : ""}"></i><button data-page="1" aria-label="Sonraki sayfa">›</button></div>
     <div class="dock"><span class="app"><i style="background:#3DDC84;color:#fff">T</i></span><span class="app"><i style="background:#4E8DF5;color:#fff">M</i></span><span class="app"><i style="background:#F2F2F2;color:#333">W</i></span><button class="app" id="lock-btn" aria-label="Ekranı kilitle"><i style="background:#2B2F36;color:#fff">⏻</i></button></div>
   </div>`;
 }
+function hint() {
+  const n = V.baby.name, st = V.baby.stageIdx;
+  return `Boş yere dokun: ${n} ${LOCOMOTION[st]} gelir. Parmağınla tutup taşı. Kaba, yatağa, topa${st >= 3 ? " ya da pil ikonuna" : ""} dokun.`;
+}
 function setMode(m) {
   mode = m;
+  M.perch = null; M.peek = null; M.task = null; M.carried = null;
   if (m === "home") { M.y = M.ty = Math.min(M.y, FLOOR.home); M.tx = M.x; }
-  if (m === "lock") { M.y = M.ty = FLOOR.lock; M.tx = M.x; }
+  if (m === "lock") { M.y = M.ty = FLOOR.lock; M.tx = M.x; M.lookUpAt = performance.now(); }
 }
 function renderApp() {
   const v = V, pose = currentPose(v);
@@ -1689,7 +1886,10 @@ document.addEventListener("click", async e => {
     case "close-app": setMode("home"); render(); renderPanel(); return;
     case "open-settings": view = "settings"; render(); return;
     case "close-settings": view = null; render(); return;
+    case "p-charge": charging = !charging; t.textContent = charging ? "Şarjdan çıkar" : "Şarja tak"; M.lastCharge = -1e9; if (mode === "home") render(); return;
+    case "p-sound": soundOn = !soundOn; t.textContent = soundOn ? "Ses: açık" : "Ses: kapalı"; return;
     case "tapzone": {
+      if (M.suppressClick) { M.suppressClick = false; return; }
       const r = $("#screen").getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
       const res = tapTo(fx, fy), first = Server.tap(); refresh();
       if (res === "coming" && first) brainEvent({ olay: "ana-ekran-dokunma" }, { noGesture: true });   // günün ilk dokunuşu: günlüğe AI notu, hareket yine dokunulan yere
@@ -1735,6 +1935,11 @@ $("#routine-form").addEventListener("change", () => {
   refresh(); renderPanel();
 });
 window.addEventListener("resize", sizeCanvas);
+$("#screen").addEventListener("pointerdown", e => { userTouched = true; dragStart(e); });
+$("#screen").addEventListener("pointermove", dragMove);
+$("#screen").addEventListener("pointerup", dragEnd);
+$("#screen").addEventListener("pointercancel", dragEnd);
+document.addEventListener("pointerdown", () => { userTouched = true; }, { once: true });
 
 setInterval(() => {
   if (!V || mode === "off" || onboarding || speed === 0) return;
@@ -1742,7 +1947,7 @@ setInterval(() => {
   const { memory } = Server.advance(speed * 1000, false); refresh();
   if (memory) { render(); showCelebrate(memory); }
   else if (mode === "lock") { const c = document.querySelector(".lock-clock"); if (c) c.textContent = hhmm(V.now); }
-  else if (mode === "home") { const s = document.querySelector(".sbar span"); if (s) s.textContent = hhmm(V.now); const h = $("#home-hint"); if (h) h.textContent = `Boş bir yere dokun, ${V.baby.name} ${LOCOMOTION[V.baby.stageIdx]} oraya gelir.`; }
+  else if (mode === "home") { const s = document.querySelector(".sbar span"); if (s) s.textContent = hhmm(V.now); const h = $("#home-hint"); if (h) h.textContent = hint(); }
   else if (mode === "app" && tick % 5 === 0 && !(document.activeElement && document.activeElement.closest("form"))) render();
   renderPanel();
 }, 1000);

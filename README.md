@@ -12,16 +12,18 @@ Bebek **seni tanır**: rıza verdiğin sinyallerden (ekran açma-kapama, adım, 
 |---|---|
 | [`prototype/index.html`](prototype/index.html) | Tıklanabilir prototip: kilit ekranı, ana ekran, takip uygulaması, moderatör paneli |
 | [`skills/`](skills) | Karakterin beynini tanımlayan 16 skill dosyası (`SKILL.md`) |
-| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), üslup, küfür ve takım (`style.ts`), 20 test |
+| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), üslup, küfür ve takım (`style.ts`), 21 test |
 | [`android/`](android) | Cihaz testi: kilit ekranında canlı duvar kağıdı görünüyor mu? ([talimat](android/README.md)) |
 | [`ROADMAP.md`](ROADMAP.md) | Aşama aşama Android yol haritası |
 | [`DEGERLENDIRME.md`](DEGERLENDIRME.md) | Alan alan detaylı değerlendirme, eksikler ve öncelikler |
+| [`ONCELIKLER.md`](ONCELIKLER.md) | Ürün müdürü öncelik sırası, pil ikonu ve iPhone (Dynamic Island) analizi |
 | [`URUN_INCELEME.md`](URUN_INCELEME.md) | Kullanıcı yolculuğu, bağ kurduran mekanikler, rakiplerden ayrışma, yeni fikirler |
 
 ## Prototipte ne var
 
 - **Kilit ekranı:** saat, tarih, bildirimler ve en altta, kısayol ikonlarının arasında yaşayan bebek. Bildirimlerde "Besle" ve "Uyut" butonları var, kilidi açmadan bakım yapılabilir.
 - **Karakter:** yumurtadan çıkan küçük, tatlı bir chibi (kedi ya da tavşan kulaklı olabilir). İstenirse çizgi figür. Her dönemde duruşu ve hareket şekli değişir. Her birinin kendi mizacı ve iki huyu var.
+- **Elinle oynarsın:** parmakla tutup taşırsın (havada tepinir), kaba götürünce yer, yatağa koyunca uyur, topa tekme atar. Pil ikonuna tırmanıp asılır, şarja takınca pile sarılır, kilit ekranında saatin üstüne oturur, ikonların arkasına saklanır. Her şeye bağlama göre farklı sesle cevap verir.
 - **Sana benzer:** senin laflarını ("abi", "yaa"), gülüşünü ve tonunu kapar. Küfrü asla söylemez, ağzından sadece "bip!" çıkar.
 - **Takım tutar:** konuşmalarınızdan ve giydirdiğiniz formalardan etkilenir, Çocuklukta kendi takımını seçer (sadece renkler, logo yok).
 - **Ana ekran:** ikonların arkasında aynı bebek. Boş bir yere dokununca her dönemde oraya gelir (yuvarlanarak, popo kaydırarak, emekleyerek, paytak paytak, yürüyerek, koşarak); üstüne dokununca gıdıklanır (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak iletir). Ana ekranın ikinci sayfasına saklanabilir; sayfayı kaydırınca onu bulursun.
@@ -53,7 +55,7 @@ olay (ekran açıldı, ebeveyn mesajı, kilometre taşı, yürüyüş eşiği, g
 ```bash
 cd server
 npm install
-npm test          # denetim, ritim, üslup ve takım testleri (20 test)
+npm test          # denetim, ritim, üslup ve takım testleri (21 test)
 npm run typecheck
 ANTHROPIC_API_KEY=... npm run demo -- "Top oynayalım mı? Top!"
 ```

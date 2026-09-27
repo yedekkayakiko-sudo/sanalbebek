@@ -100,3 +100,10 @@ test("küfür asla söylenmez, sadece bip; bip için en az 3 küfür duymuş olm
   assert.equal(isAllowedSpeech({ ...s, uslup: { laflar: [], gulme: null, ton: "sakin", bip_sayisi: 3 } }, "bip!"), true);
   assert.equal(isAllowedSpeech({ ...base, uslup: { laflar: [], gulme: null, ton: "sakin", bip_sayisi: 9 } }, "bip!"), false);  // yenidoğan bip bile diyemez
 });
+
+test("telefonla yaşama hareketleri yürümeden önce yapılamaz", () => {
+  assert.equal(isAllowedGesture({ ...base, donem: 2 }, "pile_asil"), false);
+  assert.equal(isAllowedGesture({ ...base, donem: 3 }, "pile_asil"), true);
+  assert.equal(isAllowedGesture({ ...base, donem: 2 }, "ikon_arkasi"), true);
+  assert.equal(isAllowedGesture({ ...base, donem: 3 }, "saate_otur"), true);
+});

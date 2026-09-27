@@ -16,7 +16,7 @@ export const GESTURES: Record<string, StageIndex> = {
   yok: 0, gerin: 0, goz_temasi: 0, yuzunu_cevir: 0,
   kahkaha: 1, uzan: 1, el_cirp: 1,
   git: 2, isaret: 2, ce_e: 2, saklan: 2,
-  zipla: 3, dans: 3, taklit: 3, kapida_bekle: 3,
+  ikon_arkasi: 2, zipla: 3, dans: 3, taklit: 3, kapida_bekle: 3, pile_asil: 3, saate_otur: 3,
 };
 export const TARGETS = ["kase", "kapi", "pencere", "donence", "sen", "dokunulan_yer"] as const;
 

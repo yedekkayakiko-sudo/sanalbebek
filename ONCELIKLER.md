@@ -40,7 +40,7 @@ Karakter buluşması (kelime kapma), sesli ilk kelime, özel günler, lisanslı 
 |---|---|---|
 | Boş yere dokununca oraya gelir (her dönemde ayrı hareket şekli) | Var | Çalışır (launcher dokunuşu iletir) |
 | Üstüne dokununca gıdıklanır | Var | Çalışır |
-| Parmakla tutup taşımak (havada tepinir), bırakınca konar | Var | **Belirsiz**: sürüklemenin duvar kağıdına ulaşması launcher'a bağlı (cihaz testi 8) |
+| Parmakla tutup taşımak (havada tepinir), bırakınca konar | Var | Çalışır (ikonların üstündeki pencere dokunmayı kendisi alır) |
 | Kaba dokununca gidip yer ("ham-ham"), tokken başını çevirir | Var | Çalışır |
 | Kabın yanına taşıyınca yer | Var | Sürükleme çalışırsa çalışır |
 | Yatağa dokununca yatıp uyur | Var | Çalışır |
@@ -80,7 +80,7 @@ Bahsettiğin iPhone uygulaması büyük ihtimalle **Pixel Pals**. Evcil hayvanı
 
 - **Ana ekranda ikonların arkası:** Karakter duvar kağıdında olduğu için zaten ikonların arkasında yaşıyor. Sorun şu: launcher ikonların yerini duvar kağıdına söylemiyor, bu yüzden karakter bir ikonun arkasına bilerek gidemez, sadece rastgele denk gelir. Bildiğim kadarıyla kullanıcı bir ikonu sürükleyip bıraktığında launcher bırakma noktasını duvar kağıdına bildirebiliyor; bundan zamanla ikon yerleri öğrenilebilir. Bu, cihaz testiyle doğrulanmalı. Prototipte ikon yerleri bilindiği için bu davranış gösteriliyor.
 - **Açık bir uygulamanın arkası:** Uygulama açıkken duvar kağıdı görünmez, anlamı yok.
-- **Başka uygulamaların üstünde gezmek:** Ekran üstü izniyle mümkün, ama önermiyorum. Play bu izni sıkı denetliyor ve kullanıcılar çoğu zaman sinir bozucu buluyor.
+- **İkonların üstünde, sadece ana ekranda (cihaz testinden sonra verilen karar):** İlk telefon denemesinde ikonla dolu ekranda bebek hiç görünmedi. Bu yüzden ana ekranda bebek artık "diğer uygulamaların üzerinde göster" izniyle, ikonların üstündeki küçük bir pencerede çiziliyor. Pencere sadece duvar kağıdı görünürken (yani ana ekrandayken) açık; bir uygulama açılınca kapanıyor, başka uygulamaların üstünde gezmiyor. Kilit ekranında bu izin işe yaramaz, orada bebek duvar kağıdında kalıyor. Riskler: Google Play bu izni gerekçe ister, bazı kullanıcılar izin adımında vazgeçebilir. İzin verilmezse bebek eskisi gibi ikonların arkasında yaşar.
 
 ## "Sevildi mi" nasıl ölçülür
 

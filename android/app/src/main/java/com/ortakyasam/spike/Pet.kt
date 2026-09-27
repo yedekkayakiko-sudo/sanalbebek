@@ -19,6 +19,8 @@ class Pet(private val ctx: Context) {
     var asleep: Boolean = p.getBoolean("asleep", false)
     var hatched: Boolean = p.getBoolean("hatched", false)
     var batteryX: Float = p.getFloat("batteryX", 0.9f)     // pil ikonunun yatay yeri (0 sol, 1 sağ)
+    var overlayOn: Boolean = p.getBoolean("overlayOn", true) // ana ekranda ikonların üstünde görünsün
+    var fedAt: Long = p.getLong("fedAt", 0L)                 // uygulamadan beslenince ana ekranda yemek yerken görünsün
     private var last: Long = p.getLong("last", System.currentTimeMillis())
     val look: Look
 
@@ -52,8 +54,10 @@ class Pet(private val ctx: Context) {
 
     fun feed(): Boolean {
         if (asleep || hunger < 25f) return false
-        hunger = max(0f, hunger - 60f); save(); return true
+        hunger = max(0f, hunger - 60f); fedAt = System.currentTimeMillis(); save(); return true
     }
+
+    fun wake() { asleep = false; if (energy < 40f) energy = 40f; save() }
 
     fun sleep(): Boolean {
         if (asleep || energy > 75f) return false
@@ -73,6 +77,7 @@ class Pet(private val ctx: Context) {
             .putFloat("hunger", hunger).putFloat("energy", energy)
             .putBoolean("asleep", asleep).putBoolean("hatched", hatched)
             .putFloat("batteryX", batteryX).putLong("last", last)
+            .putBoolean("overlayOn", overlayOn).putLong("fedAt", fedAt)
             .apply()
     }
 

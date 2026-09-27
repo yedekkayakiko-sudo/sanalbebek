@@ -26,27 +26,35 @@ Sadece **Android** telefonda çalışır. Bilgisayar gerekmez. 5 dakika sürer.
 3. Sorarsa **Ana ekran ve kilit ekranı**'nı seç.
 4. Ana ekrana dön. Bebek yumurtanın içinde sallanacak ve birkaç saniye içinde çıkacak. 🐣
 
-## 4. Pil ikonunu ayarla (bir kere)
+## 4. İkonların üstünde görünsün (önemli)
 
-Uygulamayı tekrar aç. **3 · Pil ikonunun yeri** bölümündeki çubuğu, telefonunun üstündeki pil ikonunun olduğu yere getir. Çoğu telefonda en sağdadır, olduğu gibi bırakabilirsin.
+Duvar kağıdı ikonların arkasında kalır. Ekranın ikonla doluysa bebeği göremezsin. Bunun için bir kere izin veriyorsun:
+
+1. Uygulamayı tekrar aç. **Ekranına koy** bölümünde 2. adımdaki **İzin ver**'e dokun.
+2. Açılan listede **Ortak Yaşam Test**'i bul, dokun, **Diğer uygulamaların üzerinde göster** düğmesini aç.
+3. Geri tuşuna bas. 2. adımın yanında ✓ görünmeli.
+
+Bebek sadece ana ekrandayken ikonların üstüne çıkar. Bir uygulama açınca kaybolur, kimseyi rahatsız etmez. İstemezsen uygulamadan kapatabilirsin.
+
+**Pil yeri:** Uygulamadaki **Pil ikonu nerede?** çubuğunu telefonunun pil ikonunun olduğu tarafa getir. Çoğu telefonda en sağdadır, dokunmana gerek yok.
 
 ## 5. Bunları dene
 
 | Ne yap | Ne olmalı |
 |---|---|
-| Ana ekranda boş bir yere dokun | Bebek oraya gelir, el sallar |
+| Hiçbir şey yapma, izle | Ekranın her yerinde dolaşır, oturur, dans eder, bazen ekranın kenarına saklanır, bazen kendi kendine pile tırmanır |
+| Boş bir yere dokun | Oraya gelir, el sallar |
 | Bebeğin üstüne dokun | Gıdıklanır, güler |
-| Soldaki turuncu kaba dokun | Gidip yer ("ham-ham"). Tokken başını çevirir. Uygulamadaki **Acıktır** düğmesiyle aç bırakıp dene |
-| Mavi yatağa dokun | Uykusu varsa yatıp uyur |
-| Kırmızı topa dokun | Gidip tekme atar, top yuvarlanır |
-| Sağ üstte pilin hemen altına dokun | Tırmanıp pile asılır, ayaklarını sallar |
+| Kenara saklanmışken dokun | "ce-e!" der, çıkar |
+| Bebeği parmağınla tut, sürükle | Havada tepinir, bıraktığın yere konar ("hop!") |
+| Bebeği tutup sağ üstte pilin yanına bırak | Pile asılır, ayaklarını sallar |
 | Şarja tak | "⚡" der, pile koşup asılır |
-| Bebeği parmağınla tutup sürükle | Havada tepinir, bırakınca düşer ("hop!"). Kabın yanına bırakırsan yer. **Bu her telefonda çalışmayabilir**, test ettiğimiz şeylerden biri |
-| Ana ekranda sayfa kaydır | Bebek ve eşyalar hafifçe kayar |
+| En alttaki turuncu kaba dokun ya da bebeği kabın yanına bırak | Yer ("ham-ham"). Tokken başını çevirir |
+| Uygulamada **Besle**'ye bas, ana ekrana dön | Yemek yerken görürsün |
 | Kulaklık tak, ekranı kapatıp aç | Dans eder |
-| Ekranı kilitle, tekrar aç | Kilit ekranında en altta durur. Kilit ekranında dokunma çalışmaz, bu normal |
+| Ekranı kilitle, tekrar aç | Kilit ekranında altta dolaşır (kilit ekranında dokunma çalışmaz, bu normal) |
 
-Karakter şimdilik "Yürüme" dönemiyle başlar. Uygulamada dönem düğmelerine basıp yumurtayı, emeklemeyi, konuşmayı görebilirsin. **Yeni görünüm** düğmesi saçını, gözünü, kıyafetini değiştirir.
+Karakter "Yürüme" dönemiyle başlar. Uygulamada dönem düğmeleriyle yumurtayı, emeklemeyi, konuşmayı görebilirsin.
 
 ## 6. Bana sonucu gönder
 
@@ -62,8 +70,9 @@ Karakter şimdilik "Yürüme" dönemiyle başlar. Uygulamada dönem düğmelerin
 | Duvar kağıdı listesinde yok | Ayarlar → Duvar kağıdı → **Canlı duvar kağıtları** → "Ortak Yaşam Test" |
 | **Samsung:** kilit ekranında görünmüyor | Samsung bazı modellerde canlı duvar kağıdını kilit ekranında göstermez. Ana ekranda denemeye devam et, günlükte zaten görünür |
 | **Xiaomi:** dokunma çalışmıyor | Ana ekran ayarlarında "Duvar kağıdı kaydırma" açık olsun. Olmazsa günlüğü gönder |
-| Bebek hiç kıpırdamıyor | Uyuyor olabilir. Uygulamada **Karnını doyur ve uyandır**'a dokun |
-| Güncelleme geldi | Aynı adresten yeniden indirip yükle. Eskisinin üstüne kurulur |
+| Bebek hiç kıpırdamıyor | Uyuyor olabilir. Uygulamada **Uyandır**'a dokun |
+| İkonların arkasında kalıyor | 4. adımdaki izni ver. Uygulamada "İkonların üstünde: AÇIK" yazmalı |
+| Güncelleme geldi | Aynı adresten yeniden indirip yükle. Eskisinin üstüne kurulur. |
 | Geri almak istiyorum | Ayarlar → Duvar kağıdı'ndan eski resmini seç, uygulamayı kaldır |
 
 Uygulama internete bağlanmaz, hiçbir şey göndermez. Günlük sadece telefonunda durur, sen paylaşırsan gider.

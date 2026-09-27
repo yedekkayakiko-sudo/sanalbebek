@@ -11,8 +11,19 @@ android {
         applicationId = "com.ortakyasam.spike"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1-spike"
+        versionCode = 2
+        versionName = "0.2-deneme"
+    }
+
+    // Sabit imza: her yeni APK eskisinin üstüne kurulabilsin (Android imzası değişince güncellemeyi reddeder).
+    // Bu yalnızca deneme anahtarıdır; Play'e çıkarken gerçek anahtar kullanılır.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     compileOptions {

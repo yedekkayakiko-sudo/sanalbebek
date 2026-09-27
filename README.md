@@ -2,25 +2,30 @@
 
 Telefonun **duvar kağıdında** yaşayan, zamanla büyüyen bir bebek. Kilit ekranında en altta durur, ana ekranda ikonların arkasında yaşar. Uygulama sadece takip, bakım, anı albümü ve ayarlar içindir. Pou gibi uygulamanın içine girip oynanan bir oyun değildir: telefonu her açtığında onu zaten görürsün.
 
-Karakterin davranışını skill dosyalarından beslenen bir AI "beyin" belirler. Sayılar (açlık, uyku, ilişki) sunucudadır; AI bunları davranışa, sese ve günlük notuna çevirir; deterministik bir denetim katmanı da AI'ın döneme aykırı bir şey yapmasını engeller.
+Karakterin davranışını skill dosyalarından beslenen bir AI "beyin" belirler. Sayılar (açlık, uyku, ilişki) sunucudadır; AI bunları davranışa, harekete, sese ve günlük notuna çevirir; deterministik bir denetim katmanı da AI'ın döneme aykırı bir şey yapmasını engeller.
+
+Bebek **seni tanır**: rıza verdiğin sinyallerden (ekran açma-kapama, adım, şarj, kulaklık, ona yazdıkların) günlük ritmini çıkarır. Seninle aynı saatte gerinerek uyanır, yürüyüş saatinde kapıda bekler, kulaklık taktığında dans eder, yoğun saatlerinde sessizce kendi başına oynar. Öğrendiklerini "Seni tanıyor" sayfasındaki tanıma defterine yazar; her maddeyi görebilir ve silebilirsin.
 
 ## Repo
 
 | Klasör | İçerik |
 |---|---|
 | [`prototype/index.html`](prototype/index.html) | Tıklanabilir prototip: kilit ekranı, ana ekran, takip uygulaması, moderatör paneli |
-| [`skills/`](skills) | Karakterin beynini tanımlayan 11 skill dosyası (`SKILL.md`) |
-| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, testler |
+| [`skills/`](skills) | Karakterin beynini tanımlayan 13 skill dosyası (`SKILL.md`) |
+| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), 15 test |
+| [`android/`](android) | Cihaz testi: kilit ekranında canlı duvar kağıdı görünüyor mu? ([talimat](android/README.md)) |
+| [`ROADMAP.md`](ROADMAP.md) | Aşama aşama Android yol haritası |
 
 ## Prototipte ne var
 
 - **Kilit ekranı:** saat, tarih, bildirimler ve en altta, kısayol ikonlarının arasında yaşayan bebek. Bildirimlerde "Besle" ve "Uyut" butonları var, kilidi açmadan bakım yapılabilir.
-- **Ana ekran:** ikonların arkasında aynı bebek. Boş alana dokununca el sallar (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak duvar kağıdına iletir).
+- **Ana ekran:** ikonların arkasında aynı bebek. Boş alana dokununca o noktaya emekler ya da yürür (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak iletir). Ana ekranın ikinci sayfasına saklanabilir; sayfayı kaydırınca onu bulursun.
+- **Konuşmadan önceki 8 hafta:** bebek 14 hareketle anlaşır: gerinmek, kaseyi göstermek, kapıya yürümek, ce-e, el çırpmak, zıplamak, dans, saklanmak, seni taklit etmek. Heceleri senin kelimelerinden gelir: ona sık sık "top" dersen "to-to" der, ilk kelimesi büyük ihtimalle "top" olur.
 - **Güç tuşu:** ekran kapanır, duvar kağıdı çizilmez, bebek donar. Zamanı ileri sarıp (10 dk, 3 saat, sabaha kadar, 1 gün, 3 gün, 1 hafta) ekranı açınca aradaki süre yeniden hesaplanır ve beyne bir kez sorulur.
 - **Dönence:** her önemli anı (ilk gülümseme, ilk emekleme, ilk adım, ilk kelime, ilk park gezisi, ilk cümle, ortak ebeveynin katılması) bebeğin üstünde asılı dönenceye küçük bir nesne ekler. Aylar içinde duvar kağıdı sizin ortak geçmişinizle dolar. Ürünün ana fikri bu.
-- **Takip uygulaması:** şu anki durum, bakım butonları, AI'ın yazdığı günlük, anı albümü (o anın duvar kağıdı görüntüsüyle), yürüyüş (Health Connect), ortak ebeveyn daveti, ayarlar.
+- **Takip uygulaması:** Durum (bakım, ona bir şey söyle, günlük, yürüyüş), Gelişim (dil takvimi, duyduğu heceler, ilk kelime tahmini, açılan hareketler, haftalık özet), Anılar, Tanıyor (ritmin, tanıma defteri, izinler, tüm veriyi silme), Aile, Ayarlar.
 - **"Ona bir şey söyle":** ebeveyn yazar, bebek dönemine uygun tepki verir. Aynı kelimeyi 3 kez duyarsa, ilk kelimeler döneminde onu öğrenebilir. İlk kelimesi en çok duyduğu kelime ya da en bağlı olduğu ebeveynin çağrı adı olur.
-- **Moderatör paneli:** zaman hızı, iç değerler, yüklü skill'ler, son AI isteği ve cevabı, test metrikleri, olay günlüğü, JSON dışa aktarma.
+- **Moderatör paneli:** zaman hızı, büyüme ölçeği (ürün: ilk kelime 8. hafta, test: 4× hızlı), senin rutinin (sinyal simülasyonu), iç değerler, beyne giden ritim özeti, yüklü skill'ler, son AI isteği ve cevabı, test metrikleri, olay günlüğü.
 
 Prototipte AI, sayfanın `sample` yeteneğiyle Claude'a gider ve aynı skill dosyalarını okur. Claude'a ulaşılamazsa (yerel dosya, izin verilmedi) kural tabanlı moda düşer; karakter yine yaşar, sadece günlük notları sabit metin olur.
 
@@ -43,7 +48,7 @@ olay (ekran açıldı, ebeveyn mesajı, kilometre taşı, yürüyüş eşiği, g
 ```bash
 cd server
 npm install
-npm test          # denetim kurallarının testleri (7 test)
+npm test          # denetim ve ritim testleri (15 test)
 npm run typecheck
 ANTHROPIC_API_KEY=... npm run demo -- "Top oynayalım mı? Top!"
 ```
@@ -63,6 +68,8 @@ ANTHROPIC_API_KEY=... npm run demo -- "Top oynayalım mı? Top!"
 | `bildirim-metni` | Bildirim kalıpları ve yasak kalıplar (suçluluk, sahte aciliyet, seri baskısı) |
 | `kelime-ogrenme` | Duyulan kelimeden öğrenme koşulları |
 | `guvenlik-sinirlari` | Prompt injection, hassas içerik, hassas kitle, kişisel veri |
+| `sozsuz-iletisim` | Konuşmadan önceki hareket dili: 14 hareket, hedefler, döneme göre açılma |
+| `ebeveyni-tanima` | Sinyallerden ritim, ritme uyum, tanıma defteri ve asla yazılmayacak notlar |
 
 ## Android'de nasıl yapılır
 
@@ -88,6 +95,7 @@ class BebekWallpaperService : WallpaperService() {
 - Kilit ekranında mı ana ekranda mı olduğunu `KeyguardManager.isKeyguardLocked()` söyler, sahne buna göre konumlanır.
 - Bildirim butonları (Besle, Uyut) bir `BroadcastReceiver` ile sunucuya gider, uygulamayı açmaya gerek yoktur.
 - Adım verisi duvar kağıdı görünür olunca Health Connect'ten günlük toplam olarak okunur. Arka planda sürekli okuma yok.
+- Tanıma sinyalleri de arka plan servisi olmadan toplanır: ekranın açıldığı an `onVisibilityChanged(true)`, kapandığı an `false` gelir; şarj durumu ve takılı kulaklık tam o anda okunur. Ham sinyaller sunucuda 30 gün tutulur, beyne sadece `profile.ts`'nin çıkardığı özet gider.
 
 ## Dürüst riskler
 

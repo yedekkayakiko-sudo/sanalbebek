@@ -4,14 +4,16 @@ import type { BabyState, BrainEvent } from "./types.ts";
 // Kullanım: npm run demo -- "top oynayalım mı?"
 // ANTHROPIC_API_KEY yoksa kural tabanlı cevap döner.
 const state: BabyState = {
-  ad: "Milo", donem: 4, yas_gun: 11.2, saat: "18:40", uyuyor: false, gece_aglama: false,
+  ad: "Milo", donem: 4, yas_gun: 58, saat: "18:40", uyuyor: false, gece_aglama: false,
   aclik: 35, enerji: 60, ilgi: 40,
   ebeveynler: [
     { id: "p1", ad: "Derda", cagri_adi: "baba", iliski: 62 },
     { id: "p2", ad: "Ece", cagri_adi: "anne", iliski: 48 },
   ],
-  bakan: "p1", kelimeler: ["mama", "ata"], duyulanlar: { top: 3, kedi: 1 }, bugun_yeni_kelime: false,
-  anilar: ["İlk gülümseme", "İlk emekleme", "İlk adım", "İlk kelime"],
+  bakan: "p1", kelimeler: ["mama", "ata"], duyulanlar: { top: 3, kedi: 1 }, heceler: ["to"], bugun_yeni_kelime: false,
+  anilar: ["İlk gülümseme", "İlk emekleme", "İlk adım", "İlk kelime"], son_hareketler: ["gerin"],
+  ritim: { gun_sayisi: 12, uyanma: "07:30", yatma: "00:40", yuruyus_saati: "18:10", ortalama_adim: 6200, kulaklik_saatleri: ["08:00-09:00"], bugun: { yuruyuse_kalan_dk: -30 } },
+  defter: ["Sabahları 07:30 civarı uyanıyorsun."],
 };
 const event: BrainEvent = { olay: "ebeveyn-mesaji", mesaj: process.argv[2] ?? "Top oynayalım mı? Top!" };
 const brain = new Brain();

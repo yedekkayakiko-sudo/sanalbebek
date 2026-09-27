@@ -20,7 +20,7 @@ Koşullar sağlanmıyorsa `yeni_kelime: null`.
 
 ## Önceki dönemlerde
 
-Emekleme ve yürüme döneminde çok duyduğu bir kelimenin ilk hecesini tekrarlayabilir ("top" → "to-to"). Bu bir öğrenme değildir, `yeni_kelime` yine `null`.
+Emekleme ve yürüme döneminde çok duyduğu kelimelerin ilk heceleri `durum.heceler` alanında gelir ("top" → "to"). Bunları tekrarlayabilir ("to-to!"). Bu bir öğrenme değildir, `yeni_kelime` yine `null`. Ama ilk kelimenin habercisidir: en çok tekrarlanan hece, büyük ihtimalle ilk kelimenin hecesi olur.
 
 ## İlk kelime
 

@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { buildSystemPrompt, loadSkills, type Skill } from "./skills.ts";
-import { sanitize, rulePose, isAllowedNewWord } from "./guard.ts";
+import { sanitize, rulePose, ruleGesture, isAllowedNewWord } from "./guard.ts";
 import { POSES, STAGES, type BabyState, type BrainEvent, type BrainOutput } from "./types.ts";
 
 // Karakterin beyni: olay geldiğinde skill'leri sistem istemi olarak kullanıp Claude'a sorar,
@@ -13,18 +13,22 @@ const OutputSchema = z.object({
   konusma: z.string(),
   davranis: z.enum(POSES),
   gunluk: z.string(),
+  hareket: z.string(),
   yeni_kelime: z.string().nullable(),
+  defter_notu: z.string().nullable(),
 });
 
 const JSON_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["konusma", "davranis", "gunluk", "yeni_kelime"],
+  required: ["konusma", "davranis", "hareket", "gunluk", "yeni_kelime", "defter_notu"],
   properties: {
     konusma: { type: "string" },
     davranis: { type: "string", enum: [...POSES] },
+    hareket: { type: "string" },
     gunluk: { type: "string" },
     yeni_kelime: { anyOf: [{ type: "string" }, { type: "null" }] },
+    defter_notu: { anyOf: [{ type: "string" }, { type: "null" }] },
   },
 };
 
@@ -63,7 +67,7 @@ export class Brain {
       const text = response.content.flatMap(b => (b.type === "text" ? [b.text] : [])).join("");
       const parsed = OutputSchema.safeParse(JSON.parse(text));
       if (!parsed.success) return this.fallback(state, event, "şema uyuşmadı");
-      return { ...sanitize(state, parsed.data), kaynak: "ai" };
+      return { ...sanitize(state, parsed.data, event.olay === "haftalik-ozet" ? 600 : 280), kaynak: "ai" };
     } catch (err) {
       if (err instanceof Anthropic.RateLimitError) return this.fallback(state, event, "rate_limit");
       if (err instanceof Anthropic.APIConnectionError) return this.fallback(state, event, "bağlantı yok");
@@ -86,7 +90,7 @@ export class Brain {
     };
     const words = event.mesaj?.toLocaleLowerCase("tr-TR").match(/[a-zçğıöşü]+/gu) ?? [];
     const learn = words.find(w => isAllowedNewWord(state, w)) ?? null;
-    const base = sanitize(state, { konusma: "", davranis: pose, gunluk: gunluk[event.olay] ?? "", yeni_kelime: learn });
+    const base = sanitize(state, { konusma: "", davranis: pose, hareket: ruleGesture(state, event.olay), gunluk: gunluk[event.olay] ?? "", yeni_kelime: learn, defter_notu: null });
     return { ...base, kaynak: "kural", hata };
   }
 }

@@ -1,7 +1,7 @@
 ---
 name: gecen-zaman
 description: Ekran kapalıyken geçen süreyi ve o sürede olanları tek bir sahneye ve kısa bir özete dönüştürme.
-events: [kilit-acildi]
+events: [kilit-acildi, haftalik-ozet]
 ---
 
 # Geçen zaman
@@ -22,3 +22,11 @@ Karakter ekran kapalıyken çalışmaz. Ekran açılınca sunucu aradaki süreyi
 - Olanlar listesinde olmayan bir şeyi olmuş gibi anlatma.
 - Uzun süre (> 24 saat) geçtiyse bile suçlama yok. "Bir süredir yalnız oyalandı, seni görünce durup baktı" gibi nötr yaz.
 - Gece olanları gündüz açılışında hafif anlat: "Gece bir kez uyanmış, sonra kendi uyumuş."
+
+## Haftalık özet
+
+`olay: haftalik-ozet` ile son 7 günün günlük satırları `gunluk_satirlari` alanında gelir. `gunluk` alanına en fazla 4 cümlelik bir özet yaz:
+- Bu hafta yeni ne yaptı (yeni hece, yeni hareket, anı).
+- Ebeveynle ilgili tek bir gözlem (ritim, sık söylenen kelime).
+- Önümüzdeki haftaya dair tek bir merak: "to-to diye bir şey söylemeye çalışıyor, belki yakında..."
+Sayı, puan, seri ya da "bu hafta az ilgilendin" gibi değerlendirme yok.

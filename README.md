@@ -13,7 +13,8 @@ Bebek **seni tanır**: rıza verdiğin sinyallerden (ekran açma-kapama, adım, 
 | [`prototype/index.html`](prototype/index.html) | Tıklanabilir prototip: kilit ekranı, ana ekran, takip uygulaması, moderatör paneli |
 | [`skills/`](skills) | Karakterin beynini tanımlayan 16 skill dosyası (`SKILL.md`) |
 | [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), üslup, küfür ve takım (`style.ts`), 21 test |
-| [`android/`](android) | Cihaz testi: kilit ekranında canlı duvar kağıdı görünüyor mu? ([talimat](android/README.md)) |
+| [`KURULUM.md`](KURULUM.md) | **Telefonda deneme:** APK'yı indirip kurma, adım adım |
+| [`android/`](android) | Telefonda çalışan chibi duvar kağıdı ve cihaz testi ([test listesi](android/README.md)) |
 | [`ROADMAP.md`](ROADMAP.md) | Aşama aşama Android yol haritası |
 | [`DEGERLENDIRME.md`](DEGERLENDIRME.md) | Alan alan detaylı değerlendirme, eksikler ve öncelikler |
 | [`ONCELIKLER.md`](ONCELIKLER.md) | Ürün müdürü öncelik sırası, pil ikonu ve iPhone (Dynamic Island) analizi |
@@ -109,7 +110,7 @@ class BebekWallpaperService : WallpaperService() {
 
 ## Dürüst riskler
 
-1. **iPhone'da bu konsept yapılamaz.** iOS üçüncü parti uygulamaların canlı duvar kağıdı çizmesine izin vermez. En yakın şey kilit ekranı widget'ı ve Live Activity: küçük, çoğunlukla statik, sınırlı güncelleme. Karma (Android + iPhone) çiftlerde ortak ebeveyn özelliği iPhone tarafında bir widget ve uygulamayla sınırlı kalır. Bu, test öncesi verilmesi gereken bir ürün kararı.
+1. **iPhone'da canlı duvar kağıdı yapılamaz.** iOS buna izin vermez. Ama Pixel Pals'ın yolu var: Dynamic Island ve kilit ekranı Live Activity (ayrıntı: [ONCELIKLER.md](ONCELIKLER.md)). Karma (Android + iPhone) çiftlerde ortak ebeveyn özelliği iPhone tarafında bir widget ve uygulamayla sınırlı kalır. Bu, test öncesi verilmesi gereken bir ürün kararı.
 2. **Bazı Android üreticileri kilit ekranında üçüncü parti canlı duvar kağıdını göstermeyebilir.** Pixel ve stok Android'e yakın cihazlarda "ana ekran ve kilit ekranı" seçeneği çalışıyor. Samsung başta olmak üzere bazı üreticilerin kilit ekranında kendi duvar kağıdı sistemleri var ve canlı duvar kağıdını sadece ana ekranda gösterebiliyorlar. Türkiye'de Samsung payı yüksek olduğu için **ilk teknik doğrulama bu olmalı**: Samsung, Xiaomi ve Pixel'de 1 günlük bir teknik deneme.
 3. **Pil.** Canlı duvar kağıdı ekran açıkken sürekli çizer. Sahne 30 fps ile sınırlı, uyurken 5 fps. Gerçek cihazda ölçülmeli; kötü pil yorumu bu tür uygulamaları hızla öldürür.
 4. **AI maliyeti.** Olay başına bir çağrı, kullanıcı başına günde onlarca çağrı olabilir. Skill'lerin hepsi önbelleğe alınan sabit önekte duruyor, bu maliyeti ciddi düşürür. Yine de testte kullanıcı başına günlük çağrı sayısı ölçülmeli. Daha ucuz model seçimi ayrı bir karar.

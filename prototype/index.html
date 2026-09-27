@@ -194,7 +194,7 @@ textarea{width:100%;min-height:120px;font:12px var(--f-mono);border:1px solid va
     <header>
       <div class="eyebrow">Moderatör paneli · test kullanıcısı bunu görmez</div>
       <h2>Ortak Dijital Yaşam</h2>
-      <p>Bebek telefonun canlı duvar kağıdında yaşar, ekranın her yerinde gezer, ana ekranın öbür sayfasına saklanır. Konuşmadan önceki 8 hafta boyunca hareketlerle ve senin kelimelerinden çıkan hecelerle anlaşır. Senin günlük ritmini sinyallerden öğrenir ve davranışını ona göre ayarlar.</p>
+      <p>Küçük bir chibi karakter telefonun canlı duvar kağıdında yaşar, ekranın her yerinde gezer, ana ekranın öbür sayfasına saklanır. Konuşmadan önceki 8 hafta hareketlerle ve senin kelimelerinden çıkan hecelerle anlaşır. Senin ritmini ve konuşma üslubunu kapar, küfrü sadece “bip” diye söyler, zamanla ebeveynlerinin etkisiyle kendi takımını seçer.</p>
     </header>
 
     <div class="pbox">
@@ -263,7 +263,7 @@ textarea{width:100%;min-height:120px;font:12px var(--f-mono);border:1px solid va
 const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
 const EPOCH = Date.UTC(2026, 8, 28, 0, 0);     // 28 Eylül 2026, Pazartesi. Simülasyon saati yerel saat gibi okunur.
 const T0 = EPOCH + 9 * HOUR;
-const STORE = "odys-wall-v3";
+const STORE = "odys-wall-v4";
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // Dönem başlangıç günleri (gerçek zaman): ilk kelimeye ~8 hafta. server/src/types.ts ile aynı.
@@ -286,8 +286,8 @@ const OUTFITS = [{ id: "o1", name: "Adaçayı", color: "#7FA38A" }, { id: "o2", 
 const PREMIUM = [{ id: "w1", name: "Duvar kağıdı: Gece kampı", price: "₺49,99" }, { id: "w2", name: "Duvar kağıdı: Kış penceresi", price: "₺49,99" }, { id: "p2", name: "Ayıcık şapka", price: "₺29,99" }];
 const CARE_WORD = { feed: "mama", sleep: "nini", play: "ce-e", walk: "ata" };
 const CARE_WORDS = { feed: ["mama", "su", "am"], sleep: ["nini", "yat"], play: ["ce-e", "top", "hop"], walk: ["ata", "kuş", "hav"] };
-const MEM_OBJ = { smile: "güneş", crawl: "top", step: "ayakkabı", firstword: "harf küpü", park: "yaprak", sentence: "kitap", family: "iki çerçeve" };
-const SKILL_NAMES = ["karakter-kimligi", "dil-gelisimi", "sozsuz-iletisim", "ebeveyni-tanima", "duvar-kagidi-sahnesi", "guvenlik-sinirlari", "ihtiyac-davranis", "gecen-zaman", "ani-kaydi", "yuruyus", "ortak-ebeveyn", "bildirim-metni", "kelime-ogrenme"];
+const MEM_OBJ = { smile: "güneş", crawl: "top", step: "ayakkabı", firstword: "harf küpü", park: "yaprak", sentence: "kitap", family: "iki çerçeve", team: "atkı" };
+const SKILL_NAMES = ["karakter-kimligi", "dil-gelisimi", "sozsuz-iletisim", "ebeveyni-tanima", "konusma-uslubu", "kisilik", "takim-tutma", "duvar-kagidi-sahnesi", "guvenlik-sinirlari", "ihtiyac-davranis", "gecen-zaman", "ani-kaydi", "yuruyus", "ortak-ebeveyn", "bildirim-metni", "kelime-ogrenme"];
 const CONSENTS = [
   ["ekran", "Ekran açma-kapama saatleri", "Uyanma, yatma ve yoğun saatlerini öğrenir."],
   ["adim", "Adım ve hareket (Health Connect)", "Yürüyüş saatini ve günlük adımlarını öğrenir."],
@@ -311,7 +311,10 @@ const lower = s => String(s).toLocaleLowerCase("tr-TR");
 const toMin = s => { const [h, m] = String(s || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
 const fmtMin = m => `${String(Math.floor(((m % 1440) + 1440) % 1440 / 60)).padStart(2, "0")}:${String(((m % 60) + 60) % 60).padStart(2, "0")}`;
 function durText(ms) { const h = Math.round(ms / HOUR); if (ms < HOUR) return `${Math.max(1, Math.round(ms / MIN))} dakika`; if (h < 48) return `${h} saat`; return `${Math.round(ms / DAY)} gün`; }
-const randomLook = () => ({ skin: pick(LOOK.skin), hair: pick(LOOK.hair), eye: pick(LOOK.eye), style: Math.floor(Math.random() * 3) });
+const randomLook = () => ({ skin: pick(LOOK.skin), hair: pick(LOOK.hair), eye: pick(LOOK.eye), style: Math.floor(Math.random() * 3), ears: pick([null, null, "kedi", "tavsan"]) });
+// Kişilik: doğuşta mizaç ve iki huy (kisilik skill'i)
+const HUYLAR = { topa_duskun: "topa düşkün", ayak_parmagi: "ayak parmaklarıyla oynamayı seviyor", pencere_hayrani: "gökyüzüne bakmayı seviyor", saklambacci: "saklambaççı", muzik_kulagi: "müzik kulağı var", uykucu: "uykucu" };
+const randomPersona = () => { const h = Object.keys(HUYLAR).sort(() => Math.random() - 0.5); return { enerji: Math.floor(Math.random() * 5) - 2, sosyallik: Math.floor(Math.random() * 5) - 2, huylar: h.slice(0, 2) }; };
 
 /* ---------- ortak kurallar (server/src/guard.ts ve profile.ts ile aynı) ---------- */
 const BASE_SYLL = ["ma", "da", "ba", "ta", "na", "dı", "bu", "ga"];
@@ -331,6 +334,8 @@ function babbleOk(s, allowed, per) {
 }
 function allowedSpeech(st, sp) {
   const s = lower(sp.trim()); if (s === "") return true; if (s.length > 20 || st.uyuyor) return false;
+  if (/^(bi-)?bip!?$/.test(s)) return st.donem >= 2 && ((st.uslup && st.uslup.bip_sayisi) || 0) >= 3;
+  if (s.split(/[\s!?.,-]+/).some(w => w && isProfane(w))) return false;
   const syll = [...BASE_SYLL, ...st.heceler];
   if (st.donem === 0) return /^(\(minik sesler\)|h+ı+|ı+h+|ah+)$/u.test(s);
   if (st.donem === 1) return /^(agu+|ağğ+|a+|ga|(hı)(-hı){0,3}|ı+)[!?]?$/u.test(s);
@@ -346,7 +351,7 @@ function allowedGesture(st, g) {
   if (name === "git" || name === "isaret") return TARGETS.includes(target || "");
   return target === undefined;
 }
-const allowedWord = (st, w) => !!w && st.donem >= 4 && !st.bugun_yeni_kelime && /^[a-zçğıöşü-]{1,6}$/u.test(lower(w)) && (st.duyulanlar[lower(w)] || 0) >= 3 && !st.kelimeler.includes(lower(w));
+const allowedWord = (st, w) => !!w && st.donem >= 4 && !st.bugun_yeni_kelime && /^[a-zçğıöşü-]{1,6}$/u.test(lower(w)) && !isProfane(w) && (st.duyulanlar[lower(w)] || 0) >= 3 && !st.kelimeler.includes(lower(w));
 const NOTE_BLOCK = /sağlık|hasta|uyku ?bozuk|uykusuz|stres|depres|kaygı|ilaç|teşhis|konum|adres|evde|evden|evine|işyer|iş yer|ofis|(^|\s)din(\s|$)|namaz|siyas|seçim|sevgili|boşan|(^|\s)para|maaş|borç|çok geç|az yürü|fazla kullan|bağımlı/iu;
 const allowedNote = (st, n) => !!n && !!st.ritim && st.ritim.gun_sayisi >= 3 && n.trim().length > 0 && n.trim().length <= 100 && !NOTE_BLOCK.test(n) && !st.defter.some(d => lower(d) === lower(n.trim()));
 function rulePose(st) {
@@ -381,6 +386,26 @@ function sanitize(st, raw, maxDiary = 280) {
   if (out.defter_notu !== null && !allowedNote(st, out.defter_notu)) { out.defter_notu = null; fixed.push("defter_notu"); } else if (out.defter_notu) out.defter_notu = out.defter_notu.trim();
   return { ...out, duzeltildi: fixed };
 }
+
+// Küfür, üslup ve takım (server/src/style.ts ile aynı). Küfrün kendisi saklanmaz, sadece sayılır.
+const PROFANE_ROOTS = ["amk", "aq", "amına", "amina", "sik", "orospu", "piç", "pic", "yarrak", "yarak", "göt", "got", "kahpe", "pezevenk", "ibne", "gerizekal", "salak", "aptal", "şerefsiz", "serefsiz"];
+const PROFANE_EXACT = ["mal", "oç", "oc", "bok"], SAFE_PREFIX = ["sıkı", "sikke", "gotik", "malzeme", "malı", "mala"];
+const isProfane = w => { w = lower(w); return !SAFE_PREFIX.some(p => w.startsWith(p)) && (PROFANE_EXACT.includes(w) || PROFANE_ROOTS.some(r => w.startsWith(r))); };
+const FILLERS = ["abi", "abla", "yaa", "ya", "valla", "vallahi", "hadi", "aynen", "tamam", "oha", "lan", "kanka", "canım", "tatlım", "aşkım", "bebeğim", "haydi", "hayda", "eyvah", "oley", "yuppi", "yok", "evet", "hayır"];
+const TEAMS = { "sari-lacivert": ["fener", "fenerbahçe", "fenerbahce", "fb", "kanarya", "kadıköy"], "sari-kirmizi": ["galatasaray", "cimbom", "gs", "aslan", "cimbombom"], "siyah-beyaz": ["beşiktaş", "besiktas", "bjk", "kartal", "karakartal"], "bordo-mavi": ["trabzon", "trabzonspor", "ts", "fırtına", "firtina"] };
+function detectTeam(text) { const ws = lower(text).match(/[a-zçğıöşü]+/gu) || []; for (const [c, keys] of Object.entries(TEAMS)) if (ws.some(w => keys.some(k => w === k || (k.length >= 5 && w.startsWith(k))))) return c; return null; }
+function styleOf(st) {
+  const laflar = Object.entries(st.fill).filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([w]) => w);
+  const top = Object.entries(st.laugh).sort((a, b) => b[1] - a[1])[0], n = Math.max(1, st.n);
+  return { laflar, gulme: top && top[1] >= 2 ? top[0] : null, ton: st.excl / n >= 0.4 ? "coskulu" : st.quest / n >= 0.4 ? "sorucu" : "sakin", bip_sayisi: st.bip };
+}
+function teamAffinity(team, parents) {
+  const egilim = {}, per = {};
+  team.inputs.forEach(i => { const rel = (parents.find(p => p.id === i.p) || { rel: 50 }).rel; const w = (i.gift ? 2 : 1) * (0.5 + Math.min(100, Math.max(0, rel)) / 100); egilim[i.color] = +((egilim[i.color] || 0) + w).toFixed(2); if (!i.gift) (per[i.p] = per[i.p] || {})[i.color] = (per[i.p][i.color] || 0) + 1; });
+  const ebeveyn_takimlari = {}; Object.entries(per).forEach(([p, m]) => { ebeveyn_takimlari[p] = Object.entries(m).sort((a, b) => b[1] - a[1])[0][0]; });
+  return { egilim, ebeveyn_takimlari, secim: team.secim };
+}
+function chooseTeam(t, donem) { if (t.secim || donem < 5) return t.secim; const b = Object.entries(t.egilim).sort((a, c) => c[1] - a[1])[0]; return b && b[1] >= 3 ? b[0] : null; }
 
 // Ritim: sinyallerden deterministik özet. Gün 04:00'te başlar.
 function computeRhythm(signals, now, consent) {
@@ -425,7 +450,9 @@ function computeRhythm(signals, now, consent) {
 const Server = (() => {
   let S = null;
   const fresh = (name, look, callName, consent) => ({
-    v: 3, now: T0, lastSim: T0, scale: 4,
+    v: 4, now: T0, lastSim: T0, scale: 4, charStyle: "chibi", persona: randomPersona(),
+    style: { fill: {}, laugh: {}, excl: 0, quest: 0, n: 0, bip: 0, lastBipDay: -1 },
+    team: { inputs: [], secim: null, jersey: null, jerseyUntil: 0 },
     baby: { name, look, bornAt: T0, hunger: 25, energy: 85, attention: 60, asleep: false, crying: false, cryStart: 0, stageIdx: 0, hungryFlag: false, nightCryKey: -99 },
     parents: [{ id: "p1", name: "Sen", callName, rel: 40, gainDay: -1, gainToday: 0 }],
     active: "p1", memories: [], pending: [], counts: { feed: 0, sleep: 0, play: 0, walk: 0 },
@@ -554,6 +581,7 @@ const Server = (() => {
       if (si === 4 && !hasMem("firstword")) S.pending.push("firstword");
       if (si === 5 && !hasMem("sentence")) S.pending.push("sentence");
     }
+    if (b.stageIdx >= 5 && !S.team.secim && !S.pending.includes("team")) { const c = chooseTeam(teamAffinity(S.team, S.parents), b.stageIdx); if (c) S.pending.push("team"); }
     if (b.stageIdx >= 3 && !hasMem("step") && !S.pending.includes("step") && (S.walk.walkedInWalkStage || ad >= STAGES[3].from + 3)) S.pending.push("step");
     // Duyduğu hecelerin ilk kez söylendiği an (Gelişim çizelgesi için)
     if (b.stageIdx >= 2) heardSyllables(S.heard).forEach(s => { if (!S.firstSounds[s]) { S.firstSounds[s] = S.now; emit(sum, away, "new_syllable", `İlk kez “${s}-${s}” dedi.`); if (!away) diary(`İlk kez “${s}-${s}” dedi.`); } });
@@ -567,10 +595,20 @@ const Server = (() => {
     const kind = S.pending.shift();
     if (kind === "crawl") return addMemory("crawl", "İlk emekleme", "Ekranın öbür ucundaki kaseye emekleyerek kendi başına ulaştı.");
     if (kind === "step") return addMemory("step", "İlk adım", S.walk.walkedInWalkStage ? "Dışarıdaki yürüyüşlerden sonra tutunduğu yeri bıraktı ve ilk adımını attı." : "Tutunmayı bırakıp ilk adımını attı.");
+    if (kind === "team") {
+      const t = teamAffinity(S.team, S.parents), c = chooseTeam(t, S.baby.stageIdx); if (!c) return null;
+      S.team.secim = c; const who = S.parents.filter(p => t.ebeveyn_takimlari[p.id] === c).map(p => p.name);
+      return addMemory("team", "Takımını seçti", `${TEAM_NAMES[c]} atkıyı kaptı ve bırakmadı.${who.length ? ` ${who.join(" ve ")} çok sevindi.` : ""}`);
+    }
     if (kind === "park") return addMemory("park", "İlk park gezisi", "1 km birlikte yürüdünüz. Salıncakları uzun uzun izledi.");
     if (kind === "firstword") { const f = firstWord(); S.vocab = [f.word]; S.wordDay = dayIdx(S.now); return addMemory("firstword", "İlk kelime", `“${f.word}” dedi. ${f.reason}`, { reason: f.reason }); }
     if (kind === "sentence") { const a = S.vocab[0] || "mama", b = S.vocab.find(w => w !== a) || "daha"; return addMemory("sentence", "İlk cümle", `“${a} ${b}” dedi. İki kelimeyi ilk kez yan yana getirdi.`); }
     return null;
+  }
+  function favorites() {
+    const k = Object.keys(S.counts).sort((a, b) => S.counts[b] - S.counts[a])[0];
+    const top = Object.entries(S.heard).sort((a, b) => b[1] - a[1])[0];
+    return [S.counts[k] >= 3 ? { feed: "kase", sleep: "ninni", play: "oyun", walk: "kapı" }[k] : null, top && top[1] >= 3 ? top[0] : null].filter(Boolean);
   }
   function simulateTo(target, away) {
     const sum = { events: [], notifs: [], suppressed: [], from: S.now, to: target };
@@ -602,7 +640,7 @@ const Server = (() => {
   }
 
   return {
-    load() { try { const s = JSON.parse(localStorage.getItem(STORE) || "null"); if (s && s.v === 3) S = s; } catch (e) {} return !!S; },
+    load() { try { const s = JSON.parse(localStorage.getItem(STORE) || "null"); if (s && s.v === 4) S = s; } catch (e) {} return !!S; },
     create(name, look, callName, consent) { S = fresh(name, look, callName, consent); log("born"); diary(`${name} doğdu ve duvar kağıdına yerleşti.`); save(); },
     reset() { S = null; try { localStorage.removeItem(STORE); } catch (e) {} },
     view() { return structuredClone(S); },
@@ -622,7 +660,8 @@ const Server = (() => {
         aclik: Math.round(b.hunger), enerji: Math.round(b.energy), ilgi: Math.round(b.attention),
         ebeveynler: S.parents.map(p => ({ id: p.id, ad: p.name, cagri_adi: p.callName, iliski: Math.round(p.rel) })), bakan: S.active,
         kelimeler: [...S.vocab], duyulanlar: { ...S.heard }, heceler: b.stageIdx >= 2 ? heardSyllables(S.heard) : [], bugun_yeni_kelime: S.wordDay === d,
-        anilar: S.memories.map(m => m.title), son_hareketler: S.gestures.slice(-3), ritim: rhythm(), defter: S.notebook.filter(n => !n.hidden).map(n => n.text) };
+        anilar: S.memories.map(m => m.title), son_hareketler: S.gestures.slice(-3), ritim: rhythm(), defter: S.notebook.filter(n => !n.hidden).map(n => n.text),
+        uslup: S.consent.mesaj ? styleOf(S.style) : null, kisilik: { ...S.persona, sevdikleri: favorites() }, takim: teamAffinity(S.team, S.parents) };
     },
     applyBrain(out, event) {
       S.ai = { pose: out.davranis, speech: out.konusma, at: S.now };
@@ -630,6 +669,7 @@ const Server = (() => {
       if (!["kilometre-tasi", "haftalik-ozet"].includes(event.olay)) diary(out.gunluk, out.kaynak);
       if (event.olay === "haftalik-ozet" && out.gunluk) { S.weekly.push({ t: S.now, text: out.gunluk, src: out.kaynak }); }
       if (out.yeni_kelime && !S.vocab.includes(out.yeni_kelime)) { S.vocab.push(out.yeni_kelime); S.wordDay = dayIdx(S.now); log("learned_word", { w: out.yeni_kelime }); diary(`Duyduğu bir kelimeyi söylemeyi öğrendi: “${out.yeni_kelime}”.`); }
+      if (/bip/.test(out.konusma)) S.style.lastBipDay = dayIdx(S.now);
       if (out.defter_notu && !(S.deletedNotes || []).includes(lower(out.defter_notu))) { S.notebook.push({ id: "d" + (S.notebook.length + 1), key: null, text: out.defter_notu, t: S.now, src: out.kaynak }); log("note_added", { src: out.kaynak }); }
       ruleNotes();
       log("brain", { olay: event.olay, kaynak: out.kaynak, poz: out.davranis, hareket: out.hareket }); save();
@@ -638,7 +678,20 @@ const Server = (() => {
     found() { S.metrics.found++; log("found_hiding"); diary(`${S.baby.name} saklandığı sayfada bulundu, kahkahalarla güldü.`); save(); },
     setMemoryText(id, text) { const m = S.memories.find(x => x.id === id); if (m && text) { m.text = text; save(); } },
     hear(text) {
-      if (S.consent.mesaj) { const words = lower(text).match(/[a-zçğıöşü]+/gu) || []; [...new Set(words)].filter(w => w.length >= 2 && w.length <= 6).forEach(w => { S.heard[w] = (S.heard[w] || 0) + 1; }); }
+      if (S.consent.mesaj) {
+        const words = lower(text).match(/[a-zçğıöşü]+/gu) || [], st = S.style;
+        st.n++; if (text.includes("!")) st.excl++; if (text.includes("?")) st.quest++;
+        words.forEach(w => {
+          if (isProfane(w)) { st.bip++; return; }                       // küfür saklanmaz, sadece sayılır
+          if (/^(ha){2,}h?$/.test(w)) st.laugh.haha = (st.laugh.haha || 0) + 1;
+          else if (/^(sj){2,}/.test(w)) st.laugh.sjsj = (st.laugh.sjsj || 0) + 1;
+          else if (/^a(ha){2,}/.test(w)) st.laugh.ahah = (st.laugh.ahah || 0) + 1;
+          else if (FILLERS.includes(w)) st.fill[w] = (st.fill[w] || 0) + 1;
+        });
+        [...new Set(words)].filter(w => w.length >= 2 && w.length <= 6 && !isProfane(w)).forEach(w => { S.heard[w] = (S.heard[w] || 0) + 1; });
+        const team = detectTeam(text);
+        if (team) { S.team.inputs.push({ p: S.active, color: team }); log("team_mention", { color: team, by: S.active }); }
+      }
       S.metrics.messages++; log("parent_message", { by: S.active }); diary(`${parent(S.active).name}: “${text.slice(0, 80)}”`, "ebeveyn"); save();
     },
     act(action, via = "app") {
@@ -686,6 +739,14 @@ const Server = (() => {
     },
     wipeProfile() { S.signals = []; S.notebook = []; S.heard = {}; log("profile_wiped"); diary("Tanıma verileri silindi. Seni yeniden tanımaya başlayacak."); save(); },
     setRoutine(r) { Object.assign(S.routine, r); log("routine", r); save(); },
+    giftJersey(color) {
+      const p = parent(S.active);
+      if (S.team.secim && S.team.secim !== color) { log("jersey_refused", { color }); diary(`${p.name} ona ${TEAM_NAMES[color]} forma giydirmeye çalıştı; gülerek kaçtı. O ${TEAM_NAMES[S.team.secim]}.`); save(); return false; }
+      S.team.inputs.push({ p: S.active, color, gift: true }); S.team.jersey = color; S.team.jerseyUntil = S.now + DAY;
+      log("jersey_gift", { color, by: S.active }); diary(`${p.name} ona ${TEAM_NAMES[color]} forma giydirdi.`); save(); return true;
+    },
+    setCharStyle(x) { S.charStyle = x; log("char_style", { x }); save(); },
+    markBip() { S.style.lastBipDay = dayIdx(S.now); save(); },
     setScale(x) { S.scale = x; log("scale", { x }); save(); },
     createInvite() { S.invite.code = Math.random().toString(36).slice(2, 6).toUpperCase() + "-" + Math.random().toString(36).slice(2, 4).toUpperCase(); log("invite_sent"); save(); },
     acceptInvite(name, callName) {
@@ -722,7 +783,13 @@ const Brain = (() => {
     const sound = st.uyuyor ? "" : [pick(["hıı", "ııh"]), pick(["agu", "hı-hı-hı", "aaa"]), pick([`${h}-${h}`, `${h}-${h}!`, "da-da?"]), pick([`ba${h}-${h}?`, `${h}-${h}!`, "bada-bu?"]),
       st.kelimeler.length ? pick(st.kelimeler) + "!" : "ma", st.kelimeler.length ? pick(st.kelimeler) + " " + pick(["daha", "ver"]) : "mama"][st.donem];
     const pose = rulePose(st);
-    return { ...sanitize(st, { konusma: ev.olay === "kilit-acildi" && (ev.gecen_sure_dk || 0) < 30 ? "" : sound, davranis: pose === "oynuyor" && ev.olay !== "kilit-acildi" ? "gulumsuyor" : pose,
+    // konusma-uslubu: küfür duymuşsa arada bir "bip" der ve utanır; günde en fazla bir kez
+    if (!st.uyuyor && st.donem >= 2 && st.uslup && st.uslup.bip_sayisi >= 3 && V.style.lastBipDay !== dayIdx(V.now) && Math.random() < 0.35)
+      return { ...sanitize(st, { konusma: pick(["bip!", "bi-bip!"]), davranis: "cekingen", hareket: "yuzunu_cevir", gunluk: pick(["Bir şey söylemeye çalıştı ama sadece 'bip' çıktı. Nereden duydu acaba...", "Ağzından bir 'bip' kaçtı, sonra elleriyle ağzını kapattı."]), yeni_kelime: null, defter_notu: null }), kaynak: "kural", hata };
+    // üslup: sahibinin laflarının hecesiyle mırıldanır
+    const laf = st.uslup && st.uslup.laflar.length && st.donem >= 2 && st.donem <= 3 ? st.uslup.laflar[0] : null;
+    const lafSound = laf ? (firstSyllable(laf) || "a") + "-" + laf.slice(firstSyllable(laf) ? firstSyllable(laf).length : 0) + "!" : null;
+    return { ...sanitize(st, { konusma: ev.olay === "kilit-acildi" && (ev.gecen_sure_dk || 0) < 30 ? "" : (lafSound && Math.random() < 0.4 ? lafSound : sound), davranis: pose === "oynuyor" && ev.olay !== "kilit-acildi" ? "gulumsuyor" : pose,
       hareket: ruleGesture(st, ev.olay), gunluk: g[ev.olay] || "", yeni_kelime: words.find(w => allowedWord(st, w)) || null, defter_notu: null }, ev.olay === "haftalik-ozet" ? 600 : 280), kaynak: "kural", hata };
   }
   function weeklyRule(st) {
@@ -775,6 +842,7 @@ const Brain = (() => {
    İSTEMCİ: duvar kağıdı motoru (hareket, sayfalar) + uygulama
    ===================================================================== */
 let V = null;
+let hatchStart = 0;
 let mode = "lock", page = 0, tab = "status", view = null, speed = 60, onboarding = false, tick = 0;
 let awayAcc = null, lockNotifs = [], toast = "", survey = false, bubble = null, bubbleUntil = 0, flashPose = null, flashUntil = 0;
 // Hareket durumu. x: dünya koordinatı (0..1.3; ana ekran 2 sayfa, duvar kağıdı sayfa başına %30 kayar), y: ayakların ekran yüksekliğine oranı.
@@ -829,7 +897,7 @@ function tapTo(fx, fy) {
   M.arrive = now;
   return "coming";
 }
-function tapSound(st) { return [pick(["hıı", "ah"]), pick(["agu", "hı-hı"]), pick(["da!", "ma-ma!"]), pick(["ta-ta!", "bu?"]), (V.vocab[0] || "ma") + "!", (V.vocab[0] || "mama") + " " + pick(["daha", "ver"])][st]; }
+function tapSound(st) { if (st >= 2 && V.style.bip >= 3 && V.consent.mesaj && Math.random() < 0.12) return "bip!"; return [pick(["hıı", "ah"]), pick(["agu", "hı-hı"]), pick(["da!", "ma-ma!"]), pick(["ta-ta!", "bu?"]), (V.vocab[0] || "ma") + "!", (V.vocab[0] || "mama") + " " + pick(["daha", "ver"])][st]; }
 
 function updateMotion(now) {
   const dt = Math.min(0.1, (now - (M.last || now)) / 1000); M.last = now;
@@ -838,7 +906,7 @@ function updateMotion(now) {
   if (b.asleep || b.crying) { M.tx = M.x; M.ty = M.y; }
   const dxp = (M.tx - M.x) * CW, dyp = (M.ty - M.y) * CH, dist = Math.hypot(dxp, dyp);
   if (dist > 1.5) {
-    const stepPx = Math.min(dist, SPEED[st] * S * dt);
+    const stepPx = Math.min(dist, SPEED[st] * (1 + (V.persona.enerji || 0) * 0.12) * S * dt);
     M.x += dxp / dist * stepPx / CW; M.y += dyp / dist * stepPx / CH;
     if (Math.abs(dxp) > 2) M.facing = Math.sign(dxp);
     M.roll += stepPx / (9 * S) * (M.facing || 1);
@@ -852,8 +920,11 @@ function updateMotion(now) {
   // Kendi başına gezinme: uyanıkken, kullanıcı son 30 sn dokunmadıysa, AI çağrısı yapmadan.
   if (!M.g && !M.hidden && !b.asleep && !b.crying && mode !== "off" && mode !== "app" && now > M.userUntil && now - M.lastIdle > 20000) {
     M.lastIdle = now;
-    const r = Math.random();
-    if (r < 0.45) playGesture(ruleGesture(Server.brainState()));
+    const r = Math.random(), huy = V.persona.huylar, bs = Server.brainState();
+    const huyG = { saklambacci: "saklan", pencere_hayrani: "isaret:pencere", topa_duskun: "isaret:donence", muzik_kulagi: "dans", uykucu: "gerin", ayak_parmagi: "kahkaha" };
+    const fav = huy.map(h => huyG[h]).filter(g => allowedGesture(bs, g));
+    if (r < 0.2 && fav.length) playGesture(pick(fav));        // kisilik: huyları sık görünür
+    else if (r < 0.5) playGesture(ruleGesture(bs));
     else if (r < 0.8) moveTo(0.15 + Math.random() * 0.7, floorY() - Math.random() * (mode === "home" ? 0.2 : 0.05));
   }
   // Saklambaç: ana ekranın 2. sayfasında bulundu
@@ -888,6 +959,7 @@ function drawKeepsake(c, kind) {
   if (kind === "firstword") { c.fillStyle = "#F3E3C3"; rr(c, -8, -8, 16, 16, 3); c.fill(); c.fillStyle = "#B4521F"; c.font = "700 11px 'Bricolage Grotesque', sans-serif"; c.textAlign = "center"; c.fillText("A", 0, 4); c.textAlign = "start"; }
   if (kind === "park") { c.fillStyle = "#8FBF6A"; c.beginPath(); c.ellipse(0, 0, 9, 4, -0.5, 0, Math.PI * 2); c.fill(); c.strokeStyle = "#5E8B45"; c.lineWidth = 1.4; line(c, -8, 4, 8, -4); }
   if (kind === "sentence") { c.fillStyle = "#C45B7A"; rr(c, -10, -5, 20, 10, 2); c.fill(); c.fillStyle = "#F7E9D7"; c.fillRect(-9, -4, 18, 2); }
+  if (kind === "team" && V && V.team.secim) { const [c1, c2] = TEAM_COLORS[V.team.secim]; for (let i = 0; i < 5; i++) { c.fillStyle = i % 2 ? c2 : c1; c.fillRect(-12 + i * 4.8, -3, 4.8, 6); } c.fillStyle = c1; c.fillRect(-12, 3, 3, 6); c.fillRect(9, 3, 3, 6); }
   if (kind === "family") { c.fillStyle = "#D9B36C"; rr(c, -14, -8, 12, 15, 2); c.fill(); rr(c, 2, -8, 12, 15, 2); c.fill(); c.fillStyle = "#3B2A20"; c.fillRect(-12, -6, 8, 11); c.fillRect(4, -6, 8, 11); }
 }
 // Sabit sahne: kase (sol), kapı (sağ), anı dönencesi (üst). Sayfa kaydırınca birlikte kayar.
@@ -959,7 +1031,7 @@ function armEnd(A, sx, sy, s, u, t, def) {
 // A: { X, Y (ayak pikseli), mood, arms, pdx, pdy, lift, moving, facing, shoes, lookX, lookY }. Baş üstü noktasını döndürür.
 function drawStick(c, v, S, t, A) {
   const st = v.baby.stageIdx, look = v.baby.look, mood = A.mood, u = S * 1.35;
-  const outfit = (OUTFITS.find(o => o.id === v.outfit) || OUTFITS[0]).color;
+  const outfit = outfitOf(v).main;
   const a = REDUCED ? 0 : 1, X = A.X, Y = A.Y - A.lift, f = A.facing < 0 ? -1 : 1;
   c.lineCap = "round"; c.lineJoin = "round";
   c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(X, A.Y + 1, 13 * u * (1 - Math.min(0.5, A.lift / (60 * u))), 3 * u, 0, 0, Math.PI * 2); c.fill();
@@ -1031,6 +1103,137 @@ function drawStick(c, v, S, t, A) {
   return { x: head.x, y: head.y - head.r - 6 * u };
 }
 
+/* ---------- chibi karakter ---------- */
+// Tasarım kuralı: her zaman çocuksu, yuvarlak ve tatlı oranlar (büyük kafa, kısa gövde). Yetişkinleştirilmiş anime estetiği yok.
+const TEAM_COLORS = { "sari-lacivert": ["#FFE100", "#12235E"], "sari-kirmizi": ["#FDB912", "#B4122E"], "siyah-beyaz": ["#F4F4F4", "#151515"], "bordo-mavi": ["#7A1C36", "#62A8E5"] };
+const TEAM_NAMES = { "sari-lacivert": "sarı-lacivert", "sari-kirmizi": "sarı-kırmızı", "siyah-beyaz": "siyah-beyaz", "bordo-mavi": "bordo-mavi" };
+function outfitOf(v) {
+  const tm = v.team || {}, jersey = tm.secim || (tm.jersey && v.now < tm.jerseyUntil ? tm.jersey : null);
+  if (jersey) return { main: TEAM_COLORS[jersey][0], stripe: TEAM_COLORS[jersey][1] };
+  return { main: (OUTFITS.find(o => o.id === v.outfit) || OUTFITS[0]).color, stripe: null };
+}
+function fillOutfit(c, path, of, x0, y0, w, h) {
+  c.fillStyle = of.main; path(); c.fill();
+  if (!of.stripe) return;
+  c.save(); path(); c.clip(); c.fillStyle = of.stripe;
+  for (let x = x0 + w * 0.12; x < x0 + w; x += w * 0.3) c.fillRect(x, y0, w * 0.13, h);
+  c.restore();
+}
+function chibiHead(c, x, y, r, look, mood, st, t, lookX, lookY) {
+  const H = look.hair;
+  // arka saç
+  c.fillStyle = H; c.beginPath(); c.ellipse(x, y + r * 0.05, r * 1.12, r * 1.08, 0, 0, Math.PI * 2); c.fill();
+  // kulaklar: kedi ya da tavşan (küçük varlık)
+  if (look.ears === "kedi") [-1, 1].forEach(s => { c.fillStyle = H; c.beginPath(); c.moveTo(x + s * r * 0.35, y - r * 0.85); c.lineTo(x + s * r * 0.95, y - r * 1.45); c.lineTo(x + s * r * 0.9, y - r * 0.5); c.fill(); c.fillStyle = "#F5A3B5"; c.beginPath(); c.moveTo(x + s * r * 0.5, y - r * 0.85); c.lineTo(x + s * r * 0.86, y - r * 1.25); c.lineTo(x + s * r * 0.82, y - r * 0.7); c.fill(); });
+  if (look.ears === "tavsan") [-1, 1].forEach(s => { c.fillStyle = H; c.beginPath(); c.ellipse(x + s * r * 0.45, y - r * 1.35, r * 0.2, r * 0.55, s * 0.2, 0, Math.PI * 2); c.fill(); c.fillStyle = "#F5A3B5"; c.beginPath(); c.ellipse(x + s * r * 0.45, y - r * 1.32, r * 0.09, r * 0.38, s * 0.2, 0, Math.PI * 2); c.fill(); });
+  // yüz
+  c.fillStyle = look.skin; c.beginPath(); c.ellipse(x, y + r * 0.08, r * 0.98, r * 0.9, 0, 0, Math.PI * 2); c.fill();
+  // perçem
+  c.fillStyle = H; c.beginPath(); c.moveTo(x - r * 1.02, y + r * 0.1); c.quadraticCurveTo(x - r * 1.05, y - r * 1.05, x, y - r * 1.02); c.quadraticCurveTo(x + r * 1.05, y - r * 1.05, x + r * 1.02, y + r * 0.1);
+  const tips = st < 2 ? 3 : 5;
+  for (let i = tips; i >= 0; i--) { const px = x + r * 0.95 - (i / tips) * r * 1.9; c.lineTo(px, y - r * (i % 2 ? 0.35 : 0.1) - (st < 2 ? r * 0.25 : 0)); }
+  c.closePath(); c.fill();
+  // gözler
+  const ex = r * 0.4, ey = y + r * 0.2, rx = r * 0.21, ry = r * 0.27;
+  const lx = mood === "hungry" ? -0.8 : mood === "shy" ? 0.6 : lookX, ly = mood === "shy" ? 0.5 : lookY;
+  c.strokeStyle = INK; c.lineCap = "round"; c.lineWidth = r * 0.09;
+  if (mood === "sleep") [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey - r * 0.02, rx, 0.1 * Math.PI, 0.9 * Math.PI); c.stroke(); });
+  else if (mood === "laugh") [-1, 1].forEach(s => { c.beginPath(); c.moveTo(x + s * ex - rx, ey + r * 0.05); c.lineTo(x + s * ex, ey - r * 0.12); c.lineTo(x + s * ex + rx, ey + r * 0.05); c.stroke(); });
+  else if (!REDUCED && (t % 4100) < 120) [-1, 1].forEach(s => { c.beginPath(); c.arc(x + s * ex, ey, rx, 0.1 * Math.PI, 0.9 * Math.PI); c.stroke(); });
+  else [-1, 1].forEach(s => {
+    const cx = x + s * ex;
+    c.fillStyle = "#FFFFFF"; c.beginPath(); c.ellipse(cx, ey, rx, ry, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = look.eye; c.beginPath(); c.ellipse(cx + lx * rx * 0.25, ey + ly * ry * 0.2 + ry * 0.08, rx * 0.86, ry * 0.86, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = INK; c.beginPath(); c.ellipse(cx + lx * rx * 0.25, ey + ly * ry * 0.2 + ry * 0.12, rx * 0.45, ry * 0.5, 0, 0, Math.PI * 2); c.fill();
+    circle(c, cx + lx * rx * 0.25 - rx * 0.32, ey - ry * 0.3, rx * 0.3, "#FFFFFF"); circle(c, cx + lx * rx * 0.25 + rx * 0.35, ey + ry * 0.35, rx * 0.14, "#FFFFFF");
+    c.beginPath(); c.ellipse(cx, ey, rx, ry, 0, Math.PI * 1.05, Math.PI * 1.95); c.stroke();          // üst kirpik çizgisi
+    if (mood === "sleepy") { c.fillStyle = look.skin; c.fillRect(cx - rx * 1.2, ey - ry * 1.2, rx * 2.4, ry * 1.15); c.beginPath(); c.moveTo(cx - rx, ey); c.lineTo(cx + rx, ey); c.stroke(); }
+  });
+  if (mood === "cry") { const d = (t / 500) % 1; circle(c, x - ex, ey + ry + d * r * 0.5, r * 0.08, "rgba(130,190,255,.95)"); circle(c, x + ex, ey + ry + ((d + .5) % 1) * r * 0.5, r * 0.08, "rgba(130,190,255,.95)"); }
+  // yanaklar: pembe ve üç çizgi
+  [-1, 1].forEach(s => { c.fillStyle = mood === "shy" ? "rgba(255,110,130,.6)" : "rgba(255,130,150,.4)"; c.beginPath(); c.ellipse(x + s * r * 0.64, y + r * 0.5, r * 0.18, r * 0.1, 0, 0, Math.PI * 2); c.fill();
+    c.strokeStyle = "rgba(220,90,110,.6)"; c.lineWidth = r * 0.04; for (let i = -1; i <= 1; i++) { c.beginPath(); c.moveTo(x + s * r * 0.64 + i * r * 0.08 - r * 0.03, y + r * 0.55); c.lineTo(x + s * r * 0.64 + i * r * 0.08 + r * 0.03, y + r * 0.45); c.stroke(); } });
+  // ağız
+  const my = y + r * 0.62; c.strokeStyle = INK; c.lineWidth = r * 0.07; c.fillStyle = "#C0485A";
+  if (mood === "laugh" || mood === "cry") { c.beginPath(); c.moveTo(x - r * 0.14, my - r * 0.04); c.quadraticCurveTo(x, my + r * 0.26, x + r * 0.14, my - r * 0.04); c.closePath(); c.fill(); }
+  else if (mood === "sleepy") { c.beginPath(); c.ellipse(x, my, r * 0.06, r * 0.08, 0, 0, Math.PI * 2); c.fill(); }
+  else if (mood === "hungry") { c.beginPath(); c.arc(x, my + r * 0.06, r * 0.08, 1.1 * Math.PI, 1.9 * Math.PI); c.stroke(); }
+  else if (look.ears === "kedi") { c.beginPath(); c.arc(x - r * 0.06, my - r * 0.02, r * 0.06, 0, Math.PI); c.arc(x + r * 0.06, my - r * 0.02, r * 0.06, 0, Math.PI); c.stroke(); }   // ω
+  else if (mood === "happy" || mood === "needy") { c.beginPath(); c.arc(x, my - r * 0.06, r * 0.1, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke(); }
+  else { c.beginPath(); c.moveTo(x - r * 0.05, my); c.lineTo(x + r * 0.05, my); c.stroke(); }
+}
+function drawChibi(c, v, S, t, A) {
+  const st = v.baby.stageIdx, look = v.baby.look, mood = A.mood, u = S * 1.45, of = outfitOf(v);
+  const a = REDUCED ? 0 : 1, X = A.X, Y = A.Y - A.lift, f = A.facing < 0 ? -1 : 1, skin = look.skin;
+  c.lineCap = "round"; c.lineJoin = "round";
+  c.fillStyle = "rgba(0,0,0,.35)"; c.beginPath(); c.ellipse(X, A.Y + 1, 14 * u * (1 - Math.min(0.5, A.lift / (60 * u))), 3.2 * u, 0, 0, Math.PI * 2); c.fill();
+  const limb = w => { c.strokeStyle = skin; c.lineWidth = w * u; };
+  let head;
+  if (mood === "sleep" && st >= 1) {
+    fillOutfit(c, () => { c.beginPath(); c.ellipse(X + 5 * u, Y - 5 * u, 11 * u, 5.5 * u, 0, 0, Math.PI * 2); }, of, X - 6 * u, Y - 11 * u, 22 * u, 12 * u);
+    limb(3.5); line(c, X + 15 * u, Y - 4 * u, X + 20 * u, Y - 2 * u);
+    head = { x: X - 11 * u, y: Y - 10 * u, r: 11 * u };
+  } else if (st === 0) {
+    // yumurtadan yeni çıkmış: alt kabuk içinde, kafa dışarıda. Yuvarlanarak gelir.
+    const hatch = hatchStart ? Math.min(1, (performance.now() - hatchStart) / 2500) : 1;
+    c.save(); c.translate(X, Y - 9 * u); if (A.moving) c.rotate(Math.sin(M.roll * 0.5) * 0.35); else if (hatch < 1) c.rotate(Math.sin(t / 60) * 0.12 * (1 - hatch));
+    c.fillStyle = "#FFF6E6"; c.strokeStyle = LINE; c.lineWidth = 1.5 * u;
+    c.beginPath(); c.moveTo(-11 * u, -2 * u);
+    for (let i = 0; i <= 6; i++) c.lineTo(-11 * u + i * (22 * u / 6), (i % 2 ? -5 : -1) * u);
+    c.quadraticCurveTo(12 * u, 10 * u, 0, 10 * u); c.quadraticCurveTo(-12 * u, 10 * u, -11 * u, -2 * u); c.fill(); c.stroke();
+    c.fillStyle = "rgba(240,190,140,.5)"; circle(c, -4 * u, 4 * u, 1.6 * u, "rgba(240,190,140,.5)"); circle(c, 5 * u, 6 * u, 1.2 * u, "rgba(240,190,140,.5)");
+    c.restore();
+    if (hatch < 1) { c.fillStyle = "#FFF6E6"; c.save(); c.translate(X + hatch * 26 * u, Y - 22 * u - hatch * 30 * u); c.rotate(hatch * 3); c.beginPath(); c.ellipse(0, 0, 11 * u, 7 * u, 0, Math.PI, 0); c.fill(); c.restore(); }
+    head = { x: X, y: Y - 17 * u, r: 10 * u };
+    if (A.arms === "up" || A.arms === "wave") { limb(3); line(c, X + 8 * u, Y - 12 * u, X + 12 * u + (A.arms === "wave" ? Math.sin(t / 110) * 2 * u : 0), Y - 20 * u); }
+  } else if (st === 1) {
+    const hop = A.moving ? Math.abs(Math.sin(t / 130)) * 3 * u : 0, by = Y - hop;
+    limb(4.5); line(c, X - 3 * u, by - 3 * u, X - 9 * u, Y - 1.5 * u); line(c, X + 3 * u, by - 3 * u, X + 9 * u, Y - 1.5 * u);
+    fillOutfit(c, () => { c.beginPath(); c.ellipse(X, by - 8 * u, 8.5 * u, 7.5 * u, 0, 0, Math.PI * 2); }, of, X - 9 * u, by - 16 * u, 18 * u, 16 * u);
+    limb(3.6); const sy = by - 11 * u;
+    [-1, 1].forEach(s => { const e = armEnd(A, X + s * 6 * u, sy, s, u * 0.8, t, [X + s * 9 * u, sy + 5 * u]); if (e) line(c, X + s * 6 * u, sy, e[0], e[1]); });
+    head = { x: X, y: by - 25 * u, r: 12 * u };
+  } else if (st === 2) {
+    const k = A.moving ? Math.sin(t / 120) * 2.5 * u : 0;
+    limb(4); line(c, X - 7 * u * f, Y - 7 * u, X - 10 * u * f - k * f, Y - 0.5 * u); line(c, X - 4 * u * f, Y - 7 * u, X - 3 * u * f + k * f, Y - 0.5 * u);
+    fillOutfit(c, () => { c.beginPath(); c.ellipse(X - 1 * u * f, Y - 9 * u, 10 * u, 6.5 * u, 0, 0, Math.PI * 2); }, of, X - 11 * u, Y - 16 * u, 22 * u, 14 * u);
+    limb(3.6); const shx = X + 6 * u * f, shy = Y - 9 * u;
+    const up = A.arms === "point" || A.arms === "up" || A.arms === "wave";
+    line(c, shx, shy, up ? shx + 6 * u * f : shx + 1 * u * f + k * f, up ? shy - 8 * u + (A.arms === "wave" ? Math.sin(t / 110) * 2 * u : 0) : Y - 0.5 * u);
+    head = { x: X + 11 * u * f, y: Y - 19 * u, r: 11.5 * u };
+  } else {
+    const legH = [0, 0, 0, 5, 6, 7.5][st] * u, bodyH = [0, 0, 0, 10, 11, 12.5][st] * u, bw = [0, 0, 0, 13, 14, 15][st] * u;
+    const wob = (st === 3 && !REDUCED ? Math.sin(t / 420) * 0.05 : 0) + (A.arms === "dance" ? Math.sin(t / 240) * 0.18 : 0) + (mood === "laugh" ? Math.sin(t / 55) * 0.04 : 0);
+    c.save(); c.translate(X, A.Y); c.rotate(wob); c.translate(-X, -A.Y);
+    const step = A.moving ? Math.sin(t / (st === 3 ? 120 : 95)) * 2.5 * u : 0, hip = Y - legH, neck = hip - bodyH;
+    limb(4.2); line(c, X - 2.5 * u, hip, X - 3 * u + step, Y - 1.5 * u); line(c, X + 2.5 * u, hip, X + 3 * u - step, Y - 1.5 * u);
+    c.fillStyle = A.shoes ? "#6EA8D8" : "#F4EDE4";
+    c.beginPath(); c.ellipse(X - 3.5 * u + step, Y - 1 * u, 3 * u, 1.9 * u, 0, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.ellipse(X + 3.5 * u - step, Y - 1 * u, 3 * u, 1.9 * u, 0, 0, Math.PI * 2); c.fill();
+    const body = () => { c.beginPath(); c.moveTo(X - bw * 0.36, neck); c.lineTo(X + bw * 0.36, neck); c.quadraticCurveTo(X + bw * 0.62, hip, X + bw * 0.5, hip + 1.5 * u); c.lineTo(X - bw * 0.5, hip + 1.5 * u); c.quadraticCurveTo(X - bw * 0.62, hip, X - bw * 0.36, neck); c.closePath(); };
+    fillOutfit(c, body, of, X - bw * 0.62, neck, bw * 1.24, bodyH + 2 * u);
+    limb(3.6); const sy = neck + 2 * u, sway = a * Math.sin(t / 420) * 0.8 * u;
+    [-1, 1].forEach(s => {
+      let e = armEnd(A, X + s * bw * 0.38, sy, s, u * 0.8, t, [X + s * bw * 0.62, sy + 6.5 * u + s * sway]);
+      if (A.arms === "eyes") e = [X + s * 4 * u, neck - 12 * u];
+      if (!e && mood === "sleepy") e = [X + s * 4 * u, neck - 12 * u];
+      line(c, X + s * bw * 0.38, sy, e[0], e[1]);
+    });
+    head = { x: X, y: neck - 12 * u, r: [0, 0, 0, 13, 13.5, 14][st] * u };
+    c.restore();
+  }
+  chibiHead(c, head.x, head.y, head.r, look, mood, st, t, A.lookX || 0, A.lookY || 0);
+  if (A.arms === "eyes") { circle(c, head.x - head.r * 0.4, head.y + head.r * 0.2, head.r * 0.26, skin); circle(c, head.x + head.r * 0.4, head.y + head.r * 0.2, head.r * 0.26, skin); }
+  if (mood === "sleep") {
+    c.fillStyle = "rgba(255,255,255,.85)"; c.font = `700 ${10 * u}px "Bricolage Grotesque", sans-serif`;
+    for (let i = 0; i < 3; i++) { const p = REDUCED ? i / 3 : ((t / 2400) + i / 3) % 1; c.globalAlpha = 1 - p; c.fillText("z", head.x + 11 * u + p * 14 * u, head.y - 10 * u - p * 22 * u); }
+    c.globalAlpha = 1;
+  }
+  if (A.arms === "dance") { c.fillStyle = "rgba(255,210,160,.9)"; c.font = `700 ${10 * u}px sans-serif`; for (let i = 0; i < 2; i++) { const p = ((t / 1600) + i / 2) % 1; c.globalAlpha = 1 - p; c.fillText("♪", head.x + (i ? -22 : 16) * u, head.y - 6 * u - p * 22 * u); } c.globalAlpha = 1; }
+  if (mood === "hungry") { const bx = head.x - 20 * u, by = head.y - 14 * u; circle(c, head.x - 13 * u, head.y - 7 * u, 1.5 * u, "#FFF"); circle(c, bx, by, 7 * u, "#FFF"); c.fillStyle = "#CFE3EF"; rr(c, bx - 2.2 * u, by - 3.5 * u, 4.4 * u, 7 * u, 1.4 * u); c.fill(); }
+  return { x: head.x, y: head.y - head.r * (look.ears === "tavsan" ? 1.9 : look.ears === "kedi" ? 1.5 : 1.1) - 4 * u };
+}
+
 function actorFor(v, pose, off, W, H, lock) {
   const now = performance.now(), g = M.g, st = v.baby.stageIdx;
   let mood = MOOD[pose] || "happy", arms = "none", lift = 0, pdx = 0, pdy = 0, lookX = 0, lookY = 0, shoes = false;
@@ -1089,7 +1292,7 @@ function drawNow(t = performance.now(), m = mode) {
   }
   const A = actorFor(V, currentPose(V), off, CW, CH, lock);
   M.feet = { x: A.X, y: A.Y };
-  headPt = drawStick(ctx, V, S, t, A);
+  headPt = (V.charStyle === "cizgi" ? drawStick : drawChibi)(ctx, V, S, t, A);
 }
 function frame(t) {
   updateMotion(t);
@@ -1236,6 +1439,11 @@ function growthView(v) {
   const gAll = Object.entries(GESTURES).filter(([k]) => k !== "yok");
   return `<div><div class="eyebrow">Gelişim</div><h2 style="font-size:22px;margin-top:4px">${STAGES[st].name} · ${Math.floor(ad)}. gün</h2>
     <p class="small muted m0">${next ? `${next.name} dönemine yaklaşık ${Math.max(1, Math.ceil(next.from - ad))} gün.` : "Çocukluk döneminde."}${st < 3 ? ` İlk kelimeye yaklaşık ${Math.max(1, Math.ceil(56 - ad))} gün.` : ""}</p></div>
+    <section class="card"><div class="eyebrow">Kimliği</div>
+      <p class="m0">${esc(["Çok sakin", "Sakin", "Dengeli", "Hareketli", "Yerinde duramayan"][v.persona.enerji + 2])}, ${esc(["çok utangaç", "biraz utangaç", "ılımlı", "cana yakın", "herkese koşan"][v.persona.sosyallik + 2])} biri.</p>
+      <p class="small m0">Huyları: ${v.persona.huylar.map(h => `<span class="tag">${esc(HUYLAR[h])}</span>`).join(" ")}</p>
+      ${(() => { const u = styleOf(v.style); return v.consent.mesaj && (u.laflar.length || u.gulme || u.bip_sayisi) ? `<p class="small m0">Senden kaptıkları: ${u.laflar.map(w => `<span class="tag">${esc(w)}</span>`).join(" ") || "henüz yok"}${u.gulme ? ` · gülüşü “${esc(u.gulme)}”` : ""} · konuşma tonun ${esc({ coskulu: "coşkulu", sakin: "sakin", sorucu: "meraklı" }[u.ton])}</p>${u.bip_sayisi ? `<p class="small m0">Senden ${u.bip_sayisi} “bip”lik kelime duydu. Söylemeye kalkarsa ağzından sadece “bip” çıkar.</p>` : ""}` : ""; })()}
+    </section>
     <section class="card"><div class="eyebrow">Dil takvimi</div><ul class="timeline">
       ${STAGES.map((s, i) => `<li class="${i < st ? "done" : i === st ? "now" : ""}"><i></i><span><b>${s.name}</b><br><span class="small muted">${s.sound}</span></span><small>${s.from}. gün</small></li>`).join("")}
     </ul></section>
@@ -1285,6 +1493,7 @@ function familyView(v) {
   return `<div><div class="eyebrow">Aile</div><h2 style="font-size:22px;margin-top:4px">${two ? "İki telefonda aynı bebek" : "Şimdilik sadece sen"}</h2></div>
     ${v.parents.map(p => `<section class="card"><div class="row" style="justify-content:space-between"><h3>${esc(p.name)}</h3>${p.id === v.active ? `<span class="pill good">bu telefon</span>` : ""}</div>
       <p class="m0">${esc(relLabel(p.rel, p.id === "p1"))}</p><p class="small muted m0">Ona “${esc(p.callName || "…")}” demeyi öğrenebilir. Her ebeveynin ritmi ayrı tanınır.</p></section>`).join("")}
+    ${teamCard(v)}
     ${two ? `<div><div class="eyebrow">Hangi telefondasın? (prototip)</div><div class="row" style="margin-top:6px">${v.parents.map(p => `<button class="chip" aria-pressed="${p.id === v.active}" data-parent="${p.id}">${esc(p.name)}</button>`).join("")}</div></div>`
     : v.invite.code ? `<section class="card"><h3>Davet linki hazır</h3>
       <div class="row"><code id="invite-link" style="font:600 13px var(--f-mono);user-select:all">ortak.app/davet/${esc(v.invite.code)}</code><button class="btn ghost small" id="copy-invite">Kopyala</button></div>
@@ -1294,6 +1503,17 @@ function familyView(v) {
       <button class="btn" type="submit">Kabul edildi</button></form></section>`
     : `<section class="card"><h3>Ortak ebeveyn davet et</h3><p class="m0">Partnerinin telefonunda da aynı bebek yaşar. Günlük ve anılar ortak, ilişkiniz ayrı ayrı gelişir.</p>
       <button class="btn" id="make-invite" style="align-self:flex-start">Davet linki oluştur</button></section>`}`;
+}
+function teamCard(v) {
+  const t = teamAffinity(v.team, v.parents), tot = Math.max(3, ...Object.values(t.egilim));
+  const pt = v.parents.map(p => t.ebeveyn_takimlari[p.id] ? `${esc(p.name)}: ${TEAM_NAMES[t.ebeveyn_takimlari[p.id]]}` : null).filter(Boolean);
+  const derbi = new Set(Object.values(t.ebeveyn_takimlari)).size > 1;
+  return `<section class="card"><div class="eyebrow">Takım</div>
+    <p class="m0">${t.secim ? `${esc(v.baby.name)} <b>${TEAM_NAMES[t.secim]}</b>. Bu kararı kendi verdi.` : v.baby.stageIdx < 3 ? `${esc(v.baby.name)} henüz formalara sadece rengi için bakıyor.` : `${esc(v.baby.name)} henüz kararsız. Çocuklukta kendi seçimini yapacak.`}</p>
+    ${pt.length ? `<p class="small m0">${pt.join(" · ")}${derbi ? " · <b>evde derbi var</b>" : ""}</p>` : `<p class="small muted m0">Ona takımından bahset ya da forma giydir; zamanla etkilenir.</p>`}
+    ${Object.keys(t.egilim).length ? Object.entries(TEAM_NAMES).filter(([k]) => t.egilim[k]).map(([k, n]) => `<div class="meter"><span>${n}</span><span class="bar"><i style="width:${Math.min(100, t.egilim[k] / tot * 100)}%;background:linear-gradient(90deg,${TEAM_COLORS[k][0]} 50%,${TEAM_COLORS[k][1]} 50%)"></i></span><span class="v">${t.egilim[k]}</span></div>`).join("") : ""}
+    <div class="row">${Object.entries(TEAM_NAMES).map(([k, n]) => `<button class="chip" data-jersey="${k}"><span style="display:inline-block;width:14px;height:10px;border-radius:2px;background:linear-gradient(90deg,${TEAM_COLORS[k][0]} 50%,${TEAM_COLORS[k][1]} 50%);margin-right:6px"></span>${n} forma</button>`).join("")}</div>
+    <p class="small muted m0">Kulüp adı, logo ve resmi forma lisans gerektirir; prototipte sadece renkler var.</p></section>`;
 }
 function settingsView(v) {
   const s = v.settings, sw = (id, on, l) => `<button class="switch" role="switch" id="${id}" aria-checked="${on}" aria-label="${esc(l)}"></button>`;
@@ -1306,6 +1526,7 @@ function settingsView(v) {
       <div class="set"><div><b>Gece uyanma bildirimi</b><p>Varsayılan kapalı. Ekranı zorla açmaz. Yanıt vermemek hiçbir şeyi kötüleştirmez.</p></div>${sw("s-night", s.night, "Gece bildirimi")}</div>
     </section>
     <section class="card"><div class="eyebrow">Görünüm</div>
+      <div class="row" role="group" aria-label="Karakter stili"><span class="small muted">Stil:</span>${[["chibi", "Chibi"], ["cizgi", "Çizgi figür"]].map(([k, l]) => `<button class="chip" aria-pressed="${v.charStyle === k}" data-charstyle="${k}">${l}</button>`).join("")}</div>
       <div class="row">${OUTFITS.map(o => `<button class="chip" aria-pressed="${v.outfit === o.id}" data-outfit="${o.id}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${o.color};margin-right:6px"></span>${esc(o.name)}</button>`).join("")}</div>
       ${PREMIUM.map(p => `<div class="row" style="justify-content:space-between"><span>${esc(p.name)}</span><button class="btn ghost small" data-premium="${p.id}">${p.price}</button></div>`).join("")}
       <p class="small muted m0" id="shop-toast">Bakım asla parayla açılmaz. Premium sadece görünüm.</p>
@@ -1359,9 +1580,9 @@ function showOnboarding() {
   let look = randomLook(), call = "anne";
   ui.innerHTML = "";
   ov.innerHTML = `<div class="layer sheet-bg"><form class="sheet" id="ob-form" role="dialog" aria-label="Kurulum">
-    <div class="eyebrow">Kurulum</div><h2>Duvar kağıdına bir bebek yerleşecek</h2>
+    <div class="eyebrow">Kurulum</div><h2>Duvar kağıdına küçük biri yerleşecek</h2>
     <canvas id="ob-canvas" class="look-preview" aria-label="Bebeğin görünümü"></canvas>
-    <button type="button" class="btn ghost small" id="ob-reroll" style="align-self:center">Başka bir bebek</button>
+    <button type="button" class="btn ghost small" id="ob-reroll" style="align-self:center">Başka bir tane</button>
     <label class="small" for="ob-name">Adı</label><input type="text" id="ob-name" value="${esc(pick(NAMES))}" maxlength="16" required>
     <label class="small" for="ob-call">Seni nasıl çağırsın?</label>
     <div class="row">${["anne", "baba", "abla", "abi"].map(c => `<button type="button" class="chip" data-call="${c}" aria-pressed="${c === call}">${c}</button>`).join("")}</div>
@@ -1374,7 +1595,7 @@ function showOnboarding() {
   </form></div>`;
   const draw = () => {
     const c = $("#ob-canvas"), dpr = Math.min(2, window.devicePixelRatio || 1); c.width = 140 * dpr; c.height = 140 * dpr;
-    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); drawWallpaper(x, 140, 140, T0, 0); drawStick(x, { baby: { stageIdx: 3, look }, outfit: "o1" }, 1.9, 1000, { X: 70, Y: 124, mood: "happy", arms: "wave", lift: 0, facing: 1, moving: false, lookX: 0, lookY: 0 });
+    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); drawWallpaper(x, 140, 140, T0, 0); drawChibi(x, { baby: { stageIdx: 3, look }, outfit: "o1", team: {} }, 1.55, 1000, { X: 70, Y: 128, mood: "happy", arms: "wave", lift: 0, facing: 1, moving: false, lookX: 0, lookY: 0 });
   };
   draw();
   $("#ob-reroll").onclick = () => { look = randomLook(); draw(); };
@@ -1384,7 +1605,7 @@ function showOnboarding() {
     e.preventDefault(); e.stopPropagation();
     const consent = Object.fromEntries(CONSENTS.map(([k]) => [k, $("#ob-c-" + k).checked]));
     Server.create($("#ob-name").value.trim() || "Milo", look, $("#ob-call").value.trim(), consent);
-    onboarding = false; ov.innerHTML = ""; refresh(); fillRoutine(); Server.screenOn(); render(); renderPanel(); say("(minik sesler)");
+    onboarding = false; ov.innerHTML = ""; refresh(); fillRoutine(); Server.screenOn(); render(); renderPanel(); hatchStart = performance.now(); setTimeout(() => say("(minik sesler)"), 2600);
   };
 }
 function fillRoutine() {
@@ -1410,6 +1631,9 @@ function renderPanel() {
     <dt>Dönem</dt><dd>${STAGES[b.stageIdx].name} (${ageDaysV(V).toFixed(1)}. gün)</dd>
     <dt>Bekleyen kilometre taşı</dt><dd>${V.pending.join(", ") || "–"}</dd>
     <dt>Heceler / kelimeler</dt><dd>${esc(heardSyllables(V.heard).join(" ") || "–")} / ${esc(V.vocab.join(", ") || "–")}</dd>
+    <dt>Mizaç (enerji / sosyallik)</dt><dd>${V.persona.enerji} / ${V.persona.sosyallik} · ${esc(V.persona.huylar.join(", "))}</dd>
+    <dt>Üslup (beyne giden)</dt><dd style="white-space:normal;max-width:260px">${V.consent.mesaj ? esc(JSON.stringify(styleOf(V.style))) : "izin yok"}</dd>
+    <dt>Takım eğilimi</dt><dd style="white-space:normal;max-width:260px">${esc(JSON.stringify(teamAffinity(V.team, V.parents).egilim))}${V.team.secim ? " · seçim: " + V.team.secim : ""}</dd>
     <dt>Sinyal sayısı</dt><dd>${V.signals.length}</dd>
     <dt>Ritim (beyne giden)</dt><dd style="white-space:normal;max-width:260px">${r ? esc(JSON.stringify(r)) : "rıza yok"}</dd></dl>`;
   const days = new Set([...V.metrics.unlocks, ...V.metrics.appOpens].map(o => o.day));
@@ -1453,6 +1677,8 @@ document.addEventListener("click", async e => {
   if (d.parent) { Server.setActive(d.parent); render(); renderPanel(); return; }
   if (d.max) { Server.setSettings({ maxPerDay: +d.max }); render(); return; }
   if (d.outfit) { Server.setOutfit(d.outfit); render(); return; }
+  if (d.charstyle) { Server.setCharStyle(d.charstyle); render(); renderPanel(); return; }
+  if (d.jersey) { const ok = Server.giftJersey(d.jersey); refresh(); if (ok) { flashPose = "gulumsuyor"; flashUntil = performance.now() + 3000; if (V.baby.stageIdx >= 3) playGesture("zipla"); } else playGesture("yuzunu_cevir"); render(); renderPanel(); return; }
   if (d.premium) { Server.fakeDoor(d.premium); refresh(); const s = $("#shop-toast"); if (s) s.textContent = "Bu prototipte satın alma yok. İlgin not edildi."; renderPanel(); return; }
   switch (t.id) {
     case "power": case "p-power": power(); return;

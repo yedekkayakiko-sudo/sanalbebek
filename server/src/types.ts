@@ -64,6 +64,9 @@ export interface BabyState {
   son_hareketler: string[];
   ritim: Rhythm | null;      // rıza yoksa null
   defter: string[];          // tanıma defterindeki mevcut notlar
+  uslup?: import("./style.ts").Style;          // ebeveynin konuşma üslubu (izin varsa)
+  kisilik?: { enerji: number; sosyallik: number; huylar: string[]; sevdikleri: string[] };
+  takim?: import("./style.ts").TeamState;
 }
 
 export interface BrainEvent {

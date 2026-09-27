@@ -1,4 +1,5 @@
 import { GESTURES, POSES, TARGETS, type BabyState, type BrainOutput, type Pose } from "./types.ts";
+import { isProfane } from "./style.ts";
 
 // Modelin çıktısı ne olursa olsun, bebeğin dönemine aykırı konuşma ve hareket ekrana çıkmaz.
 // Skill'ler modeli yönlendirir; bu dosya kuralları deterministik olarak uygular.
@@ -41,6 +42,9 @@ export function isAllowedSpeech(state: BabyState, speech: string): boolean {
   const s = speech.trim().toLocaleLowerCase("tr-TR");
   if (s === "") return true;
   if (s.length > 20 || state.uyuyor) return false;
+  // "bip": küfrü duymuş karakter onu asla açıkça söyleyemez, sadece "bip" çıkar (konusma-uslubu)
+  if (/^(bi-)?bip!?$/.test(s)) return state.donem >= 2 && (state.uslup?.bip_sayisi ?? 0) >= 3;
+  if (s.split(/[\s!?.,-]+/).some(w => w && isProfane(w))) return false;
   const syll = [...BASE_SYLLABLES, ...state.heceler];
   switch (state.donem) {
     case 0: return /^(\(minik sesler\)|h+ı+|ı+h+|ah+)$/u.test(s);
@@ -68,6 +72,7 @@ export function isAllowedNewWord(state: BabyState, word: string | null): word is
   return state.donem >= 4
     && !state.bugun_yeni_kelime
     && /^[a-zçğıöşü-]{1,6}$/u.test(w)
+    && !isProfane(w)
     && (state.duyulanlar[w] ?? 0) >= 3
     && !state.kelimeler.includes(w);
 }

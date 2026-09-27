@@ -91,3 +91,12 @@ test("bilinmeyen poz kural tabanlı poza düşer", () => {
   const out = sanitize(s, { konusma: "", davranis: "dans_ediyor" as never, hareket: "yok", gunluk: "", yeni_kelime: null, defter_notu: null });
   assert.equal(out.davranis, "mutfaga_bakiyor");
 });
+
+test("küfür asla söylenmez, sadece bip; bip için en az 3 küfür duymuş olmalı", () => {
+  const s = { ...base, donem: 5 as const, kelimeler: ["mama"], duyulanlar: { salak: 5 } };
+  assert.equal(isAllowedSpeech(s, "salak"), false);
+  assert.equal(isAllowedNewWord(s, "salak"), false);
+  assert.equal(isAllowedSpeech(s, "bip!"), false);
+  assert.equal(isAllowedSpeech({ ...s, uslup: { laflar: [], gulme: null, ton: "sakin", bip_sayisi: 3 } }, "bip!"), true);
+  assert.equal(isAllowedSpeech({ ...base, uslup: { laflar: [], gulme: null, ton: "sakin", bip_sayisi: 9 } }, "bip!"), false);  // yenidoğan bip bile diyemez
+});

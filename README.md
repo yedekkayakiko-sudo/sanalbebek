@@ -11,16 +11,19 @@ Bebek **seni tanır**: rıza verdiğin sinyallerden (ekran açma-kapama, adım, 
 | Klasör | İçerik |
 |---|---|
 | [`prototype/index.html`](prototype/index.html) | Tıklanabilir prototip: kilit ekranı, ana ekran, takip uygulaması, moderatör paneli |
-| [`skills/`](skills) | Karakterin beynini tanımlayan 13 skill dosyası (`SKILL.md`) |
-| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), 15 test |
+| [`skills/`](skills) | Karakterin beynini tanımlayan 16 skill dosyası (`SKILL.md`) |
+| [`server/`](server) | Beyin modülü (TypeScript): skill yükleyici, Claude çağrısı, çıktı denetimi, ritim çıkarma (`profile.ts`), üslup, küfür ve takım (`style.ts`), 20 test |
 | [`android/`](android) | Cihaz testi: kilit ekranında canlı duvar kağıdı görünüyor mu? ([talimat](android/README.md)) |
 | [`ROADMAP.md`](ROADMAP.md) | Aşama aşama Android yol haritası |
 | [`DEGERLENDIRME.md`](DEGERLENDIRME.md) | Alan alan detaylı değerlendirme, eksikler ve öncelikler |
+| [`URUN_INCELEME.md`](URUN_INCELEME.md) | Kullanıcı yolculuğu, bağ kurduran mekanikler, rakiplerden ayrışma, yeni fikirler |
 
 ## Prototipte ne var
 
 - **Kilit ekranı:** saat, tarih, bildirimler ve en altta, kısayol ikonlarının arasında yaşayan bebek. Bildirimlerde "Besle" ve "Uyut" butonları var, kilidi açmadan bakım yapılabilir.
-- **Karakter:** küçük, tatlı bir çizgi figür. Her dönemde duruşu ve hareket şekli değişir.
+- **Karakter:** yumurtadan çıkan küçük, tatlı bir chibi (kedi ya da tavşan kulaklı olabilir). İstenirse çizgi figür. Her dönemde duruşu ve hareket şekli değişir. Her birinin kendi mizacı ve iki huyu var.
+- **Sana benzer:** senin laflarını ("abi", "yaa"), gülüşünü ve tonunu kapar. Küfrü asla söylemez, ağzından sadece "bip!" çıkar.
+- **Takım tutar:** konuşmalarınızdan ve giydirdiğiniz formalardan etkilenir, Çocuklukta kendi takımını seçer (sadece renkler, logo yok).
 - **Ana ekran:** ikonların arkasında aynı bebek. Boş bir yere dokununca her dönemde oraya gelir (yuvarlanarak, popo kaydırarak, emekleyerek, paytak paytak, yürüyerek, koşarak); üstüne dokununca gıdıklanır (Android'de launcher bu dokunuşu `android.wallpaper.tap` olarak iletir). Ana ekranın ikinci sayfasına saklanabilir; sayfayı kaydırınca onu bulursun.
 - **Konuşmadan önceki 8 hafta:** bebek 14 hareketle anlaşır: gerinmek, kaseyi göstermek, kapıya yürümek, ce-e, el çırpmak, zıplamak, dans, saklanmak, seni taklit etmek. Heceleri senin kelimelerinden gelir: ona sık sık "top" dersen "to-to" der, ilk kelimesi büyük ihtimalle "top" olur.
 - **Güç tuşu:** ekran kapanır, duvar kağıdı çizilmez, bebek donar. Zamanı ileri sarıp (10 dk, 3 saat, sabaha kadar, 1 gün, 3 gün, 1 hafta) ekranı açınca aradaki süre yeniden hesaplanır ve beyne bir kez sorulur.
@@ -50,7 +53,7 @@ olay (ekran açıldı, ebeveyn mesajı, kilometre taşı, yürüyüş eşiği, g
 ```bash
 cd server
 npm install
-npm test          # denetim ve ritim testleri (15 test)
+npm test          # denetim, ritim, üslup ve takım testleri (20 test)
 npm run typecheck
 ANTHROPIC_API_KEY=... npm run demo -- "Top oynayalım mı? Top!"
 ```
@@ -72,6 +75,9 @@ ANTHROPIC_API_KEY=... npm run demo -- "Top oynayalım mı? Top!"
 | `guvenlik-sinirlari` | Prompt injection, hassas içerik, hassas kitle, kişisel veri |
 | `sozsuz-iletisim` | Konuşmadan önceki hareket dili: 14 hareket, hedefler, döneme göre açılma |
 | `ebeveyni-tanima` | Sinyallerden ritim, ritme uyum, tanıma defteri ve asla yazılmayacak notlar |
+| `konusma-uslubu` | Sahibinin laflarını, gülüşünü ve tonunu kapma; küfür yerine "bip" |
+| `kisilik` | Doğuşta mizaç ve iki huy, sahibinden gelen sevdikler |
+| `takim-tutma` | Ebeveynlerin etkisiyle renkten takım seçimi, evde derbi, rakibe saygı |
 
 ## Android'de nasıl yapılır
 

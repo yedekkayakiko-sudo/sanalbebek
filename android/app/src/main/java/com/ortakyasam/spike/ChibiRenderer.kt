@@ -59,6 +59,7 @@ class ChibiRenderer(val look: Look) {
         }
         val pose = if (f.hatch < 1f) Pose.EGG else f.pose
         val ts = t.toFloat()
+        if (look.species != 0 && pose != Pose.EGG) tail(c, pose, x, y, u, lg, ts, f.facing)
         var hx: Float; var hy: Float; var hr = r
         when (pose) {
             Pose.EGG -> {
@@ -155,7 +156,7 @@ class ChibiRenderer(val look: Look) {
             circle(c, hx - 13 * u, hy - 7 * u, 1.5f * u, 0xFFFFFFFF.toInt()); circle(c, bx, by, 7 * u, 0xFFFFFFFF.toInt())
             fill.color = 0xFFCFE3EF.toInt(); rect.set(bx - 2.2f * u, by - 3.5f * u, bx + 2.2f * u, by + 3.5f * u); c.drawRoundRect(rect, 1.4f * u, 1.4f * u, fill)
         }
-        val earTop = when (look.ears) { 2 -> 1.9f; 1 -> 1.5f; else -> 1.3f }
+        val earTop = when { look.species == 3 || (look.species == 0 && look.ears == 2) -> 1.9f; look.species != 0 || look.ears == 1 -> 1.5f; else -> 1.3f }
         return PointF(hx, hy - hr * earTop - 4 * u)
     }
 
@@ -173,6 +174,7 @@ class ChibiRenderer(val look: Look) {
     }
 
     private fun head(c: Canvas, x: Float, y: Float, r: Float, mood: Mood, stage: Int, ts: Float, lookX: Float, lookY: Float) {
+        if (look.species != 0) { animalHead(c, x, y, r, mood, ts, lookX, lookY); return }
         val hair = look.hair
         oval(c, x, y + r * 0.08f, r * 1.1f, r * 1.04f, hair)
         if (look.ears == 1) for (s in intArrayOf(-1, 1)) {
@@ -198,6 +200,83 @@ class ChibiRenderer(val look: Look) {
         path.reset(); val wob = sin(ts / 500f) * r * 0.06f
         path.moveTo(x + r * 0.05f, y - r * 0.98f); path.quadTo(x + r * 0.35f + wob, y - r * 1.55f, x + r * 0.55f + wob, y - r * 1.25f)
         stroke.color = hair; stroke.strokeWidth = r * 0.12f; c.drawPath(path, stroke)
+        face(c, x, y, r, mood, ts, lookX, lookY, animal = false)
+    }
+
+    /** Evcil hayvan kafası: kulaklar, yüz, desen, burun. Gözler ve ağız insanla aynı (anime gözler). */
+    private fun animalHead(c: Canvas, x: Float, y: Float, r: Float, mood: Mood, ts: Float, lookX: Float, lookY: Float) {
+        val fur = look.skin; val fur2 = look.fur2
+        val pink = 0xFFF7A9BC.toInt()
+        val floppy = look.species == 1 && look.earStyle == 0
+        // arkadaki kulaklar
+        when {
+            look.species == 3 -> for (s in intArrayOf(-1, 1)) {
+                c.save(); c.rotate(s * 10f + sin(ts / 700f + s) * 4f, x + s * r * 0.4f, y - r * 1.3f)
+                oval(c, x + s * r * 0.4f, y - r * 1.35f, r * 0.24f, r * 0.66f, fur)
+                oval(c, x + s * r * 0.4f, y - r * 1.3f, r * 0.11f, r * 0.46f, pink)
+                c.restore()
+            }
+            !floppy -> for (s in intArrayOf(-1, 1)) {
+                val tw = sin(ts / 900f + s) * r * 0.04f
+                path.reset(); path.moveTo(x + s * r * 0.2f, y - r * 0.7f); path.lineTo(x + s * r * 0.78f + tw, y - r * 1.35f); path.lineTo(x + s * r * 0.95f, y - r * 0.25f); path.close()
+                fill.shader = null; fill.color = if (look.species == 1) fur2 else fur; c.drawPath(path, fill)
+                path.reset(); path.moveTo(x + s * r * 0.4f, y - r * 0.65f); path.lineTo(x + s * r * 0.76f + tw, y - r * 1.12f); path.lineTo(x + s * r * 0.84f, y - r * 0.45f); path.close()
+                fill.color = pink; c.drawPath(path, fill)
+            }
+        }
+        // yüz
+        oval(c, x, y + r * 0.08f, r * 1.05f, r * 0.95f, fur)
+        // desen: 1 göz çevresinde leke, 2 beyaz ağız-alın
+        if (look.pattern == 1) oval(c, x + r * 0.4f, y + r * 0.12f, r * 0.38f, r * 0.42f, fur2)
+        if (look.pattern == 2) { oval(c, x, y - r * 0.55f, r * 0.14f, r * 0.34f, 0xFFFFF8F0.toInt()) }
+        // ağız çevresi (burun bölgesi)
+        oval(c, x, y + r * 0.58f, r * 0.44f, r * 0.3f, if (look.pattern == 2) 0xFFFFF8F0.toInt() else lighten(fur))
+        // sarkık kulaklar önde, yanlarda sallanır
+        if (floppy) for (s in intArrayOf(-1, 1)) {
+            c.save(); c.rotate(s * (14f + sin(ts / 520f + s) * 5f), x + s * r * 0.75f, y - r * 0.6f)
+            oval(c, x + s * r * 0.98f, y - r * 0.02f, r * 0.3f, r * 0.62f, fur2)
+            c.restore()
+        }
+        face(c, x, y - r * 0.06f, r, mood, ts, lookX, lookY, animal = true)
+        // burun
+        val ny = y + r * 0.44f
+        if (look.species == 1) oval(c, x, ny, r * 0.14f, r * 0.1f, INK)
+        else { path.reset(); path.moveTo(x - r * 0.1f, ny - r * 0.05f); path.lineTo(x + r * 0.1f, ny - r * 0.05f); path.lineTo(x, ny + r * 0.07f); path.close(); fill.shader = null; fill.color = 0xFFE58FA8.toInt(); c.drawPath(path, fill) }
+        circle(c, x - r * 0.04f, ny - r * 0.03f, r * 0.035f, 0xAAFFFFFF.toInt())
+        // kedi ve tavşan bıyıkları
+        if (look.species >= 2) {
+            stroke.color = 0x99594A40.toInt(); stroke.strokeWidth = r * 0.03f
+            for (s in intArrayOf(-1, 1)) for (k in 0..1) c.drawLine(x + s * r * 0.3f, ny + r * (0.08f + k * 0.1f), x + s * r * 0.85f, ny + r * (k * 0.16f - 0.02f), stroke)
+        }
+    }
+
+    /** Kuyruk: gövdenin arkasında. Köpekte hızlı sallanır, kedide yavaş kıvrılır, tavşanda ponpon. */
+    private fun tail(c: Canvas, pose: Pose, x: Float, y: Float, u: Float, lg: Float, ts: Float, facing: Int) {
+        val side = if (facing < 0) 1f else -1f
+        val hx: Float; val hy: Float
+        when (pose) {
+            Pose.STAND -> { hx = x + side * 4 * u; hy = y - lg - 2 * u }
+            Pose.SIT, Pose.EAT -> { hx = x + side * 7 * u; hy = y - 4 * u }
+            Pose.CRAWL -> { hx = x - facing * 11 * u; hy = y - 10 * u }
+            Pose.LIE -> { hx = x + 16 * u; hy = y - 6 * u }
+            else -> return
+        }
+        if (look.species == 3) { circle(c, hx, hy, 3.2f * u, lighten(look.skin)); return }
+        val dog = look.species == 1
+        val wag = sin(ts / (if (dog) 110f else 520f)) * (if (dog) 3f else 2f) * u
+        path.reset(); path.moveTo(hx, hy)
+        path.quadTo(hx + side * 6 * u, hy - 1 * u, hx + side * (if (dog) 7f else 9f) * u + wag, hy - (if (dog) 8f else 12f) * u)
+        stroke.color = look.skin; stroke.strokeWidth = (if (dog) 2.8f else 2.2f) * u; c.drawPath(path, stroke)
+        if (look.pattern == 2 && dog) circle(c, hx + side * 7 * u + wag, hy - 8 * u, 1.4f * u, 0xFFFFF8F0.toInt())
+    }
+
+    private fun lighten(c: Int): Int {
+        val r = (((c shr 16) and 0xFF) + 255) / 2; val g = (((c shr 8) and 0xFF) + 255) / 2; val b = ((c and 0xFF) + 255) / 2
+        return (0xFF shl 24) or (r shl 16) or (g shl 8) or b
+    }
+
+    /** Gözler, yanaklar ve ağız. Hayvanda ağız burnun altında biraz daha aşağıda. */
+    private fun face(c: Canvas, x: Float, y: Float, r: Float, mood: Mood, ts: Float, lookX: Float, lookY: Float, animal: Boolean) {
         // gözler
         val ex = r * 0.38f; val ey = y + r * 0.24f; val rx = r * 0.235f; val ry = r * 0.3f
         val lx = when (mood) { Mood.HUNGRY -> -0.8f; Mood.SHY -> 0.6f; else -> lookX }
@@ -227,7 +306,7 @@ class ChibiRenderer(val look: Look) {
         // yanaklar
         for (s in intArrayOf(-1, 1)) oval(c, x + s * r * 0.62f, y + r * 0.56f, r * 0.2f, r * 0.11f, if (mood == Mood.SHY) 0x9EFF6982.toInt() else 0x73FF7D96)
         // ağız
-        val my = y + r * 0.64f
+        val my = y + r * (if (animal) 0.74f else 0.64f)
         stroke.color = INK; stroke.strokeWidth = r * 0.07f
         when (mood) {
             Mood.LAUGH, Mood.SURPRISE -> oval(c, x, my + r * 0.04f, r * 0.1f, r * 0.1f, 0xFFC0485A.toInt())

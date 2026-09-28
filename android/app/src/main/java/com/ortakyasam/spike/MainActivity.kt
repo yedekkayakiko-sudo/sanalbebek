@@ -33,6 +33,8 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         val pet = Pet(this).also { it.catchUp() }
+        // İlk açılış: önce "Kim olsun?" (bebek mi, evcil hayvan mı?)
+        if (!pet.chosen) { startActivity(Intent(this, ChooseActivity::class.java)); return }
         room.reloadPet(pet)
         val wallOn = WallpaperManager.getInstance(this).wallpaperInfo?.packageName == packageName
         room.needsSetup = !wallOn || (pet.overlayOn && !Settings.canDrawOverlays(this))
@@ -40,6 +42,6 @@ class MainActivity : Activity() {
 
     override fun onPause() {
         super.onPause()
-        room.pet.save()
+        if (room.pet.chosen) room.pet.save()
     }
 }

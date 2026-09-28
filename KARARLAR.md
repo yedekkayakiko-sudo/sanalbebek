@@ -9,6 +9,8 @@ Derdahan ve Burak ile konuşularak alınan kararlar. Yeni bir karar alındıkça
 | Kitle | Geniş: kardeş, anne, arkadaş. Herkese uygun olmalı; içerik çocuklar için de güvenli |
 | Büyüme | Bebek uygulamanın indirildiği gün doğar ve gerçek zamanla büyür. İyi bakılırsa zamanında, ihmal edilirse birkaç gün geç büyür. İnsan gibi sürekli büyür; sonu daha sonra konuşulacak. Asla ölmez |
 | İlk ay | Sık küçük olaylar (ilk gülümseme, dönme, oturma), sonra aylık büyüme ve doğum günleri |
+| Karakter seçimi | İlk açılışta bir kere: bebek ya da kendi evcil hayvanı. Herkesin başta tek karakteri var; ikinci karakter ileride "kardeş" olarak (ödül ya da ücretli) |
+| Evcil hayvan büyümesi | Bebek gibi yavru doğar, aynı takvimle büyür. Konuşmaz; kendi sesini çıkarır (hav, miyav) |
 | Fotoğraftan karakter | Şimdilik sadece evcil hayvan. Fotoğraf "okunur", hazır karakter ona benzetilir (renk, kulak, desen). İnsan fotoğrafı sonra değerlendirilecek |
 | Platform | Şimdilik Android. iOS (Dynamic Island + widget + oyun) sonra |
 | Görseller | Şimdilik kodla ve yapay zekâyla. Beğenilirse çizer bütçesi ayrılacak |
@@ -20,7 +22,7 @@ Derdahan ve Burak ile konuşularak alınan kararlar. Yeni bir karar alındıkça
 
 1. ~~Gerçek zamanlı büyüme~~ ✓
 2. ~~Pou tarzı odalar ve ekonomi: altın, market, ödüllü reklam (deneme), bez/tuvalet, revir, mini oyun~~ ✓
-3. Evcil hayvan fotoğrafından karakter (köpek, kedi, tavşan şablonları)
+3. ~~Evcil hayvan fotoğrafından karakter (köpek, kedi, tavşan)~~ ✓ İlk sürüm: renkler telefonda çıkarılıyor, kulak ve desen elle seçiliyor. Yapay zekâ ile otomatik tanıma 4. adımdaki sunucuyla gelecek
 4. Yapay zekâ: sunucu, konuşma, kullanıcıyı tanıma, moral desteği
 5. "Birlikte izle" ve uygulama farkındalığı
 6. Gerçek reklam (AdMob ödüllü reklam), daha fazla mini oyun, arkadaşlarla oynama

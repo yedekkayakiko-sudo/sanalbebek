@@ -122,7 +122,7 @@ class BebekWallpaperService : WallpaperService() {
                 OverlayPet.refreshPermission(ctx)
                 val hp = headphones(ctx)
                 val pet = Baby.pet
-                if (!isPreview) DiagLog.add(ctx, "GÖRÜNÜR · ${where()} · şarj: ${Baby.charging} · kulaklık: $hp · ikon üstü izni: ${OverlayPet.permitted} · ${Pet.STAGE_NAMES[pet.stage]} · açlık ${pet.hunger.toInt()} enerji ${pet.energy.toInt()}${if (pet.asleep) " · uyuyor" else ""}")
+                if (!isPreview) DiagLog.add(ctx, "GÖRÜNÜR · ${where()} · şarj: ${Baby.charging} · kulaklık: $hp · ikon üstü izni: ${OverlayPet.permitted} · ${pet.stageName()} · açlık ${pet.hunger.toInt()} enerji ${pet.energy.toInt()}${if (pet.asleep) " · uyuyor" else ""}")
                 if (!pet.hatched && !isPreview && Baby.hatchStart == 0L) Baby.hatchStart = SystemClock.uptimeMillis() + 600
                 else if (hp) Baby.startDance()
                 else Baby.sayHungryIfNeeded()

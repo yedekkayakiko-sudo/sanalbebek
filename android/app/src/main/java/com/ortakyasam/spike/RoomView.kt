@@ -233,7 +233,7 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
                 fill.color = 0xFFFFFFFF.toInt(); rect.set(cx - 28 * u, floorY - 12 * u, cx + 28 * u, floorY + 3 * u); c.drawRoundRect(rect, 7 * u, 7 * u, fill)
                 fill.color = 0xFF9ADCEB.toInt(); rect.set(cx - 25 * u, floorY - 10 * u, cx + 25 * u, floorY - 6 * u); c.drawRoundRect(rect, 3 * u, 3 * u, fill)
                 text.textSize = 34 * d; c.drawText("🦆", w * 0.84f, floorY - 2 * d, text)
-                if (pet.stage >= 4) { text.textSize = 56 * d; c.drawText("🚽", w * 0.14f, floorY + 4 * d, text) }
+                if (pet.stage >= 4 && !pet.isPet) { text.textSize = 56 * d; c.drawText("🚽", w * 0.14f, floorY + 4 * d, text) }
             }
             3 -> {
                 fill.color = 0xFFE8574A.toInt(); val px = w * 0.84f; val py = deco + 40 * d
@@ -402,8 +402,8 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
             val a = Pet.STAGE_DAYS[st]; val b = Pet.STAGE_DAYS[st + 1]
             frac = ((pet.growth - a) / (b - a)).coerceIn(0f, 1f)
             val left = ceil(b - pet.growth).toInt().coerceAtLeast(1)
-            label = "${Pet.STAGE_NAMES[st]} → ${Pet.STAGE_NAMES[st + 1]} · ~$left gün"
-        } else { frac = 1f; label = "Çocukluk · her ay biraz daha büyüyor" }
+            label = "${pet.stageName(st)} → ${pet.stageName(st + 1)} · ~$left gün"
+        } else { frac = 1f; label = "${pet.stageName(5)} · her ay biraz daha büyüyor" }
         val bw = width * 0.62f
         fill.color = 0xAAFFFFFF.toInt(); rect.set(cx - bw / 2, by - 5 * d, cx + bw / 2, by + 5 * d); c.drawRoundRect(rect, 5 * d, 5 * d, fill)
         fill.color = 0xFF9B7BE0.toInt(); rect.set(cx - bw / 2, by - 5 * d, cx - bw / 2 + bw * frac, by + 5 * d); c.drawRoundRect(rect, 5 * d, 5 * d, fill)
@@ -415,7 +415,7 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
     private fun trayItems(): List<String> = when (room) {
         0 -> pet.inventory.filter { it.value > 0 }.keys.toList().take(6) + "🛒"
         1 -> listOf(if (pet.asleep) "☀️" else "💡")
-        2 -> listOf("🧼", "🚿", if (pet.stage >= 4) "🚽" else "🧷")
+        2 -> listOf("🧼", "🚿", when { pet.isPet -> "🧻"; pet.stage >= 4 -> "🚽"; else -> "🧷" })
         3 -> listOf("🌡️", "💊")
         else -> listOf("⚽", "🎈", "🎮")
     }
@@ -442,9 +442,9 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
         }
         text.alpha = 255
         val hint = when (room) {
-            0 -> if (pet.stage <= 1) "Bebek şimdilik sadece süt içiyor 🍼" else "Yemeği sürükleyip ağzına götür · 🛒 market"
+            0 -> if (pet.stage <= 1) (if (pet.isPet) "Yavru şimdilik sadece süt içiyor 🍼" else "Bebek şimdilik sadece süt içiyor 🍼") else "Yemeği sürükleyip ağzına götür · 🛒 market"
             1 -> if (pet.asleep) "Uyandırmak için güneşe dokun" else "Uyutmak için ışığı kapat"
-            2 -> if (pet.stage >= 4) "Sabun, duş · 🚽 tuvalete götür" else "Sabun, duş · 🧷 bezini değiştir"
+            2 -> when { pet.isPet -> "Sabun, duş · 🧻 çişini temizle"; pet.stage >= 4 -> "Sabun, duş · 🚽 tuvalete götür"; else -> "Sabun, duş · 🧷 bezini değiştir" }
             3 -> "Termometreyi ve ilacı ağzına götür"
             else -> "Topa dokun · balon uçur · 🎮 oyna, altın kazan"
         }
@@ -686,7 +686,7 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
                 talk(if (foam.isNotEmpty()) "✨ tertemiz!" else "brrr!")
                 parts.add(Part(cx, floorY - 50 * k, 0f, -40 * d, 1.5f, 1.5f, "✨", 30 * d, 0f))
             }
-            s == "🧷" || s == "🚽" -> {
+            s == "🧷" || s == "🚽" || s == "🧻" -> {
                 if (pet.diaper < 20) { talk(if (pet.stage >= 4) "gelmedi ki!" else "ı-ıh"); return }
                 pet.changeDiaper(); waveUntil = now + 1500
                 talk(if (s == "🚽") "oh be! 🚽" else "✨ oh!")
@@ -757,6 +757,6 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
         repeat(3) { parts.add(Part(cx + (rnd.nextFloat() - 0.5f) * 30 * k, babyTop(), (rnd.nextFloat() - 0.5f) * 80 * d, -140 * d, 1.1f, 1.1f, "💗", 24 * d, 0f)) }
     }
 
-    private fun talk(s: String) { say = s; sayUntil = SystemClock.uptimeMillis() + 1800 }
+    private fun talk(s: String) { say = if (s.contains("°C")) s else pet.voice(s); sayUntil = SystemClock.uptimeMillis() + 1800 }
     private fun hello() = when (pet.stage) { 0, 1 -> "agu!"; 2, 3 -> "ba-ba!"; else -> "merhaba!" }
 }

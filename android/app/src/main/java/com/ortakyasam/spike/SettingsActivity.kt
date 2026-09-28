@@ -107,6 +107,12 @@ class SettingsActivity : Activity() {
             pet.name = nameBox.text.toString().trim().ifEmpty { "Minik" }.take(16); pet.save(); refresh(); toast("Kaydedildi")
         }
         val looks = row(ch).apply { setPadding(0, dp(8), 0, 0) }
+        pillButton(ch, "🔄 Karakteri değiştir (bebek / evcil hayvan)") {
+            android.app.AlertDialog.Builder(this).setTitle("Karakteri değiştir")
+                .setMessage("Yeni karakter bugün yeniden doğar. Şimdiki karakterin büyümesi ve eşyaları sıfırlanır.")
+                .setPositiveButton("Değiştir") { _, _ -> startActivity(Intent(this, ChooseActivity::class.java)) }
+                .setNegativeButton("Vazgeç", null).show()
+        }
         pillButton(looks, "🎨 Yeni görünüm", weight = 1f) {
             getSharedPreferences("pet", MODE_PRIVATE).edit().putInt("seed", 0).apply(); pet = Pet(this); refresh()
         }
@@ -179,7 +185,7 @@ class SettingsActivity : Activity() {
     }
 
     private fun refresh() {
-        growthInfo.text = "Yaş: ${pet.ageDays().toInt()} gün · Büyüme: ${"%.1f".format(pet.growth)} gün · ${Pet.STAGE_NAMES[pet.stage]}" +
+        growthInfo.text = "Yaş: ${pet.ageDays().toInt()} gün · Büyüme: ${"%.1f".format(pet.growth)} gün · ${pet.stageName()}" +
             (if (pet.sick) " · hasta" else "") + " · 🪙 ${pet.coins}"
         stageButtons.forEachIndexed { i, b ->
             val on = i == pet.stage

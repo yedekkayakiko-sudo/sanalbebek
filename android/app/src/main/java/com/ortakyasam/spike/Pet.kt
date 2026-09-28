@@ -38,13 +38,40 @@ class Pet(private val ctx: Context) {
     val inventory: MutableMap<String, Int> = parseInv(p.getString("inv", null) ?: "🍼:4;🍎:2;🥛:2")
     val look: Look
 
+    val species: Int get() = look.species
+    val isPet: Boolean get() = look.species != 0
+    /** Karakter seçildi mi (ilk açılıştaki "bebek mi, evcil hayvan mı?" ekranı). */
+    val chosen: Boolean get() = p.getBoolean("chosen", false)
+
+    /** Dönem adı; hayvanlarda yavru dönemleri. */
+    fun stageName(i: Int = stage): String = if (isPet) PET_STAGE_NAMES[i] else STAGE_NAMES[i]
+
+    /**
+     * Konuşma: insan bebek söyleneni söyler; hayvan kelime yerine kendi sesini çıkarır, emojiyi korur.
+     * ("acıktım…" → "hav hav! 🍖" gibi değil, sadece "hav hav!"; "🤒 ıhh" → "🤒 ıın")
+     */
+    fun voice(s: String): String {
+        if (!isPet) return s
+        val emoji = s.filter { !it.isLetterOrDigit() && !it.isWhitespace() && it !in ".,!?…'\"-:°%" }.trim()
+        val sound = when (species) {
+            1 -> listOf("hav!", "hav hav!", "vuf!", "hıı?")
+            2 -> listOf("miyav!", "mrr…", "miyuv?", "mırr")
+            else -> listOf("fıs fıs!", "hıı?", "ıhık!")
+        }[kotlin.math.abs(s.hashCode()) % 3]
+        return if (emoji.isEmpty()) sound else "$emoji $sound"
+    }
+
     /** 0 Yenidoğan … 5 Çocukluk; büyüme günlerinden hesaplanır. */
     val stage: Int get() = stageFor(growth)
 
     init {
         var seed = p.getInt("seed", 0)
         if (seed == 0) { seed = Random.nextInt(1, Int.MAX_VALUE); p.edit().putInt("seed", seed).apply() }
-        look = Look.fromSeed(seed)
+        val sp = p.getInt("species", 0)
+        look = if (sp == 0) Look.fromSeed(seed) else {
+            val fur = p.getInt("fur", 0xFFD9A066.toInt())
+            Look(fur, p.getInt("fur2", 0xFF8A5A3C.toInt()), p.getInt("eyeColor", 0xFF3A2A20.toInt()), fur, 0, sp, p.getInt("fur2", 0xFF8A5A3C.toInt()), p.getInt("earStyle", 0), p.getInt("pattern", 0))
+        }
         if (bornAt == 0L) {
             // İlk açılış (ya da gerçek zamanlı büyümeden önceki sürümden geçiş): bebek bugün doğar.
             bornAt = System.currentTimeMillis(); last = bornAt
@@ -146,11 +173,40 @@ class Pet(private val ctx: Context) {
     /** Henüz kutlanmamış bir dönüm noktası varsa metnini döner ve kutlandı olarak işaretler. */
     fun takeMilestone(): String? {
         val i = MILESTONES.indexOfLast { it.first <= growth }
-        if (i > shownMilestone) { shownMilestone = i; save(); return MILESTONES[i].second }
+        if (i > shownMilestone) { shownMilestone = i; save(); return if (isPet) petMilestone(i) else MILESTONES[i].second }
         val months = (ageDays() / 30.44f).toInt()
         if (months > shownMonths) { shownMonths = months; save(); return "🎂 $name $months aylık oldu!" }
         return null
     }
+
+    private fun petMilestone(i: Int): String {
+        val sound = when (species) { 1 -> "havlama"; 2 -> "miyav"; else -> "zıplama" }
+        return when (i) {
+            0 -> "🐾 Dünyaya geldi!"
+            6 -> "🎾 Top peşinde koşuyor"
+            7 -> "🔔 Adını tanıyor"
+            8 -> "💬 İlk $sound!"
+            9 -> if (species == 2) "🪣 Kum kabını öğrendi" else "🚪 Tuvaleti öğrendi"
+            10 -> "🌟 Artık kocaman oldu!"
+            else -> MILESTONES[i].second
+        }
+    }
+
+    /**
+     * İlk açılıştaki seçim: karakter bugün yeniden doğar. Pil yeri ve ikon üstü ayarı korunur.
+     * Fotoğraf saklanmaz; sadece ondan çıkarılan renkler kaydedilir.
+     */
+    fun rebirth(newName: String, species: Int, fur: Int = 0, fur2: Int = 0, earStyle: Int = 0, pattern: Int = 0) {
+        val keepBattery = batteryX; val keepOverlay = overlayOn
+        p.edit().clear()
+            .putBoolean("chosen", true).putInt("species", species)
+            .putInt("fur", fur).putInt("fur2", fur2).putInt("earStyle", earStyle).putInt("pattern", pattern)
+            .putString("name", newName).putFloat("batteryX", keepBattery).putBoolean("overlayOn", keepOverlay)
+            .putString("inv", if (species == 0) "🍼:4;🍎:2;🥛:2" else "🍼:4;🥛:2;${if (species == 2) "🐟" else if (species == 1) "🍖" else "🥕"}:2")
+            .apply()
+    }
+
+    fun markChosen() { p.edit().putBoolean("chosen", true).apply() }
 
     /** Günde bir kez giriş hediyesi (altın). Verildiyse miktarı, verilmediyse 0 döner. */
     fun dailyBonus(): Int {
@@ -188,6 +244,7 @@ class Pet(private val ctx: Context) {
 
     companion object {
         val STAGE_NAMES = listOf("Yenidoğan", "Bebek", "Emekleme", "Yürüme", "İlk kelimeler", "Çocukluk")
+        val PET_STAGE_NAMES = listOf("Yeni doğmuş yavru", "Minik yavru", "Emekleyen yavru", "Oyuncu yavru", "Genç", "Yetişkin")
         /** Dönemlerin başladığı büyüme günü. Konuşma yaklaşık 2 ayda başlar. */
         val STAGE_DAYS = floatArrayOf(0f, 7f, 21f, 35f, 56f, 90f)
 
@@ -201,6 +258,8 @@ class Pet(private val ctx: Context) {
             "🥕" to Food(4, 10f, 0f, false),
             "🍓" to Food(12, 12f, 8f, false),
             "🍪" to Food(10, 10f, 10f, false),
+            "🍖" to Food(9, 18f, 6f, false),
+            "🐟" to Food(9, 18f, 6f, false),
         )
 
         val MILESTONES = listOf(
@@ -228,7 +287,14 @@ class Pet(private val ctx: Context) {
     }
 }
 
-data class Look(val skin: Int, val hair: Int, val eye: Int, val outfit: Int, val ears: Int) {
+/**
+ * Görünüm. species 0 insan bebek, 1 köpek, 2 kedi, 3 tavşan. Hayvanlarda skin = ana tüy rengi,
+ * fur2 = ikinci renk (kulak, leke), earStyle köpekte 0 sarkık / 1 dik, pattern 0 düz / 1 göz lekesi / 2 beyaz ağız.
+ */
+data class Look(
+    val skin: Int, val hair: Int, val eye: Int, val outfit: Int, val ears: Int,
+    val species: Int = 0, val fur2: Int = 0, val earStyle: Int = 0, val pattern: Int = 0,
+) {
     companion object {
         private val SKIN = intArrayOf(0xFFF6D7C3.toInt(), 0xFFEBC0A0.toInt(), 0xFFD39C74.toInt(), 0xFFA8704A.toInt(), 0xFF6F4630.toInt())
         private val HAIR = intArrayOf(0xFF2B1D14.toInt(), 0xFF5A3A22.toInt(), 0xFF9C6A3A.toInt(), 0xFFD9B36C.toInt(), 0xFFB5532E.toInt())

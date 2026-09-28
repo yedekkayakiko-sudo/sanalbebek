@@ -357,7 +357,7 @@ object Baby {
         modeUntil = if (dur == Long.MAX_VALUE) Long.MAX_VALUE else now + dur
     }
 
-    private fun say(s: String, ms: Long) { bubble = s; bubbleUntil = SystemClock.uptimeMillis() + ms }
+    private fun say(s: String, ms: Long) { bubble = if (s.startsWith("🎂") || s.length > 18) s else pet.voice(s); bubbleUntil = SystemClock.uptimeMillis() + ms }
 
     private fun log(s: String) { app?.let { DiagLog.add(it, "$s · ${if (locked) "kilit" else "ana ekran"}") } }
 

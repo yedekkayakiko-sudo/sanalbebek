@@ -22,6 +22,7 @@ class MainActivity : Activity() {
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
         val pet = Pet(this).also { it.catchUp() }
         room = RoomView(this, pet) { startActivity(Intent(this, SettingsActivity::class.java)) }
+        room.onChat = { startActivity(Intent(this, ChatActivity::class.java)) }
         room.setOnApplyWindowInsetsListener { v, insets ->
             @Suppress("DEPRECATION")
             (v as RoomView).setInsets(insets.systemWindowInsetTop.toFloat(), insets.systemWindowInsetBottom.toFloat())

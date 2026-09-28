@@ -23,7 +23,7 @@ Derdahan ve Burak ile konuşularak alınan kararlar. Yeni bir karar alındıkça
 1. ~~Gerçek zamanlı büyüme~~ ✓
 2. ~~Pou tarzı odalar ve ekonomi: altın, market, ödüllü reklam (deneme), bez/tuvalet, revir, mini oyun~~ ✓
 3. ~~Evcil hayvan fotoğrafından karakter (köpek, kedi, tavşan)~~ ✓ İlk sürüm: renkler telefonda çıkarılıyor, kulak ve desen elle seçiliyor. Yapay zekâ ile otomatik tanıma 4. adımdaki sunucuyla gelecek
-4. Yapay zekâ: sunucu, konuşma, kullanıcıyı tanıma, moral desteği
+4. Yapay zekâ: ~~sunucusuz deneme (kurallı beyin, sohbet, düzen öğrenme, kelime kapma, moral desteği)~~ ✓ · gerçek yapay zekâ için sunucu ve ücret kararı sonra
 5. "Birlikte izle" ve uygulama farkındalığı
 6. Gerçek reklam (AdMob ödüllü reklam), daha fazla mini oyun, arkadaşlarla oynama
 7. iOS

@@ -79,11 +79,27 @@ object Baby {
         if (pet.look != chibi.look) chibi = ChibiRenderer(pet.look)
         pet.catchUp(); lastCatchUp = SystemClock.uptimeMillis()
         lastStep = 0L
+        if (pet.hatched && !pet.asleep) greetByContext(ctx)
         if (pet.hatched) pet.takeMilestone()?.let { say(it, 4500); waveUntil = SystemClock.uptimeMillis() + 3000 }
         // Uygulamadan yeni beslendiyse ana ekranda yerken görünsün.
         if (pet.fedAt > shownFedAt && System.currentTimeMillis() - pet.fedAt < 5 * 60_000 && pet.hatched && !pet.asleep) {
             shownFedAt = pet.fedAt
             setMode(Mode.EAT, 3500); say("ham-ham!", 2500)
+        }
+    }
+
+    /**
+     * Seni tanıyan davranışlar (sunucusuz): sohbette üzgün olduğunu söylediysen bir kez sarılır,
+     * olağan uyanma saatinde günaydın der, olağan uyku saatini geçtiysen uyumanı söyler.
+     */
+    private var lastGreetDay = -1L
+    private fun greetByContext(ctx: Context) {
+        val now = SystemClock.uptimeMillis()
+        val day = System.currentTimeMillis() / 86_400_000L
+        when {
+            LocalBrain.takeComfortPrompt(ctx) -> { say(if (pet.stage >= 5) "🤗 iyi misin?" else "🤗", 3500); setMode(Mode.DANCE, 1500); waveUntil = now + 2500 }
+            Rhythm.isMorning(ctx) && lastGreetDay != day -> { lastGreetDay = day; say(if (pet.stage >= 4) "günaydın! ☀️" else "☀️ agu!", 3000); waveUntil = now + 2500 }
+            Rhythm.isPastBedtime(ctx) && pet.stage >= 4 -> say("uyku vakti! 😴", 2500)
         }
     }
 
@@ -349,7 +365,11 @@ object Baby {
     fun startDance() { if (pet.hatched && !pet.asleep && pet.stage >= 1) { setMode(Mode.DANCE, 3500); say("♪ la-la", 3000) } }
     fun sayHungryIfNeeded() { if (pet.hatched && !pet.asleep && pet.hunger > 70) say(if (pet.stage >= 4) "acıktım…" else "mama?", 2500) }
 
-    private fun arriveWord() = when (pet.stage) { 0, 1 -> "agu!"; 2, 3 -> "ba-ba!"; else -> "geldim!" }
+    private fun arriveWord(): String {
+        // Konuşan dönemde bazen sahibinden kaptığı kelimeyi söyler.
+        if (pet.stage >= 4 && !pet.isPet && rnd.nextFloat() < 0.35f) app?.let { LocalBrain.learnedWords(it).firstOrNull()?.let { w -> return "$w!" } }
+        return when (pet.stage) { 0, 1 -> "agu!"; 2, 3 -> "ba-ba!"; else -> "geldim!" }
+    }
 
     private fun setMode(m: Mode, dur: Long) {
         val now = SystemClock.uptimeMillis()

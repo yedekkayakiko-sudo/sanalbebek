@@ -116,6 +116,7 @@ class BebekWallpaperService : WallpaperService() {
             if (v) {
                 visibleSince = SystemClock.elapsedRealtime()
                 frames = 0
+                if (!isPreview) Rhythm.record(ctx)
                 Baby.reload(ctx)
                 Baby.charging = charging(ctx)
                 Baby.setLocked(isLocked())

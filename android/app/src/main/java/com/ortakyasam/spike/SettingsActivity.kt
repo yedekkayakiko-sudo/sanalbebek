@@ -158,6 +158,7 @@ class SettingsActivity : Activity() {
         pillButton(tr2, "🤒 Hasta yap", weight = 1f) { pet.sick = true; pet.save(); toast("Revire götür 🩺") }
         pillButton(tr2, "🍗 Acıktır", weight = 1f) { pet.hunger = 85f; pet.asleep = false; pet.save(); refresh() }
         pillButton(tr2, "🪙 +100", weight = 1f) { pet.earn(100); refresh() }
+        pillButton(dev, "🧠 Örnek düzen verisi doldur (5 gün)") { Rhythm.devFill(this); toast("Konuş ekranındaki \"seni tanıyor\" kartına bak") }
         pillButton(dev, "🥚 Sıfırla: bugün yeniden doğsun") {
             pet.devReset(); pet = Pet(this); refresh(); toast("Yeniden doğdu. Ana ekrana dön ya da uygulamayı aç.")
         }

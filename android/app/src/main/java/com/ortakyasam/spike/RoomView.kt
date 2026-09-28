@@ -27,6 +27,7 @@ import kotlin.random.Random
  */
 @SuppressLint("ViewConstructor")
 class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) : View(ctx) {
+    var onChat: () -> Unit = {}
     var topInset = 0f
     var bottomInset = 0f
     var needsSetup = false
@@ -136,6 +137,7 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
             drawParts(c)
             if (room == 1 && pet.asleep) { fill.color = 0x99000018.toInt(); c.drawRect(0f, 0f, width.toFloat(), trayY - 40 * d, fill); drawMoon(c) }
             drawHud(c)
+            drawChatButton(c, now)
             drawTray(c, now)
             drawBar(c)
             dragItem?.let { text.textSize = 44 * d; text.alpha = 255; c.drawText(it, dragX, dragY + 15 * d, text) }
@@ -410,6 +412,18 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
         text.textSize = 11 * d; c.drawText(label, cx, by + 20 * d, text)
     }
 
+    // Konuş düğmesi: sahnenin sağ üstünde
+    private fun chatX() = width - 42 * d
+    private fun chatY() = topInset + 205 * d
+
+    private fun drawChatButton(c: Canvas, now: Long) {
+        val pulse = 1f + 0.05f * sin(now / 400.0).toFloat()
+        fill.color = 0xFFEC6E4C.toInt(); c.drawCircle(chatX(), chatY(), 27 * d * pulse, fill)
+        text.alpha = 255; text.textSize = 24 * d; c.drawText("💬", chatX(), chatY() + 8 * d, text)
+        text.textSize = 12 * d; text.color = 0xFF3A2A20.toInt(); text.isFakeBoldText = true
+        c.drawText("Konuş", chatX(), chatY() + 46 * d, text); text.isFakeBoldText = false
+    }
+
     // ---------- Odanın eşyaları ----------
 
     private fun trayItems(): List<String> = when (room) {
@@ -638,6 +652,7 @@ class RoomView(ctx: Context, var pet: Pet, private val onSettings: () -> Unit) :
                 petting = false
                 if (y > barTop) { room = (x / (width / ROOMS.size.toFloat())).toInt().coerceIn(0, ROOMS.size - 1); foam.clear(); if (room != 4) ball = null; return true }
                 if (hypot(x - (width - 30 * d), y - row1Y()) < 28 * d) { onSettings(); return true }
+                if (hypot(x - chatX(), y - chatY()) < 34 * d) { onChat(); return true }
                 if (needsSetup && abs(y - (floorY + 30 * d)) < 20 * d && abs(x - cx) < 150 * d) { onSettings(); return true }
                 val items = trayItems()
                 items.forEachIndexed { i, s -> if (hypot(x - trayX(i, items.size), y - trayY) < 32 * d) { tapItem(s, x, y); return true } }

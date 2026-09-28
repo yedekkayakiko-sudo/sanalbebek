@@ -21,6 +21,8 @@ data class Frame(
     val x: Float, val y: Float, val u: Float, val stage: Int, val pose: Pose, val mood: Mood,
     val arms: Arms = Arms.NONE, val moving: Boolean = false, val facing: Int = 1, val kick: Boolean = false,
     val lift: Float = 0f, val lookX: Float = 0f, val lookY: Float = 0f, val charging: Boolean = false, val hatch: Float = 1f,
+    /** Boy çarpanı (Pet.scale); 0 ise döneme göre. mature 0..1: büyüdükçe kol-bacak uzar, kafa orantıca küçülür. */
+    val scale: Float = 0f, val mature: Float = 0f,
 )
 
 /** Prototipteki chibi çiziminin Kotlin karşılığı (prototype/index.html → drawChibi, chibiHead). */
@@ -39,8 +41,9 @@ class ChibiRenderer(val look: Look) {
     private fun line(c: Canvas, x1: Float, y1: Float, x2: Float, y2: Float, color: Int, w: Float) { stroke.color = color; stroke.strokeWidth = w; c.drawLine(x1, y1, x2, y2, stroke) }
 
     fun draw(c: Canvas, f: Frame, t: Long): PointF {
-        val u = f.u * size[f.stage.coerceIn(0, 5)]
-        val r = 12.5f * u; val bw = 12f * u; val bh = 8.5f * u; val lg = 4.5f * u
+        val u = f.u * (if (f.scale > 0f) f.scale else size[f.stage.coerceIn(0, 5)])
+        val m = f.mature.coerceIn(0f, 1f)
+        val r = 12.5f * u * (1 - 0.12f * m); val bw = 12f * u * (1 + 0.1f * m); val bh = 8.5f * u * (1 + 0.35f * m); val lg = 4.5f * u * (1 + 0.8f * m)
         val x = f.x; val y = f.y - f.lift
         val skin = look.skin
         fun limb(x1: Float, y1: Float, x2: Float, y2: Float, w: Float) = line(c, x1, y1, x2, y2, skin, w * u)
@@ -54,7 +57,7 @@ class ChibiRenderer(val look: Look) {
             path.quadTo(cx - bw * 0.64f, top + bh, cx - bw * 0.36f, top); path.close()
             fill.shader = null; fill.color = look.outfit; c.drawPath(path, fill)
         }
-        val pose = if (f.stage == 0 || f.hatch < 1f) Pose.EGG else f.pose
+        val pose = if (f.hatch < 1f) Pose.EGG else f.pose
         val ts = t.toFloat()
         var hx: Float; var hy: Float; var hr = r
         when (pose) {

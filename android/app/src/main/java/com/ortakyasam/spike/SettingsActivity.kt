@@ -31,6 +31,7 @@ import android.widget.Toast
 class SettingsActivity : Activity() {
     private lateinit var pet: Pet
     private lateinit var overlayStatus: TextView
+    private lateinit var growthInfo: TextView
     private lateinit var step1: StepRow
     private lateinit var step2: StepRow
     private lateinit var overlaySwitch: Button
@@ -105,23 +106,10 @@ class SettingsActivity : Activity() {
         pillButton(nameRow, "Kaydet") {
             pet.name = nameBox.text.toString().trim().ifEmpty { "Minik" }.take(16); pet.save(); refresh(); toast("Kaydedildi")
         }
-        text(ch, "Dönem (denemek için elle seç)", 14f, MUTED).setPadding(0, dp(14), 0, dp(4))
-        for (range in listOf(0..2, 3..5)) {
-            val r = row(ch)
-            for (i in range) {
-                val b = Button(this).apply {
-                    text = Pet.STAGE_NAMES[i]; isAllCaps = false; textSize = 13f
-                    setOnClickListener { pet.stage = i; pet.save(); refresh() }
-                }
-                stageButtons.add(b)
-                r.addView(b, LinearLayout.LayoutParams(0, dp(46), 1f).apply { setMargins(dp(3), dp(3), dp(3), dp(3)) })
-            }
-        }
         val looks = row(ch).apply { setPadding(0, dp(8), 0, 0) }
         pillButton(looks, "🎨 Yeni görünüm", weight = 1f) {
             getSharedPreferences("pet", MODE_PRIVATE).edit().putInt("seed", 0).apply(); pet = Pet(this); refresh()
         }
-        pillButton(looks, "🥚 Yeniden doğsun", weight = 1f) { pet.hatched = false; pet.save(); refresh(); toast("Ana ekrana dön: yumurtadan çıkacak") }
 
         // ---- Pil ----
         section(root, "Pil ikonu nerede?")
@@ -138,6 +126,35 @@ class SettingsActivity : Activity() {
         }
         batLabel.text = sideLabel(seek.progress)
         bat.addView(seek, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(48)))
+
+        // ---- Geliştirici ----
+        section(root, "Test araçları")
+        val dev = card(root, 0xFFFFFFFF.toInt())
+        text(dev, "Bebek gerçek zamanla büyür; bunlar sadece denemek için. Ürünün kendisinde olmayacak.", 14f, MUTED)
+        growthInfo = text(dev, "", 14f, INK).apply { setPadding(0, dp(8), 0, dp(4)) }
+        val tr1 = row(dev)
+        pillButton(tr1, "+1 gün", weight = 1f) { pet.catchUp(); pet.devAddDays(1f); refresh() }
+        pillButton(tr1, "+7 gün", weight = 1f) { pet.catchUp(); pet.devAddDays(7f); refresh() }
+        pillButton(tr1, "+30 gün", weight = 1f) { pet.catchUp(); pet.devAddDays(30f); refresh() }
+        text(dev, "Döneme atla:", 14f, MUTED).setPadding(0, dp(10), 0, dp(2))
+        for (range in listOf(0..2, 3..5)) {
+            val r = row(dev)
+            for (i in range) {
+                val b = Button(this).apply {
+                    text = Pet.STAGE_NAMES[i]; isAllCaps = false; textSize = 13f
+                    setOnClickListener { pet.catchUp(); pet.devAddDays(Pet.STAGE_DAYS[i] + 0.01f - pet.growth); refresh() }
+                }
+                stageButtons.add(b)
+                r.addView(b, LinearLayout.LayoutParams(0, dp(46), 1f).apply { setMargins(dp(3), dp(3), dp(3), dp(3)) })
+            }
+        }
+        val tr2 = row(dev)
+        pillButton(tr2, "🤒 Hasta yap", weight = 1f) { pet.sick = true; pet.save(); toast("Revire götür 🩺") }
+        pillButton(tr2, "🍗 Acıktır", weight = 1f) { pet.hunger = 85f; pet.asleep = false; pet.save(); refresh() }
+        pillButton(tr2, "🪙 +100", weight = 1f) { pet.earn(100); refresh() }
+        pillButton(dev, "🥚 Sıfırla: bugün yeniden doğsun") {
+            pet.devReset(); pet = Pet(this); refresh(); toast("Yeniden doğdu. Ana ekrana dön ya da uygulamayı aç.")
+        }
 
         // ---- Test günlüğü ----
         section(root, "Test günlüğü")
@@ -162,6 +179,8 @@ class SettingsActivity : Activity() {
     }
 
     private fun refresh() {
+        growthInfo.text = "Yaş: ${pet.ageDays().toInt()} gün · Büyüme: ${"%.1f".format(pet.growth)} gün · ${Pet.STAGE_NAMES[pet.stage]}" +
+            (if (pet.sick) " · hasta" else "") + " · 🪙 ${pet.coins}"
         stageButtons.forEachIndexed { i, b ->
             val on = i == pet.stage
             b.background = rounded(if (on) ACCENT else 0xFFF1E9E1.toInt(), dp(12).toFloat())

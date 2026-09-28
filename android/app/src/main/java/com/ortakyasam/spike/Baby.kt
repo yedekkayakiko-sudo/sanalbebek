@@ -79,6 +79,7 @@ object Baby {
         if (pet.look != chibi.look) chibi = ChibiRenderer(pet.look)
         pet.catchUp(); lastCatchUp = SystemClock.uptimeMillis()
         lastStep = 0L
+        if (pet.hatched) pet.takeMilestone()?.let { say(it, 4500); waveUntil = SystemClock.uptimeMillis() + 3000 }
         // Uygulamadan yeni beslendiyse ana ekranda yerken görünsün.
         if (pet.fedAt > shownFedAt && System.currentTimeMillis() - pet.fedAt < 5 * 60_000 && pet.hatched && !pet.asleep) {
             shownFedAt = pet.fedAt
@@ -196,6 +197,8 @@ object Baby {
         val (lo, hi) = yRange()
         val r = rnd.nextFloat()
         when {
+            pet.sick && r < 0.3f -> say(if (pet.stage >= 4) "🤒 hastayım…" else "🤒 ıhh", 2000)
+            pet.diaper > 70 && r < 0.25f -> say(if (pet.stage >= 4) "tuvalet!" else "💩 ıı!", 1800)
             pet.hunger > 70 && r < 0.2f -> say(if (pet.stage >= 4) "acıktım…" else "mama?", 1800)
             !locked && pet.stage >= 2 && (r < 0.12f || (charging && r < 0.4f)) -> goTo(batteryX(), lo, Goal.CLIMB)
             !locked && pet.stage >= 2 && r < 0.22f -> {
@@ -385,11 +388,12 @@ object Baby {
             mode == Mode.SHY -> Mood.SHY
             mode == Mode.CARRIED && now - modeStart < 500 -> Mood.SURPRISE
             mode == Mode.DANCE || mode == Mode.HANG -> Mood.LAUGH
-            pet.energy < 25 -> Mood.SLEEPY
+            pet.energy < 25 || pet.sick -> Mood.SLEEPY
             pet.hunger > 70 -> Mood.HUNGRY
             else -> Mood.HAPPY
         }
         val ground = when {
+            st == 0 -> Pose.LIE
             st == 1 -> Pose.SIT
             st == 2 -> if (moving) Pose.CRAWL else Pose.SIT
             mode == Mode.SIT -> Pose.SIT
@@ -415,7 +419,7 @@ object Baby {
             mode == Mode.DANCE -> Frame(x, fy, u, st, ground, mood, arms, moving = true, facing = facing)
             else -> Frame(x, fy, u, st, ground, mood, arms, moving, facing, lookX = lookX, charging = charging)
         }
-        val p = chibi.draw(c, frame, now)
+        val p = chibi.draw(c, frame.copy(scale = pet.scale(), mature = pet.maturity()), now)
         val b = bubble
         if (b == null || now > bubbleUntil) { bubble = null; return }
         when {
@@ -426,7 +430,12 @@ object Baby {
         }
     }
 
-    private fun drawBubble(c: Canvas, px: Float, bottom: Float, s: String, minX: Float, maxX: Float, tail: Boolean, size: Float) {
+    private fun drawBubble(c: Canvas, px: Float, bottom: Float, s: String, minX: Float, maxX: Float, tail: Boolean, size0: Float) {
+        textPaint.textSize = size0
+        // Uzun yazı (dönüm noktası gibi) dar pencereye sığsın diye küçülür.
+        val room = maxX - minX - 4 * S
+        val full = textPaint.measureText(s) + size0 * 1.1f
+        val size = if (full > room) size0 * room / full else size0
         textPaint.textSize = size
         val tw = textPaint.measureText(s)
         val pad = size * 0.55f

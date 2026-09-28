@@ -52,8 +52,10 @@ object OverlayPet {
         if (reason == "ok" && view == null) show(ctx) else if (reason != "ok" && view != null) hide()
     }
 
-    fun winW() = 100 * Baby.S
-    fun winH() = 140 * Baby.S
+    // Bebek büyüdükçe pencere de büyür (pencere her ana ekrana dönüşte yeniden açılır).
+    private fun grow() = kotlin.math.max(1f, Baby.pet.scale())
+    fun winW() = 100 * Baby.S * grow()
+    fun winH() = 140 * Baby.S * grow()
 
     /** Pencerenin ekrandaki sol üst köşesi: normalde ayaklar altta, tutunurken eller üstte. */
     fun origin(): Pair<Float, Float> {
